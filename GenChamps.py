@@ -3,13 +3,23 @@ import traceback
 import asyncio
 
 from discord import Game
+from discord.ext import commands
 from discord.ext.commands import Bot
 
 # Discord Variables
 BOT_PREFIX = ("!!", ">>")
 BOT_STATUS = "!!help or >>help"
-client = Bot(command_prefix=BOT_PREFIX)
+
+BOT_AUTHOR = "FeistyJalapeno#9045"
+BOT_VERSION = "Version 1.2"
+UPDATE_NOTES = "Added in about command."
+ABOUT_BOT = "This bot was created since when Paladins selects random champions its not random. Some people are highly "\
+            "likely to get certain roles and if you have a full team not picking champions sometime the game fails to "\
+            "fill the last person causing the match to fail to start and kick everyone. This could be due to the game" \
+            "trying to select a champ that has already been selected."
+
 TOKEN = "NTM3MzQ1ODE3MDcwMTQxNDUw.Dyptmw.zHrf5ozKflMqoBEDDxywOI9T0XA"
+client = Bot(command_prefix=BOT_PREFIX)
 
 
 # List of Champs by Class
@@ -107,6 +117,29 @@ async def rand(command):
                          "damage, flank, healer, tank, champ, or team.")
 
 
+@client.command(name='about',
+                description="Learn more about the bot.",
+                brief="Learn more about the bot.",
+                aliases=['info', 'update'])
+async def about():
+    await client.say("Bot Author: " + BOT_AUTHOR + "\n"
+                     "Bot Version: " + BOT_VERSION + "\n"
+                     "Updated Notes: " + UPDATE_NOTES + "\n\n"
+                     "About: " + ABOUT_BOT)
+
+
+# Handles errors when a user messes up the spelling or forgets an argument to a command
+@client.event
+async def on_command_error(error, ctx):
+    channel = ctx.message.channel
+    if isinstance(error, commands.MissingRequiredArgument):
+        await client.send_message(channel, "A required argument to the command you called is missing"+"\N{CROSS MARK}")
+    elif isinstance(error, commands.BadArgument):  # This should do nothing since I check in functions for input error
+        await client.send_message(channel, "Now you done messed up son.")
+    elif isinstance(error, commands.CommandNotFound):
+        await client.send_message(channel, f"\N{WARNING SIGN} {error}")
+
+
 # This code for some reason does not work other discord functions and cause the bot to only respond to these commands
 """
 @client.event
@@ -132,13 +165,6 @@ async def on_ready():
     # Status of the bot
     await client.change_presence(game=Game(name=BOT_STATUS))
 
-
-# Not sure if this will do anything but have it here anyway
-@client.event
-async def on_error(event, *args, **kwargs):
-    message = args[0] # Gets the message object
-    # logging.warning(traceback.format_exc()) #logs the error
-    await client.send_message(message.channel, "You caused an error!") # send the message to the channel
 
 """
 async def list_servers():

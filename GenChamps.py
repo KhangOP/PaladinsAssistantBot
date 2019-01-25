@@ -79,7 +79,11 @@ def gen_team():
 
     """Shuffle the team so people get different roles"""
     random.shuffle(team)
-    return team
+
+    team_string = "\n"
+    for champ in team:
+        team_string += champ + "\n"
+    return team_string
 
 
 """End of Python Functions"""
@@ -101,20 +105,20 @@ def gen_team():
 async def rand(command):
     command = str(command).lower()
     if command == "damage":
-        await client.say("Your random Damage champion is: " + pick_damage())
+        await client.say("Your random Damage champion is: " + "```" + pick_damage() + "```")
     elif command == "flank":
-        await client.say("Your random Flank champion is: " + pick_flank())
+        await client.say("Your random Flank champion is: " + "```" + pick_flank() + "```")
     elif command == "healer":
-        await client.say("Your random Support/Healer champion is: " + pick_support())
+        await client.say("Your random Support/Healer champion is: " + "```" + pick_support() + "```")
     elif command == "tank":
-        await client.say("Your random FrontLine/Tank champion is: " + pick_tank())
+        await client.say("Your random FrontLine/Tank champion is: " + "```" + pick_tank() + "```")
     elif command == "champ":
-        await client.say("Your random champion is: " + pick_random_champ())
+        await client.say("Your random champion is: " + "```" + pick_random_champ() + "```")
     elif command == "team":
-        await  client.say("Your random team is: " + str(gen_team()))
+        await  client.say("Your random team is: " + "```" + gen_team() + "```")
     else:
         await client.say("Invalid command. For the random command please choose from one following options: "
-                         "damage, flank, healer, tank, champ, or team.")
+                         "damage, flank, healer, tank, champ, or team. \n For example example: ```>>random damage```")
 
 
 @client.command(name='about',

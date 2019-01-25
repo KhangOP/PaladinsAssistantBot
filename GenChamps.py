@@ -7,6 +7,7 @@ from discord.ext.commands import Bot
 
 # Discord Variables
 BOT_PREFIX = ("!!", ">>")
+BOT_STATUS = "!!help or >>help"
 client = Bot(command_prefix=BOT_PREFIX)
 TOKEN = "NTM3MzQ1ODE3MDcwMTQxNDUw.Dyptmw.zHrf5ozKflMqoBEDDxywOI9T0XA"
 
@@ -20,45 +21,33 @@ Support = ["Grohk", "Grover", "Ying", "Mal'Damba", "Seris", "Jenos", "Furia"]
 
 
 # Picks a random damage champion.
-def pick_damage(damages):
-    tmp_damage = Damage
+def pick_damage():
     secure_random = random.SystemRandom()
-    for damage in damages:
-        tmp_damage.remove(damage)
-    return secure_random.choice(tmp_damage)
+    return secure_random.choice(Damage)
 
 
 # Picks a random flank champion.
-def pick_flank(flanks):
-    tmp_flank = Flank
+def pick_flank():
     secure_random = random.SystemRandom()
-    for flank in flanks:
-        tmp_flank.remove(flank)
-    return secure_random.choice(tmp_flank)
+    return secure_random.choice(Flank)
 
 
 # Picks a random tank champion.
-def pick_tank(tanks):
-    tmp_tanks = FrontLine
+def pick_tank():
     secure_random = random.SystemRandom()
-    for tank in tanks:
-        tmp_tanks.remove(tank)
-    return secure_random.choice(tmp_tanks)
+    return secure_random.choice(FrontLine)
 
 
 # Picks a random support champion.
-def pick_support(healers):
-    tmp_healers = Support
+def pick_support():
     secure_random = random.SystemRandom()
-    for healer in healers:
-        tmp_healers.remove(healer)
-    return secure_random.choice(tmp_healers)
+    return secure_random.choice(Support)
 
 
 # Picks a random champion from any class.
 def pick_random_champ():
     secure_random = random.SystemRandom()
-    return secure_random.choice([pick_damage, pick_support, pick_tank, pick_flank])([])
+    return secure_random.choice([pick_damage, pick_support, pick_tank, pick_flank])()
 
 
 # Uses the random functions about to generate team of random champions
@@ -66,10 +55,10 @@ def pick_random_champ():
 def gen_team():
     team = []
     print("Random Team")
-    team.append(pick_damage([]))
-    team.append(pick_flank([]))
-    team.append(pick_support([]))
-    team.append(pick_tank([]))
+    team.append(pick_damage())
+    team.append(pick_flank())
+    team.append(pick_support())
+    team.append(pick_tank())
 
     fill = pick_random_champ()
     """Keep Generating a random champ until its not one we already have"""
@@ -86,14 +75,36 @@ def gen_team():
 """End of Python Functions"""
 
 
-# Calls python function
-@client.command(name='damage',
-                description="Picks a random damage champion.",
-                brief="Picks a random damage champion.",
-                aliases=['Damage', 'DAMAGE'],
-                pass_context=True)
-async def random_damage():
-    await  client.say("Your random damage champion is: " + pick_damage([]))
+# Calls python functions
+@client.command(name='random',
+                description="Picks a random champ(s) based on the given input. \n"
+                            "damage - Picks a random Damage champion. \n"
+                            "healer - Picks a random Support/Healer champion. \n"
+                            "flank -  Picks a random Flank champion. \n"
+                            "tank -   Picks a random FrontLine/Tank champion. \n"
+                            "champ -  Picks a random champion from any class. \n"
+                            "team -   Picks a random team. "
+                            "It will always pick (1 Damage, 1 Flank, 1 Support, and 1 FrontLine, "
+                            "and then one other champion.) \n",
+                brief="Picks a random champ(s) based on the given input.\n",
+                aliases=['rand', 'r'])
+async def rand(command):
+    command = str(command).lower()
+    if command == "damage":
+        await client.say("Your random Damage champion is: " + pick_damage())
+    elif command == "flank":
+        await client.say("Your random Flank champion is: " + pick_flank())
+    elif command == "healer":
+        await client.say("Your random Support/Healer champion is: " + pick_support())
+    elif command == "tank":
+        await client.say("Your random FrontLine/Tank champion is: " + pick_tank())
+    elif command == "champ":
+        await client.say("Your random champion is: " + pick_random_champ())
+    elif command == "team":
+        await  client.say("Your random team is: " + str(gen_team()))
+    else:
+        await client.say("Invalid command. For the random command please choose from one following options: "
+                         "damage, flank, healer, tank, champ, or team.")
 
 
 # This code for some reason does not work other discord functions and cause the bot to only respond to these commands
@@ -119,7 +130,15 @@ async def on_ready():
     print(client.user.id)
     print('------')
     # Status of the bot
-    await client.change_presence(game=Game(name="!!help or >>help"))
+    await client.change_presence(game=Game(name=BOT_STATUS))
+
+
+# Not sure if this will do anything but have it here anyway
+@client.event
+async def on_error(event, *args, **kwargs):
+    message = args[0] # Gets the message object
+    # logging.warning(traceback.format_exc()) #logs the error
+    await client.send_message(message.channel, "You caused an error!") # send the message to the channel
 
 """
 async def list_servers():

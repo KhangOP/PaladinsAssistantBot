@@ -18,7 +18,12 @@ ABOUT_BOT = "This bot was created since when Paladins selects random champions i
             "fill the last person causing the match to fail to start and kick everyone. This could be due to the game" \
             "trying to select a champ that has already been selected."
 
-TOKEN = "NTM3MzQ1ODE3MDcwMTQxNDUw.Dyptmw.zHrf5ozKflMqoBEDDxywOI9T0XA"
+file_name = "token"
+# Gets token from a file
+with open(file_name, 'r') as f:
+    TOKEN = f.read().replace('\n', '')
+f.close()
+
 client = Bot(command_prefix=BOT_PREFIX)
 
 
@@ -100,7 +105,7 @@ def gen_team():
                             "team -   Picks a random team. "
                             "It will always pick (1 Damage, 1 Flank, 1 Support, and 1 FrontLine, "
                             "and then one other champion.) \n",
-                brief="Picks a random champ(s) based on the given input.\n",
+                brief="Picks a random champ(s) based on the given input.",
                 aliases=['rand', 'r'])
 async def rand(command):
     command = str(command).lower()

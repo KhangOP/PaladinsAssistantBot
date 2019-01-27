@@ -1,6 +1,8 @@
 import random
 import traceback
 import asyncio
+import requests
+from bs4 import BeautifulSoup
 
 from discord import Game
 from discord.ext import commands
@@ -30,8 +32,8 @@ client = Bot(command_prefix=BOT_PREFIX)
 # List of Champs by Class
 Damage = ["Cassie", "Kinessa", "Drogoz", "Bomb King", "Viktor", "Sha Lin", "Tyra", "Willo", "Lian", "Strix", "Vivian",
           "Dredge", "Imani"]
-Flank = ["Skye", "Buck", "Evie", "Androxus", "Maeve", "Lex", "Zhin", "Talus", "Moji", "Koga"]
-FrontLine = ["Barik", "Fernado", "Ruckus", "Makoa", "Trovald", "Inara", "Ash", "Terminus", "Khan"]
+Flank = ["Skye", "Buck", "Evie", "Androxus", "Meave", "Lex", "Zhin", "Talus", "Moji", "Koga"]
+FrontLine = ["Barik", "Fernando", "Ruckus", "Makoa", "Torvald", "Inara", "Ash", "Terminus", "Khan"]
 Support = ["Grohk", "Grover", "Ying", "Mal'Damba", "Seris", "Jenos", "Furia"]
 
 
@@ -91,6 +93,50 @@ def gen_team():
     return team_string
 
 
+def get_champ_stats(player_name, champ):
+    # making sure they are in the correct format for the site
+    player_name = str(player_name)
+    champ = str(champ).lower().capitalize()
+
+    url = "https://mypaladins.com/player/" + player_name
+    soup = BeautifulSoup(requests.get(url).text, 'html.parser')
+
+    # Get the secret number assigned to every player on their site
+    for link in soup.find_all('a'):
+        link = link.get('href')
+        if link != "/":
+            url = link.replace("pl/", "")
+            break
+
+    url = url + "/champions"
+    soup = BeautifulSoup(requests.get(url).text, 'html.parser')
+
+    sup = str(soup.get_text()).splitlines()
+    sup = list(filter(None, sup))
+    yes = 0
+
+    info = []
+
+    # Gathering the info we want
+    for item in sup:
+        item = item.replace("/", "").strip()
+        if item == champ:
+            yes = 1
+        if yes >= 1:
+            if yes == 3 or yes == 4 or yes == 5 or yes == 7 or yes == 8:
+                pass
+            else:
+                info.append(item)
+            yes += 1
+            if yes == 10:
+                break
+
+    # Here is what we want
+    results = str("Champion: " + info.pop(0) + "\n" + info.pop(0) + "\n" + "KDA: " + info.pop(0) + "\n" + "WinRate: " +
+                  info.pop(0))
+    return results
+
+
 """End of Python Functions"""
 
 
@@ -135,6 +181,14 @@ async def about():
                      "Bot Version: " + BOT_VERSION + "\n"
                      "Updated Notes: " + UPDATE_NOTES + "\n\n"
                      "About: " + ABOUT_BOT)
+
+
+@client.command(name='stats',
+                description="Returns simple stats of a champ for a player.",
+                brief="Returns simple stats of a champ for a player.",
+                aliases=['stat'])
+async def stats(player_name, champ):
+    await client.say("```" + get_champ_stats(player_name, champ) + "```")
 
 
 # Handles errors when a user messes up the spelling or forgets an argument to a command
@@ -187,14 +241,15 @@ async def list_servers():
 
 """
 @client.command()
-async def bitcoin():
-    url = "Uasdasd"
-    responce = requests.get(url)
-    value = responce.json()['bpi']['USD']['rate']
+async def stats():
+    url = "http://paladins.guru/profile/pc/FeistyJalapeno"
+    response = requests.get(url)
+    value = response.json()
+    print(value)
     await client.say(value)
 """
 
-#client.loop.create_task(list_servers())
+# client.loop.create_task(list_servers())
 
 # Must be called after Discord functions
 client.run(TOKEN)

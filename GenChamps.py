@@ -13,8 +13,8 @@ BOT_PREFIX = ("!!", ">>")
 BOT_STATUS = "!!help or >>help"
 
 BOT_AUTHOR = "FeistyJalapeno#9045"
-BOT_VERSION = "Version 1.2"
-UPDATE_NOTES = "Added in about command."
+BOT_VERSION = "Version 1.4"
+UPDATE_NOTES = "Added sub-command to stats command for global stats."
 ABOUT_BOT = "This bot was created since when Paladins selects random champions its not random. Some people are highly "\
             "likely to get certain roles and if you have a full team not picking champions sometime the game fails to "\
             "fill the last person causing the match to fail to start and kick everyone. This could be due to the game" \
@@ -86,6 +86,8 @@ def gen_team():
 
     """Shuffle the team so people get different roles"""
     random.shuffle(team)
+    random.shuffle(team)
+    random.shuffle(team)
 
     team_string = "\n"
     for champ in team:
@@ -93,10 +95,63 @@ def gen_team():
     return team_string
 
 
+# Gets global stats for a player
+def get_global_stats(player_name):
+    player_name = str(player_name).lower()
+    url = "http://paladins.guru/profile/pc/" + player_name
+
+    soup = BeautifulSoup(requests.get(url).text, 'html.parser')
+    sup = str(soup.get_text())
+
+    sup = sup.split(" ")
+    data = list(filter(None, sup))
+
+    stats = []
+
+    # Gets account name and level
+    for i, row in enumerate(data):
+        if data[i] == "Giveaway":
+            stats.append(data[i + 2])
+            stats.append(data[i + 1])
+            break
+
+    # Gets Global wins and loses
+    for i, row in enumerate(data):
+        if data[i] == "Loss":
+            stats.append(data[i + 1])
+            stats.append(data[i + 3])
+            new_s = str(data[i + 4].replace("(", "") + " %")
+            stats.append(new_s)
+            break
+
+    # Gets Global KDA
+    for i, row in enumerate(data):
+        if data[i] == "KDA":
+            stats.append(data[i + 1])
+            stats.append(data[i + 3])
+            stats.append(data[i + 5])
+            stats.append(data[i + 6])
+            break
+
+    # Puts all the info into one string to print
+    global_stats = "Name: " + stats.pop(0) + "\n" + "Account Level: " + stats.pop(0) + "\n" + "Wins: " + stats.pop(0) +\
+                   "\n" + "Loses: " + stats.pop(0) + "\n" + "WinRate: " + stats.pop(0) + "\n" + "Kills: " + \
+                   stats.pop(0) + "\n" + "Deaths: " + stats.pop(0) + "\n" + "Assists: " + stats.pop(0) + "\n" + \
+                   "Global KDA: " + stats.pop(0)
+    return global_stats
+
+
 def get_champ_stats(player_name, champ):
-    # making sure they are in the correct format for the site
     player_name = str(player_name)
     champ = str(champ).lower().capitalize()
+
+    # Personal stats
+    if champ == "Me":
+        return get_global_stats(player_name)
+
+    # Special case cause of the way the site stores the champion name
+    if "Mal" in champ:
+        champ = "Mal'Damba"
 
     url = "https://mypaladins.com/player/" + player_name
     soup = BeautifulSoup(requests.get(url).text, 'html.parser')
@@ -116,6 +171,7 @@ def get_champ_stats(player_name, champ):
     yes = 0
 
     info = []
+    matches = 0
 
     # Gathering the info we want
     for item in sup:
@@ -123,8 +179,10 @@ def get_champ_stats(player_name, champ):
         if item == champ:
             yes = 1
         if yes >= 1:
-            if yes == 3 or yes == 4 or yes == 5 or yes == 7 or yes == 8:
+            if yes == 3 or yes == 4 or yes == 5:
                 pass
+            elif yes == 7 or yes == 8:
+                matches += int(item)
             else:
                 info.append(item)
             yes += 1
@@ -133,7 +191,7 @@ def get_champ_stats(player_name, champ):
 
     # Here is what we want
     results = str("Champion: " + info.pop(0) + "\n" + info.pop(0) + "\n" + "KDA: " + info.pop(0) + "\n" + "WinRate: " +
-                  info.pop(0))
+                  info.pop(0) + " out of " + str(matches) + " matches.")
     return results
 
 

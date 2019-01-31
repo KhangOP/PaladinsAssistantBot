@@ -2,6 +2,19 @@ import requests
 from bs4 import BeautifulSoup
 
 
+def get_champion_stats(player_name, champ):
+    url = "http://paladins.guru/profile/pc/" + str(player_name) + "/champions"
+    url = "http://paladins.guru/profile/pc/FeistyJalapeno/champions"
+    soup = BeautifulSoup(requests.get(url).text, 'html.parser')
+    print(soup)
+    #sup = str(soup.get_text())
+    #print(sup)
+
+name = "FeistyJalapeno"
+champ = "Strix"
+#get_champion_stats(name, "")
+
+
 def get_global_stats(player_name):
     player_name = str(player_name).lower()
     url = "http://paladins.guru/profile/pc/" + player_name
@@ -39,6 +52,12 @@ def get_global_stats(player_name):
             stats.append(data[i + 6])
             break
 
+    # Error checking to make sure that the player was found on the site
+    if 'not' in stats:
+        error = "Could not the find player " + player_name + \
+                ". Please make sure the name is spelled right (capitalization does not matter)."
+        return str(error)
+
     # Puts all the info into one string to print
     global_stats = "Name: " + stats.pop(0) + "\n" + "Account Level: " + stats.pop(0) + "\n" + "Wins: " + stats.pop(0) +\
                    "\n" + "Loses: " + stats.pop(0) + "\n" + "WinRate: " + stats.pop(0) + "\n" + "Kills: " + \
@@ -46,7 +65,9 @@ def get_global_stats(player_name):
                    "Global KDA: " + stats.pop(0)
     return global_stats
 
-get_global_stats("feistyjalapeno")
+
+player_name = "feistyjalapeno"
+print(get_global_stats(player_name))
 
 
 def get_champ_stats(player_name, champ):
@@ -66,6 +87,12 @@ def get_champ_stats(player_name, champ):
         if link != "/":
             url = link.replace("pl/", "")
             break
+
+    # Error checking to make sure that the player was found on the site
+    if "https://mypaladins.com/player" not in url:
+        error = "Could not the find player " + player_name + \
+                ". Please make sure the name is spelled right (capitalization does not matter)."
+        return str(error)
 
     url = url + "/champions"
     soup = BeautifulSoup(requests.get(url).text, 'html.parser')
@@ -99,15 +126,20 @@ def get_champ_stats(player_name, champ):
             if yes == 10:
                 break
 
+    # Error checking to make sure there is data for the champion they entered
+    if not info:
+        error = "Could not the find champion " + champ + \
+                ". Please make sure the champion name is spelled right (capitalization does not matter)."
+        return str(error)
+
     # Here is what we want
     results = str("Champion: " + info.pop(0) + "\n" + info.pop(0) + "\n" + "KDA: " + info.pop(0) + "\n" + "WinRate: " +
                   info.pop(0) + " out of " + str(matches) + " matches.")
     return results
 
 
-
 #player_name = "feistyjalapeno"
-#champ = "strix"
+#champ = "Strix"
 
 #print(get_champ_stats(player_name, champ))
 

@@ -13,8 +13,8 @@ BOT_PREFIX = ("!!", ">>")
 BOT_STATUS = "!!help or >>help"
 
 BOT_AUTHOR = "FeistyJalapeno#9045"
-BOT_VERSION = "Version 1.4"
-UPDATE_NOTES = "Added sub-command to stats command for global stats."
+BOT_VERSION = "Version 1.5."
+UPDATE_NOTES = "Added in command to pick random siege/ranked map."
 ABOUT_BOT = "This bot was created since when Paladins selects random champions its not random. Some people are highly "\
             "likely to get certain roles and if you have a full team not picking champions sometime the game fails to "\
             "fill the last person causing the match to fail to start and kick everyone. This could be due to the game" \
@@ -30,35 +30,50 @@ client = Bot(command_prefix=BOT_PREFIX)
 
 
 # List of Champs by Class
-Damage = ["Cassie", "Kinessa", "Drogoz", "Bomb King", "Viktor", "Sha Lin", "Tyra", "Willo", "Lian", "Strix", "Vivian",
+DAMAGES = ["Cassie", "Kinessa", "Drogoz", "Bomb King", "Viktor", "Sha Lin", "Tyra", "Willo", "Lian", "Strix", "Vivian",
           "Dredge", "Imani"]
-Flank = ["Skye", "Buck", "Evie", "Androxus", "Meave", "Lex", "Zhin", "Talus", "Moji", "Koga"]
-FrontLine = ["Barik", "Fernando", "Ruckus", "Makoa", "Torvald", "Inara", "Ash", "Terminus", "Khan"]
-Support = ["Grohk", "Grover", "Ying", "Mal'Damba", "Seris", "Jenos", "Furia"]
+FLANKS = ["Skye", "Buck", "Evie", "Androxus", "Meave", "Lex", "Zhin", "Talus", "Moji", "Koga"]
+FRONTLINES = ["Barik", "Fernando", "Ruckus", "Makoa", "Torvald", "Inara", "Ash", "Terminus", "Khan"]
+SUPPORTS = ["Grohk", "Grover", "Ying", "Mal'Damba", "Seris", "Jenos", "Furia"]
+
+# Map Names
+MAPS = ["Frog Isle", "Jaguar Falls", "Serpent Beach", "Frozen Guard", "Ice Mines", "Ice Mines", "Fish Market",
+        "Timber Mill", "Stone Keep", "Brightmarsh", "Splitstone Quarry", "Ascension Peak", "Warder's Gate"]
+
+
+# Prints when a function has been called
+def log_function_call():
+    print("Function called")
 
 
 # Picks a random damage champion.
 def pick_damage():
     secure_random = random.SystemRandom()
-    return secure_random.choice(Damage)
+    return secure_random.choice(DAMAGES)
 
 
 # Picks a random flank champion.
 def pick_flank():
     secure_random = random.SystemRandom()
-    return secure_random.choice(Flank)
+    return secure_random.choice(FLANKS)
 
 
 # Picks a random tank champion.
 def pick_tank():
     secure_random = random.SystemRandom()
-    return secure_random.choice(FrontLine)
+    return secure_random.choice(FRONTLINES)
 
 
 # Picks a random support champion.
 def pick_support():
     secure_random = random.SystemRandom()
-    return secure_random.choice(Support)
+    return secure_random.choice(SUPPORTS)
+
+
+# Picks a random Siege/Ranked map.
+def pick_map():
+    secure_random = random.SystemRandom()
+    return secure_random.choice(MAPS)
 
 
 # Picks a random champion from any class.
@@ -71,7 +86,6 @@ def pick_random_champ():
 # It will always pick (1 Damage, 1 Flank, 1 Support, and 1 FrontLine, and then one other champion.)
 def gen_team():
     team = []
-    print("Random Team")
     team.append(pick_damage())
     team.append(pick_flank())
     team.append(pick_support())
@@ -226,10 +240,12 @@ def get_champ_stats(player_name, champ):
                             "champ -  Picks a random champion from any class. \n"
                             "team -   Picks a random team. "
                             "It will always pick (1 Damage, 1 Flank, 1 Support, and 1 FrontLine, "
-                            "and then one other champion.) \n",
+                            "and then one other champion.) \n"
+                            "map - Picks a random siege/ranked map.",
                 brief="Picks a random champ(s) based on the given input.",
                 aliases=['rand', 'r'])
 async def rand(command):
+    log_function_call()
     command = str(command).lower()
     if command == "damage":
         await client.say("Your random Damage champion is: " + "```" + pick_damage() + "```")
@@ -243,9 +259,12 @@ async def rand(command):
         await client.say("Your random champion is: " + "```" + pick_random_champ() + "```")
     elif command == "team":
         await  client.say("Your random team is: " + "```" + gen_team() + "```")
+    elif command == "map" or command == "stage":
+        await  client.say("Your random map is: " + "```" + pick_map() + "```")
     else:
         await client.say("Invalid command. For the random command please choose from one following options: "
-                         "damage, flank, healer, tank, champ, or team. \n For example example: ```>>random damage```")
+                         "damage, flank, healer, tank, champ, team, or map. "
+                         "\n For example: ```>>random damage``` will pick a random damage champion")
 
 
 @client.command(name='about',
@@ -253,6 +272,7 @@ async def rand(command):
                 brief="Learn more about the bot.",
                 aliases=['info', 'update'])
 async def about():
+    log_function_call()
     await client.say("Bot Author: " + BOT_AUTHOR + "\n"
                      "Bot Version: " + BOT_VERSION + "\n"
                      "Updated Notes: " + UPDATE_NOTES + "\n\n"
@@ -267,6 +287,7 @@ async def about():
                 brief="Returns simple stats of a champ for a player.",
                 aliases=['stat'])
 async def stats(player_name, champ):
+    log_function_call()
     await client.say("```" + get_champ_stats(player_name, champ) + "```")
 
 
@@ -332,7 +353,6 @@ async def stats():
 
 # Must be called after Discord functions
 client.run(TOKEN)
-
 
 """Main Function"""
 """

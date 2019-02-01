@@ -13,8 +13,8 @@ BOT_PREFIX = ("!!", ">>")
 BOT_STATUS = "!!help or >>help"
 
 BOT_AUTHOR = "FeistyJalapeno#9045"
-BOT_VERSION = "Version 1.5."
-UPDATE_NOTES = "Added in command to pick random siege/ranked map."
+BOT_VERSION = "Version 1.6.4"
+UPDATE_NOTES = "Added sub-command to stats command for elo stats."
 ABOUT_BOT = "This bot was created since when Paladins selects random champions its not random. Some people are highly "\
             "likely to get certain roles and if you have a full team not picking champions sometime the game fails to "\
             "fill the last person causing the match to fail to start and kick everyone. This could be due to the game" \
@@ -109,6 +109,58 @@ def gen_team():
     return team_string
 
 
+# Helper function to the get_player_elo(player_name) function
+def return_mode(name):
+    mode = ""
+    if name == "Siege":
+        mode += "Siege rating: \n"
+    elif name == "Survival":
+        mode += "Survival rating: \n"
+    elif name == "Deathmatch":
+        mode += "Team Deathmatch rating: \n"
+    else:
+        mode += "Overall Guru Score: \n"
+    return mode
+
+
+# Elo?
+def get_player_elo(player_name):
+    url = "http://paladins.guru/profile/pc/" + str(player_name) + "/casual"
+    soup = BeautifulSoup(requests.get(url).text, 'html.parser')
+    soup = str(soup.get_text()).split(" ")
+    data = list(filter(None, soup))
+
+    stats = ""
+
+    # Gets elo information below
+    for i, row in enumerate(data):
+        #print(data[i])
+        if data[i] == "Siege" or data[i] == "Survival" or data[i] == "Deathmatch" or data[i] == "Score":
+            if data[i+1] == "Rank":
+                mode = return_mode(data[i])
+                mode += str("Rank: " + data[i + 2])             # Rank
+                mode += str(" (Top " + data[i + 5] + ")\n")     # Rank %
+                mode += str("Elo: " + data[i + 6] + "\n")       # Elo
+                mode += str("WinRate: " + data[i + 8])          # WinRate
+                mode += str(" (" + data[i + 10] + "-")          # Wins
+                mode += data[i + 11] + ")"                      # Loses
+                stats += mode + "\n\n"
+            elif data[i+1] == "-":
+                mode = return_mode(data[i])
+                mode += str("Rank: ???")                    # Rank
+                mode += str(" (Top " + "???" + ")\n")       # Rank %
+                mode += str("Elo: " + data[i + 2] + "\n")   # Elo
+                mode += str("WinRate: " + data[i + 4])      # WinRate
+                mode += str(" (" + data[i + 6] + "-")       # Wins
+                mode += data[i + 7] + ")"                   # Loses
+                stats += mode + "\n\n"
+        if data[i] == "Siege":
+            if data[i+1] == "Normal:":
+                break
+
+    return stats
+
+
 # Gets global stats for a player
 def get_global_stats(player_name):
     player_name = str(player_name).lower()
@@ -169,6 +221,10 @@ def get_champ_stats(player_name, champ):
     if champ == "Me":
         return get_global_stats(player_name)
 
+    # Personal stats
+    if champ == "Elo":
+        return get_player_elo(player_name)
+
     # Special case cause of the way the site stores the champion name
     if "Mal" in champ:
         champ = "Mal'Damba"
@@ -193,24 +249,24 @@ def get_champ_stats(player_name, champ):
     soup = BeautifulSoup(requests.get(url).text, 'html.parser')
 
     sup = str(soup.get_text()).splitlines()
-    sup = list(filter(None, sup))
+    data = list(filter(None, sup))
     yes = 0
 
     info = []
     matches = 0
 
     # Gathering the info we want
-    for item in sup:
-        item = item.replace("/", "").strip()
-        if item == champ:
+    for i, row in enumerate(data):
+        data[i] = data[i].replace("/", "").strip()
+        if data[i] == champ and data[i - 1] != "Refresh Data":  # (if player name = champ name they are looking for)
             yes = 1
         if yes >= 1:
             if yes == 3 or yes == 4 or yes == 5:
                 pass
             elif yes == 7 or yes == 8:
-                matches += int(item)
+                matches += int(data[i])
             else:
-                info.append(item)
+                info.append(data[i])
             yes += 1
             if yes == 10:
                 break
@@ -283,7 +339,8 @@ async def about():
                 description="Returns simple stats of a champ for a player. \n"
                 "stats <player_name> <champ> is the format of this command \n"
                 "stats <player_name> Strix: \n will return the players stats on Strix. \n"
-                "stats <player_name> me: \n will return the players overall stats.",
+                "stats <player_name> me: \n will return the players overall stats."
+                "stats <player_name> elo: \n will return the players elo stats.",
                 brief="Returns simple stats of a champ for a player.",
                 aliases=['stat'])
 async def stats(player_name, champ):

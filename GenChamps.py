@@ -8,12 +8,16 @@ from discord import Game
 from discord.ext import commands
 from discord.ext.commands import Bot
 
+import json
+from pyrez.api import PaladinsAPI
+
+
 # Discord Variables
 BOT_PREFIX = ("!!", ">>")
 BOT_STATUS = "!!help or >>help"
 
 BOT_AUTHOR = "FeistyJalapeno#9045"
-BOT_VERSION = "Version 1.6.4"
+BOT_VERSION = "Version 2.0 Beta"
 UPDATE_NOTES = "Added sub-command to stats command for elo stats."
 ABOUT_BOT = "This bot was created since when Paladins selects random champions its not random. Some people are highly "\
             "likely to get certain roles and if you have a full team not picking champions sometime the game fails to "\
@@ -23,11 +27,14 @@ ABOUT_BOT = "This bot was created since when Paladins selects random champions i
 file_name = "token"
 # Gets token from a file
 with open(file_name, 'r') as f:
-    TOKEN = f.read().replace('\n', '')
+    TOKEN = f.readline().strip()
+    ID = int(f.readline())
+    KEY = f.readline()
 f.close()
 
 client = Bot(command_prefix=BOT_PREFIX)
 
+paladinsAPI = PaladinsAPI(devId=ID, authKey=KEY)
 
 # List of Champs by Class
 DAMAGES = ["Cassie", "Kinessa", "Drogoz", "Bomb King", "Viktor", "Sha Lin", "Tyra", "Willo", "Lian", "Strix", "Vivian",
@@ -107,6 +114,129 @@ def gen_team():
     for champ in team:
         team_string += champ + "\n"
     return team_string
+
+
+# Paladins API Code ----------------------------------------------------------------------------------------------------
+
+# n1 = wins and n2 = total matches
+def create_win_rate(n1, n2):
+    return str('{0:.2f}'.format((n1 / n2) * 100))
+
+
+# Converts the number to the proper name
+def convert_rank(x):
+    return {
+        1: "Bronze 5",
+        2: "Bronze 4",
+        3: "Bronze 3",
+        4: "Bronze 2",
+        5: "Bronze 1",
+        6: "Silver 5",
+        7: "Silver 4",
+        8: "Silver 3",
+        9: "Silver 2",
+        10: "Silver 1",
+        11: "Gold 5",
+        12: "Gold 4",
+        13: "Gold 3",
+        14: "Gold 2",
+        15: "Gold 1",
+        16: "Platinum 5",
+        17: "Platinum 4",
+        18: "Platinum 3",
+        19: "Platinum 2",
+        20: "Platinum 1",
+        21: "Diamond 5",
+        22: "Diamond 4",
+        23: "Diamond 3",
+        24: "Diamond 2",
+        25: "Diamond 1",
+        26: "Master",
+        27: "GrandMaster",
+    }.get(x, "Un-Ranked")
+
+
+# Player stats
+def get_player_stats_api(player_name):
+    # Player level, played hours, etc
+    try:
+        info = paladinsAPI.getPlayer(player_name)
+    except:
+        return "Player not found. Capitalization does not matter."
+
+    json_data = str(info).replace("'", "\"").replace("None", "0")
+
+    # Works amazingly
+    j = json.loads(json_data)
+    ss = ""
+
+    # Basic Stats
+    ss += "Casual stats: \n"
+    ss += "Name: " + (j["Name"]) + "\n"
+    ss += "Account Level: " + str(j["Level"]) + "\n"
+    total = int(j["Wins"]) + int(j["Losses"])
+    ss += "WinRate: " + create_win_rate(int(j["Wins"]), total) + "% out of " + str(total) + \
+          " matches.\n"
+    ss += "Times Deserted: " + str(j["Leaves"]) + "\n\n"
+
+    # Ranked Info
+    ss += "Ranked stats for Season " + str(j["RankedKBM"]["Season"]) + ":\n"
+    # Rank (Masters, GM, Diamond, etc)
+    ss += "Rank: " + convert_rank(j["RankedKBM"]["Tier"]) + "\nTP: " + str(j["RankedKBM"]["Points"]) + " Position: " +\
+          str(j["RankedKBM"]["Rank"]) + "\n"
+
+    win = int(j["RankedKBM"]["Wins"])
+    lose = int(j["RankedKBM"]["Losses"])
+
+    ss += "WinRate: " + create_win_rate(win, win + lose) + "% (" + '{}-{}'.format(win, lose) + ")\n"
+    ss += "Times Deserted: " + str(j["RankedKBM"]["Leaves"]) + "\n\n"
+
+    # Extra info
+    ss += "Extra details: \n"
+    ss += "Account created on: " + str(j["Created_Datetime"]).split()[0] + "\n"
+    ss += "Last login on: " + str(j["Last_Login_Datetime"]).split()[0] + "\n"
+    ss += "Platform: " + str(j["Platform"]) + "\n"
+    ss += "MasteryLevel: " + str(j["MasteryLevel"]) + "\n"
+    ss += "Steam Achievements completed: " + str(j["Total_Achievements"]) + "\n"
+
+    return ss
+
+
+def get_champ_stats_api(player_name, champ):
+    # Stats for the champs
+    champ = str(champ).lower().capitalize()
+    stats = paladinsAPI.getChampionRanks(player_name)
+
+    if "Mal" in champ:
+        champ = "Mal'Damba"
+
+    ss = ""
+    t_wins = 0
+    t_loses = 0
+    t_kda = 0
+    count = 0
+
+    for stat in stats:
+        json_data = str(stat).replace("'", "\"").replace("None", "0").replace("Mal\"", "Mal\'")
+        j = json.loads(json_data)
+        wins = stat.wins
+        loses = stat.losses
+        kda = stat.getKDA()
+        count += 1
+        if stat.godName == champ:
+            ss = str('Champion: {} (Lv {})\nKDA: {} ({}-{}-{}) \nWinRate: {}% ({}-{}) \nLast Played: {}')
+            ss = ss.format(stat.godName, stat.godLevel, kda, stat.kills, stat.deaths, stat.assists,
+                           create_win_rate(wins, wins+loses), stat.wins, stat.losses, str(j["LastPlayed"]).split()[0])
+        t_wins += wins
+        t_loses += loses
+        t_kda += kda
+
+    global_ss = str("\n\nGlobal KDA: {}\nGlobal WinRate: {}%")
+    win_rate = create_win_rate(t_wins, t_wins + t_loses)
+    t_kda = str('{0:.2f}').format(t_kda/count)
+    global_ss = global_ss.format(t_kda, win_rate)
+    ss += global_ss
+    return ss
 
 
 # Helper function to the get_player_elo(player_name) function
@@ -219,68 +349,14 @@ def get_champ_stats(player_name, champ):
 
     # Personal stats
     if champ == "Me":
-        return get_global_stats(player_name)
+        # return get_global_stats(player_name)
+        return get_player_stats_api(player_name)
 
     # Personal stats
     if champ == "Elo":
         return get_player_elo(player_name)
 
-    # Special case cause of the way the site stores the champion name
-    if "Mal" in champ:
-        champ = "Mal'Damba"
-
-    url = "https://mypaladins.com/player/" + player_name
-    soup = BeautifulSoup(requests.get(url).text, 'html.parser')
-
-    # Get the secret number assigned to every player on their site
-    for link in soup.find_all('a'):
-        link = link.get('href')
-        if link != "/":
-            url = link.replace("pl/", "")
-            break
-
-    # Error checking to make sure that the player was found on the site
-    if "https://mypaladins.com/player" not in url:
-        error = "Could not the find player " + player_name + \
-                ". Please make sure the name is spelled right (capitalization does not matter)."
-        return str(error)
-
-    url = url + "/champions"
-    soup = BeautifulSoup(requests.get(url).text, 'html.parser')
-
-    sup = str(soup.get_text()).splitlines()
-    data = list(filter(None, sup))
-    yes = 0
-
-    info = []
-    matches = 0
-
-    # Gathering the info we want
-    for i, row in enumerate(data):
-        data[i] = data[i].replace("/", "").strip()
-        if data[i] == champ and data[i - 1] != "Refresh Data":  # (if player name = champ name they are looking for)
-            yes = 1
-        if yes >= 1:
-            if yes == 3 or yes == 4 or yes == 5:
-                pass
-            elif yes == 7 or yes == 8:
-                matches += int(data[i])
-            else:
-                info.append(data[i])
-            yes += 1
-            if yes == 10:
-                break
-
-    # Error checking to make sure there is data for the champion they entered
-    if not info:
-        error = "Could not the find champion " + champ + \
-                ". Please make sure the champion name is spelled right (capitalization does not matter)."
-        return str(error)
-
-    # Here is what we want
-    results = str("Champion: " + info.pop(0) + "\n" + info.pop(0) + "\n" + "KDA: " + info.pop(0) + "\n" + "WinRate: " +
-                  info.pop(0) + " out of " + str(matches) + " matches.")
-    return results
+    return get_champ_stats_api(player_name, champ)
 
 
 """End of Python Functions"""
@@ -304,7 +380,7 @@ async def rand(command):
     log_function_call()
     command = str(command).lower()
     if command == "damage":
-        await client.say("Your random Damage champion is: " + "```" + pick_damage() + "```")
+        await client.say("Your random Damage champion is: " + "```css\n" + pick_damage() + "\n```")
     elif command == "flank":
         await client.say("Your random Flank champion is: " + "```" + pick_flank() + "```")
     elif command == "healer":
@@ -343,7 +419,7 @@ async def about():
                 "stats <player_name> elo: \n will return the players elo stats.",
                 brief="Returns simple stats of a champ for a player.",
                 aliases=['stat'])
-async def stats(player_name, champ):
+async def stats(player_name, champ="me"):
     log_function_call()
     await client.say("```" + get_champ_stats(player_name, champ) + "```")
 
@@ -354,26 +430,36 @@ async def on_command_error(error, ctx):
     channel = ctx.message.channel
     if isinstance(error, commands.MissingRequiredArgument):
         await client.send_message(channel, "A required argument to the command you called is missing"+"\N{CROSS MARK}")
-    elif isinstance(error, commands.BadArgument):  # This should do nothing since I check in functions for input error
+    if isinstance(error, commands.BadArgument):  # This should do nothing since I check in functions for input error
         await client.send_message(channel, "Now you done messed up son.")
     elif isinstance(error, commands.CommandNotFound):
         await client.send_message(channel, f"\N{WARNING SIGN} {error}")
 
 
 # This code for some reason does not work other discord functions and cause the bot to only respond to these commands
-"""
 @client.event
 async def on_message(message):
     # we do not want the bot to reply to itself
     if message.author == client.user:
         return
 
+    # Seeing if someone is using the bot_prefix and calling a command
+    if message.content.startswith(BOT_PREFIX):
+        print(message.author, message.content, message.channel, message.server)
+    # Seeing if someone is using the bot_prefix and calling a command
+    if message.content.startswith(">> ") or message.content.startswith("!! "):
+        msg = 'Opps looks like you have a space after the bot prefix {0.author.mention}'.format(message)
+        await client.send_message(message.channel, msg)
+    """
     if message.content.startswith('*hello'):
         msg = 'Hello {0.author.mention}'.format(message)
         await client.send_message(message.channel, msg)
     elif message.content.startswith('*team'):
         await client.send_message(message.channel, str(gen_team()))
-"""
+    """
+
+    # Magical command...because on_message has priority over function commands
+    await client.process_commands(message)
 
 
 @client.event
@@ -410,6 +496,8 @@ async def stats():
 
 # Must be called after Discord functions
 client.run(TOKEN)
+
+# client.close()
 
 """Main Function"""
 """

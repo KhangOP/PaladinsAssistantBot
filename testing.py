@@ -56,8 +56,8 @@ def get_player_elo(player_name):
 
 # name = "xxluk3warm"
 # name = "BombEthan"
-name = "FeistyJalapeno"
-#print(get_player_elo(name))
+name = "ggggraaaahhhhh"
+print(get_player_elo(name))
 
 
 # NOT WORKING FOR NOW
@@ -174,14 +174,19 @@ def get_champ_stats(player_name, champ):
     # Gathering the info we want
     for i, row in enumerate(data):
         data[i] = data[i].replace("/", "").strip()
-        # print(data[i])
+        print(data[i])
         if data[i] == champ and data[i-1] != "Refresh Data":    # (if player name = champ name they are looking for)
             yes = 1
         if yes >= 1:
             if yes == 3 or yes == 4 or yes == 5:
                 pass
             elif yes == 7 or yes == 8:
-                matches += int(data[i])
+                if data[i] == "":  # Missing data on the site
+                    matches = "???"
+                    info.append("???")
+                    break
+                else:
+                    matches += int(data[i])
             else:
                 info.append(data[i])
             yes += 1
@@ -200,10 +205,10 @@ def get_champ_stats(player_name, champ):
     return results
 
 
-player_name = "Seris"
-champ = "Seris"
+player_name = "rabbitgunner"
+champ = "makoa"
 
-print(get_champ_stats(player_name, champ))
+#print(get_champ_stats(player_name, champ))
 
 """
 print(soup.prettify())

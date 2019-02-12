@@ -56,8 +56,8 @@ def get_player_elo(player_name):
 
 # name = "xxluk3warm"
 # name = "BombEthan"
-name = "ggggraaaahhhhh"
-print(get_player_elo(name))
+# name = "ggggraaaahhhhh"
+# print(get_player_elo(name))
 
 
 # NOT WORKING FOR NOW
@@ -76,6 +76,7 @@ champ = "Strix"
 # get_champion_stats(name, "")
 
 
+# Gets global stats for a player
 def get_global_stats(player_name):
     player_name = str(player_name).lower()
     url = "http://paladins.guru/profile/pc/" + player_name
@@ -127,8 +128,58 @@ def get_global_stats(player_name):
     return global_stats
 
 
-player_name = "feistyjalapeno"
+# player_name = "feistyjalapeno"
 # print(get_global_stats(player_name))
+
+
+# Gets kda and Winrate for a player
+def get_global_kda(player_name):
+    player_name = str(player_name).lower()
+    url = "http://paladins.guru/profile/pc/" + player_name
+
+    soup = BeautifulSoup(requests.get(url).text, 'html.parser')
+    sup = str(soup.get_text())
+
+    sup = sup.split(" ")
+    data = list(filter(None, sup))
+
+    stats = []
+
+    # Gets account name and level
+    for i, row in enumerate(data):
+        if data[i] == "Giveaway":
+            stats.append(data[i + 2])
+            stats.append(data[i + 1])
+            break
+
+    # Gets Global wins and loses
+    for i, row in enumerate(data):
+        if data[i] == "Loss":
+            new_s = str(data[i + 4].replace("(", "") + " %")
+            stats.append(new_s)
+            break
+
+    # Gets Global KDA
+    for i, row in enumerate(data):
+        if data[i] == "KDA":
+            stats.append(data[i + 6])
+            break
+
+    # Error checking to make sure that the player was found on the site
+    if 'not' in stats:
+        error = "Could not the find player " + player_name + \
+                ". Please make sure the name is spelled right (capitalization does not matter)."
+        return str(error)
+
+    # Puts all the info into one string to print
+    # global_stats = "Name: " + stats.pop(0) + " (Lv. " + stats.pop(0) + ")\n" + "WinRate: " + \
+    #                stats.pop(0) + "\n" + "Global KDA: " + stats.pop(0)
+    # return global_stats
+    return stats
+
+
+player_name = "feistyjalapeno"
+print(get_global_kda(player_name))
 
 
 def get_champ_stats(player_name, champ):

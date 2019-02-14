@@ -1,6 +1,8 @@
 # Paladins Discord Helper Bot
 Bot that does a lot of useful things for people who play the game Paladins.
 
-1. Can create random teams for Custom Matches in the Paladins.
-2. Randomly select from any class, a champion for someone.
-3. Get stats for a player (global and per champion).
+This bot uses [PaladinsGuru](http://paladins.guru/) and Paladins API (through the wrapper [Pyrez](https://github.com/luissilva1044894/Pyrez)) to get stats for players.
+
+1. Can create random teams for Custom Matches in Paladins.
+2. Also can randomly select from any class, a champion for someone. Or a random map.
+3. Can get stats for a player (overall, elo, current match, and per champion).

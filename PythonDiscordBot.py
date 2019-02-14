@@ -2,6 +2,8 @@ from discord import Game
 from discord.ext import commands
 from discord.ext.commands import Bot
 
+import time
+
 import PythonFunctions as Pf
 
 
@@ -32,8 +34,10 @@ client = Bot(command_prefix=BOT_PREFIX)
 @client.command(name='current',
                 description="Get stats for people in a current match.",
                 brief="Get stats for people in a current match.",
+                pass_context=True,
                 aliases=['cur', 'c'])
-async def current(player_name):
+async def current(ctx, player_name):
+    # await client.send_typing(ctx.channel)
     await client.say("```" + Pf.get_player_in_match(player_name) + "```")
 
 

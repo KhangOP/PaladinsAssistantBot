@@ -30,6 +30,29 @@ MAPS = ["Frog Isle", "Jaguar Falls", "Serpent Beach", "Frozen Guard", "Ice Mines
         "Timber Mill", "Stone Keep", "Brightmarsh", "Splitstone Quarry", "Ascension Peak", "Warder's Gate"]
 
 
+# Get the player id for a player based on their name. First it checks a dictionary and if they are not in there then
+# it does an API call to get the player's id. Then it writes that id to the dictionary. Helps save API calls.
+def get_player_id(player_name):
+    player_name = player_name.lower()
+    with open("player_ids") as f:
+        player_ids = json.load(f)
+
+    if player_name in player_ids:
+        return player_ids[player_name]
+    else:
+        player = paladinsAPI.getPlayer(player_name)
+        if not player:  # invalid name
+            return -1
+        new_id = player.playerId
+        player_ids[player_name] = new_id
+
+        # need to update the file now
+        print("Added a new player the dictionary" + player_name)
+        with open("player_ids", 'w') as f:
+            json.dump(player_ids, f)
+        return new_id
+
+
 # Picks a random damage champion.
 def pick_damage():
     secure_random = random.SystemRandom()
@@ -180,8 +203,12 @@ def get_player_stats_api(player_name):
 def get_champ_stats_api(player_name, champ):
     # Stats for the champs
     champ = str(champ).lower().capitalize()
-    # Will Fix Later !!!
-    player = paladinsAPI.getPlayer(player_name)
+
+    # Gets player id and error checks
+    player = get_player_id(player_name)
+    if player == -1:
+        return "Can't find the player: " + player_name + \
+               ". Please make sure the name is spelled correctly (Capitalization does not matter)."
     stats = paladinsAPI.getChampionRanks(player.playerId)
 
     if "Mal" in champ:
@@ -262,8 +289,11 @@ def get_player_in_match(player_name):
     # {'Match': 795950194, 'match_queue_id': 452, 'personal_status_message': 0, 'ret_msg': 0, 'status': 3,
     # 'status_string': 'In Game'}
 
-    # Will Fix Later !!!
-    player = paladinsAPI.getPlayer(player_name)
+    # Gets player id and error checks
+    player = get_player_id(player_name)
+    if player == -1:
+        return "Can't find the player: " + player_name + \
+               ". Please make sure the name is spelled correctly (Capitalization does not matter)."
     j = create_json(paladinsAPI.getPlayerStatus(player.playerId))
     if j == 0:
         return str("Player " + player_name + " is not found.")

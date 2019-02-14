@@ -3,6 +3,9 @@ from pyrez.api import PaladinsAPI
 from datetime import timedelta, datetime
 import json
 from bs4 import BeautifulSoup
+
+import testing
+
 import time
 """
 ResponseFormat = "JSON"
@@ -139,10 +142,14 @@ def get_player_in_match(player_name):
     # Data Format
     # {'Match': 795950194, 'match_queue_id': 452, 'personal_status_message': 0, 'ret_msg': 0, 'status': 3,
     # 'status_string': 'In Game'}
-    j = create_json(paladinsAPI.getPlayerStatus(player_name))
+    player = paladinsAPI.getPlayer(player_name)
+    j = create_json(paladinsAPI.getPlayerStatus(player.playerId))
     if j == 0:
         return str("Player " + player_name + " is not found.")
+
     match_id = j["Match"]
+    print(match_id)
+
     if j['status'] == 0:
         return "Player is offline."
     elif j['status'] == 1:
@@ -176,10 +183,10 @@ def get_player_in_match(player_name):
     # {'Account_Level': 17, 'ChampionId': 2493, 'ChampionName': 'Koga', 'Mastery_Level': 10, 'Match': 795511902,
     # 'Queue': '424', 'SkinId': 0, 'Tier': 0, 'playerCreated': '11/10/2017 10:00:03 PM', 'playerId': '12368291',
     # 'playerName': 'NabbitOW', 'ret_msg': None, 'taskForce': 1, 'tierLosses': 0, 'tierWins': 0}
-    try:
-        players = paladinsAPI.getMatchPlayerDetails(match_id)
-    except:
-        return "Imani is in the match and therefore we can not get stats on the current Match."
+    #try:
+    players = paladinsAPI.getMatchPlayerDetails(match_id)
+    #except:
+    #return "Imani is in the match and therefore we can not get stats on the current Match."
     # print(players)
     info = []
     team1 = []
@@ -213,12 +220,13 @@ def get_player_in_match(player_name):
 
     return match_data
 
+print(get_player_in_match("FeistyJalapeno"))
+#print(get_player_in_match("IDodgeBulletz"))
 
-string_s = get_player_in_match("Kresnik")
-print(string_s)
-# print(get_player_in_match("DonPellegrino"))
-# get_player_in_match("IDodgeBulletz")
-# print(get_player_in_match("Z1unknown"))
+#string_s = get_player_in_match("FuserXTR")
+#print(string_s)
+#print(get_player_in_match("DonPellegrino"))
+#print(get_player_in_match("Z1unknown"))
 
 """
 data = (get_player_in_match("FeistyJalapeno"))
@@ -281,7 +289,7 @@ def get_player_stats(player_name):
     return ss
 
 
-#print(get_player_stats("IsaacFernando"))
+# print(get_player_stats("IsaacFernando"))
 
 
 def get_champ_stats_api(player_name, champ):

@@ -5,6 +5,9 @@
     <orderEntry type="jdk" jdkName="Python 3.6 (Customs)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
+  <component name="PackageRequirementsSettings">
+    <option name="requirementsPath" value="C:\Users\Ethan\Anaconda3\envs\Customs\Scripts\requirments.txt" />
+  </component>
   <component name="TestRunnerService">
     <option name="projectConfiguration" value="pytest" />
     <option name="PROJECT_TEST_RUNNER" value="pytest" />

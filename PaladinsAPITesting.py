@@ -34,7 +34,6 @@ print(r.status_code)
 print(r.json())
 """
 
-
 # n1 = wins and n2 = total matches
 def create_win_rate(n1, n2):
     if n2 == 0:  # This means they have no data for the ranked split/season
@@ -78,6 +77,45 @@ def convert_rank(x):
 paladinsAPI = PaladinsAPI(devId=3046, authKey="BB8E882EADB0431E990CD95E05C2B8C9")
 print(paladinsAPI.getDataUsed())
 
+
+# Calculates the kda
+def cal_kda(kills, deaths, assist):
+    return float(kills + assist)/deaths
+
+
+# Returns simple match history details
+def get_history_two(player_name):
+    paladins_data = paladinsAPI.getMatchHistory(player_name)
+    match_id = 0
+    for match in paladins_data:
+        match_id = match.matchId
+        break
+
+    print(match_id)
+    match_data = paladinsAPI.getMatchDetails(match_id)  # Currently here cause it does not seem to be working
+    for match in match_data:
+        print(match)
+
+
+# get_history_two(7241948)
+
+
+# Returns simple match history details
+def get_history_simple(player_name):
+    paladins_data = paladinsAPI.getMatchHistory(player_name)
+    for match in paladins_data:
+        match_data = str('{}\'s {} match:\n\n').format(str(player_name), str(match.mapGame).replace("LIVE", ""))
+        ss = str('Match Status: {} ({} mins)\nChampion: {}\nKDA: {} ({}-{}-{})\nDamage: {}\nDamage Taken: {}\nHealing: {}\n')
+        kills = match.kills
+        deaths = match.deaths
+        assists = match.assists
+        kda = cal_kda(kills, deaths, assists)
+        match_data += ss.format(match.winStatus, match.matchMinutes, match.godName, kda, kills, deaths, assists, match.damage,
+                                match.damageTaken, match.healing)
+        return match_data
+
+
+print(get_history_simple(7241948))
 
 def currentTime():
     return datetime.utcnow()
@@ -220,7 +258,7 @@ def get_player_in_match(player_name):
 
     return match_data
 
-print(get_player_in_match("FeistyJalapeno"))
+#print(get_player_in_match("FeistyJalapeno"))
 #print(get_player_in_match("IDodgeBulletz"))
 
 #string_s = get_player_in_match("FuserXTR")

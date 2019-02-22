@@ -3,6 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 
 import json
+import asyncio
 
 from pyrez.api import PaladinsAPI
 
@@ -23,7 +24,7 @@ DAMAGES = ["Cassie", "Kinessa", "Drogoz", "Bomb King", "Viktor", "Sha Lin", "Tyr
            "Dredge", "Imani"]
 FLANKS = ["Skye", "Buck", "Evie", "Androxus", "Meave", "Lex", "Zhin", "Talus", "Moji", "Koga"]
 FRONTLINES = ["Barik", "Fernando", "Ruckus", "Makoa", "Torvald", "Inara", "Ash", "Terminus", "Khan"]
-SUPPORTS = ["Grohk", "Grover", "Ying", "Mal'Damba", "Seris", "Jenos", "Furia"]
+SUPPORTS = ["Grohk", "Grover", "Ying", "Mal Damba", "Seris", "Jenos", "Furia"]
 
 # Map Names
 MAPS = ["Frog Isle", "Jaguar Falls", "Serpent Beach", "Frozen Guard", "Ice Mines", "Ice Mines", "Fish Market",
@@ -87,6 +88,32 @@ def pick_map():
 def pick_random_champ():
     secure_random = random.SystemRandom()
     return secure_random.choice([pick_damage, pick_support, pick_tank, pick_flank])()
+
+
+# Calculates the kda
+def cal_kda(kills, deaths, assist):
+    return str('{0:.2f}'.format(float(kills + assist)/deaths))
+
+
+# Returns simple match history details
+def get_history_simple(player_name):
+    player_id = get_player_id(player_name)
+    paladins_data = paladinsAPI.getMatchHistory(player_id)
+    for match in paladins_data:
+        # Check to see if this player does have match history
+        if match.playerName is None:
+            break
+        match_data = str('{}\'s {} match:\n\n').format(str(player_name), str(match.mapGame).replace("LIVE", ""))
+        ss = str(
+            'Match Status: {} ({} mins)\nChampion: {}\nKDA: {} ({}-{}-{})\nDamage: {}\nDamage Taken: {}\nHealing: {}\n')
+        kills = match.kills
+        deaths = match.deaths
+        assists = match.assists
+        kda = cal_kda(kills, deaths, assists)
+        match_data += ss.format(match.winStatus, match.matchMinutes, match.godName, kda, kills, deaths, assists,
+                                match.damage, match.damageTaken, match.healing)
+        return match_data
+    return "Player does not have recent match data."
 
 
 # Uses the random functions about to generate team of random champions
@@ -201,18 +228,15 @@ def get_player_stats_api(player_name):
 
 
 def get_champ_stats_api(player_name, champ):
-    # Stats for the champs
-    champ = str(champ).lower().capitalize()
-
     # Gets player id and error checks
-    player = get_player_id(player_name)
-    if player == -1:
+    player_id = get_player_id(player_name)
+    if player_id == -1:
         return "Can't find the player: " + player_name + \
                ". Please make sure the name is spelled correctly (Capitalization does not matter)."
-    stats = paladinsAPI.getChampionRanks(player.playerId)
+    stats = paladinsAPI.getChampionRanks(player_id)
 
     if "Mal" in champ:
-        champ = "Mal'Damba"
+        champ = "Mal Damba"
 
     ss = ""
 
@@ -290,11 +314,11 @@ def get_player_in_match(player_name):
     # 'status_string': 'In Game'}
 
     # Gets player id and error checks
-    player = get_player_id(player_name)
-    if player == -1:
+    player_id = get_player_id(player_name)
+    if player_id == -1:
         return "Can't find the player: " + player_name + \
                ". Please make sure the name is spelled correctly (Capitalization does not matter)."
-    j = create_json(paladinsAPI.getPlayerStatus(player.playerId))
+    j = create_json(paladinsAPI.getPlayerStatus(player_id))
     if j == 0:
         return str("Player " + player_name + " is not found.")
     match_id = j["Match"]
@@ -324,8 +348,9 @@ def get_player_in_match(player_name):
         match_string = "Onslaught"
     elif j["match_queue_id"] == 469:
         match_string = "Team Death Match"
-    elif j["match_queue_id"] == 486:
-        return "Ranked is currently not working."
+    elif j["match_queue_id"] == 486:  # Should be fixed now
+        match_string = "Ranked"
+        # return "Ranked is currently not working."
 
     # Data Format
     # {'Account_Level': 17, 'ChampionId': 2493, 'ChampionName': 'Koga', 'Mastery_Level': 10, 'Match': 795511902,
@@ -334,7 +359,7 @@ def get_player_in_match(player_name):
     try:
         players = paladinsAPI.getMatchPlayerDetails(match_id)
     except:
-        return "Imani is in the match and therefore we can not get stats on the current Match."
+        return "An problem occurred. Please make sure you are not using this command on the event mode."
     # print(players)
     info = []
     team1 = []
@@ -368,6 +393,9 @@ def get_player_in_match(player_name):
         match_data += ss.format(pl.pop(0), pl.pop(0), pl.pop(0), pl.pop(0))
 
     return match_data
+
+
+# print(get_player_in_match("FeistyJalapeno"))
 
 
 # Helper function to the get_player_elo(player_name) function
@@ -423,7 +451,8 @@ def get_player_elo(player_name):
 
 def get_champ_stats(player_name, champ):
     player_name = str(player_name)
-    champ = str(champ).lower().capitalize()
+    # champ = str(champ).lower().capitalize()
+    champ = str(champ).lower().title()  # Need since some champ names are two words
 
     # Personal stats
     if champ == "Me":

@@ -2,7 +2,7 @@ from discord import Game
 from discord.ext import commands
 from discord.ext.commands import Bot
 
-import time
+import asyncio
 
 import PythonFunctions as Pf
 
@@ -31,14 +31,23 @@ client = Bot(command_prefix=BOT_PREFIX)
 
 
 # Get the some stats for a player while they are in a match.
+@client.command(name='last',
+                description="Get stats for a player in their match.",
+                brief="Get stats for a player in their match.")
+async def last(player_name):
+    await client.say("```" + Pf.get_history_simple(player_name) + "```")
+
+
+# Get the some stats for a player while they are in a match.
 @client.command(name='current',
                 description="Get stats for people in a current match.",
                 brief="Get stats for people in a current match.",
                 pass_context=True,
                 aliases=['cur', 'c'])
 async def current(ctx, player_name):
-    # await client.send_typing(ctx.channel)
-    await client.say("```" + Pf.get_player_in_match(player_name) + "```")
+    await client.send_typing(ctx.message.channel)  # It works... pretty cool
+    message = Pf.get_player_in_match(player_name)
+    await client.say("```" + message + "```")
 
 
 # Calls different random functions based on input
@@ -98,7 +107,9 @@ async def about():
                 "stats <player_name> elo: \n will return the players elo stats.",
                 brief="Returns simple stats of a champ for a player.",
                 aliases=['stat'])
-async def stats(player_name, champ="me"):
+async def stats(player_name, champ="me", space=""):
+    if space != "":
+        champ += " " + space
     await client.say("```" + Pf.get_champ_stats(player_name, champ) + "```")
 
 

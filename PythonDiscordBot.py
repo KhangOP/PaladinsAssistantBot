@@ -3,6 +3,7 @@ from discord.ext import commands
 from discord.ext.commands import Bot
 
 import asyncio
+import time
 
 import PythonFunctions as Pf
 
@@ -12,8 +13,8 @@ BOT_PREFIX = ("!!", ">>")
 BOT_STATUS = "!!help or >>help"
 
 BOT_AUTHOR = "FeistyJalapeno#9045"
-BOT_VERSION = "Version 2.0 Beta"
-UPDATE_NOTES = "Added sub-command to stats command for elo stats."
+BOT_VERSION = "Version 2.2 Beta"
+UPDATE_NOTES = "Last command to get stats for a players last match."
 ABOUT_BOT = "This bot was created since when Paladins selects random champions its not random. Some people are highly "\
             "likely to get certain roles and if you have a full team not picking champions sometime the game fails to "\
             "fill the last person causing the match to fail to start and kick everyone. This could be due to the game" \
@@ -28,6 +29,14 @@ f.close()
 
 # Creating client for bot
 client = Bot(command_prefix=BOT_PREFIX)
+
+
+# Get the some stats for a player while they are in a match.
+@client.command(name='history',
+                description="Get simple stats for a player's last amount of matches.",
+                brief="Get simple stats for a player's last amount of matches.")
+async def history(player_name, amount=10):
+    await client.say("```diff\n" + Pf.get_history(player_name, amount) + "```")
 
 
 # Get the some stats for a player while they are in a match.
@@ -52,7 +61,7 @@ async def current(ctx, player_name):
 
 # Calls different random functions based on input
 @client.command(name='random',
-                description="Picks a random champ(s) based on the given input. \n"
+                description="Picks a random champ(s) based on the given input command. \n"
                             "damage - Picks a random Damage champion. \n"
                             "healer - Picks a random Support/Healer champion. \n"
                             "flank -  Picks a random Flank champion. \n"
@@ -62,7 +71,7 @@ async def current(ctx, player_name):
                             "It will always pick (1 Damage, 1 Flank, 1 Support, and 1 FrontLine, "
                             "and then one other champion.) \n"
                             "map - Picks a random siege/ranked map.",
-                brief="Picks a random champ(s) based on the given input.",
+                brief="Picks a random champ(s) based on the given input command.",
                 aliases=['rand', 'r'])
 async def rand(command):
     command = str(command).lower()
@@ -134,7 +143,7 @@ async def on_message(message):
 
     # Seeing if someone is using the bot_prefix and calling a command
     if message.content.startswith(BOT_PREFIX):
-        print(message.author, message.content, message.channel, message.server)
+        print(message.author, message.content, message.channel, message.server, Pf.get_est_time())
     # Seeing if someone is using the bot_prefix and calling a command
     if message.content.startswith(">> ") or message.content.startswith("!! "):
         msg = 'Opps looks like you have a space after the bot prefix {0.author.mention}'.format(message)

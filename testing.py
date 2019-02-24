@@ -1,5 +1,12 @@
 import requests
 from bs4 import BeautifulSoup
+from datetime import datetime
+from pytz import timezone
+
+
+# Est Time zone for logging function calls
+def get_est_time():
+    return datetime.now(timezone('EST')).strftime("%H:%M:%S %Y/%m/%d")
 
 
 # Helper function to the get_player_elo(player_name) function

@@ -1,6 +1,8 @@
 import random
 import requests
 from bs4 import BeautifulSoup
+from datetime import datetime
+from pytz import timezone
 
 import json
 import asyncio
@@ -93,6 +95,63 @@ def pick_random_champ():
 # Calculates the kda
 def cal_kda(kills, deaths, assist):
     return str('{0:.2f}'.format(float(kills + assist)/deaths))
+
+
+# Est Time zone for logging function calls
+def get_est_time():
+    return datetime.now(timezone('EST')).strftime("%H:%M:%S %Y/%m/%d")
+
+
+# Converts the match name so that its small enough to fit on one line
+def convert_match_type(match_name):
+    if "TDM" in match_name:
+        return "TDM"
+    elif "Onslaught" in match_name:
+        return "Onslaught"
+    elif "Ranked" in match_name:
+        return "Ranked"
+    elif "Crazy King" in match_name:  # Event name
+        return "End Times"
+    else:
+        return "Siege"
+
+
+# Returns simple match history details for many matches
+def get_history(player_name, amount):
+    if amount > 30 or amount <= 0:
+        return "Please enter an amount between 1-30"
+    player_id = get_player_id(player_name)
+    paladins_data = paladinsAPI.getMatchHistory(player_id)
+    count = 0
+    match_data = ""
+    for match in paladins_data:
+        # Check to see if this player does have match history
+        if match.playerName is None:
+            if count == 0:
+                return "Player does not have recent match data."
+            else:
+                break
+        count += 1
+        ss = str('+{:10}{:4}{:3}:00 {:9} {:9} {:5} ({}/{}/{})\n')
+        kills = match.kills
+        deaths = match.deaths
+        assists = match.assists
+        kda = cal_kda(kills, deaths, assists)
+        ss = ss.format(match.godName, match.winStatus, match.matchMinutes, convert_match_type(match.mapGame),
+                       match.matchId, kda, kills, deaths, assists)
+        # Used for coloring
+        if match.winStatus == "Loss":
+            ss = ss.replace("+", "-")
+
+        match_data += ss
+        if count == amount:
+            break
+
+    title = str('{}\'s last {} match(s):\n\n').format(str(player_name), count)
+    title += str('{:11}{:4}  {:4} {:9} {:9} {:5} {}\n').format("Champion", "Win?", "Time", "Mode", "Match ID", "KDA",
+                                                               "Detailed")
+    title += match_data
+    return title
 
 
 # Returns simple match history details

@@ -78,9 +78,32 @@ paladinsAPI = PaladinsAPI(devId=3046, authKey="BB8E882EADB0431E990CD95E05C2B8C9"
 print(paladinsAPI.getDataUsed())
 
 
+# Get the player id for a player based on their name. First it checks a dictionary and if they are not in there then
+# it does an API call to get the player's id. Then it writes that id to the dictionary. Helps save API calls.
+def get_player_id(player_name):
+    player_name = player_name.lower()
+    with open("player_ids") as f:
+        player_ids = json.load(f)
+
+    if player_name in player_ids:
+        return player_ids[player_name]
+    else:
+        player = paladinsAPI.getPlayer(player_name)
+        if not player:  # invalid name
+            return -1
+        new_id = player.playerId
+        player_ids[player_name] = new_id
+
+        # need to update the file now
+        print("Added a new player the dictionary" + player_name)
+        with open("player_ids", 'w') as f:
+            json.dump(player_ids, f)
+        return new_id
+
+
 # Calculates the kda
 def cal_kda(kills, deaths, assist):
-    return float(kills + assist)/deaths
+    return str('{0:.2f}'.format(float(kills + assist)/deaths))
 
 
 # Returns simple match history details
@@ -99,6 +122,53 @@ def get_history_two(player_name):
 
 # get_history_two(7241948)
 
+# Converts the match name so that its small enough to fit on one line
+def convert_match_type(match_name):
+    if "TDM" in match_name:
+        return "TDM"
+    elif "Onslaught" in match_name:
+        return "Onslaught"
+    elif "Ranked" in match_name:
+        return "Ranked"
+    elif "Crazy King" in match_name:  # Event name
+        return "End Times"
+    else:
+        return "Siege"
+
+
+# Returns simple match history details for many matches
+def get_history(player_name, amount=10):
+    player_id = get_player_id(player_name)
+    paladins_data = paladinsAPI.getMatchHistory(player_id)
+    count = 0
+    match_data = ""
+    for match in paladins_data:
+        # Check to see if this player does have match history
+        if match.playerName is None:
+            if count == 0:
+                return "Player does not have recent match data."
+            else:
+                break
+        count += 1
+        ss = str('{:10}{:4}{:3}:00 {:9} {:9} {:5} ({}/{}/{})\n')
+        kills = match.kills
+        deaths = match.deaths
+        assists = match.assists
+        kda = cal_kda(kills, deaths, assists)
+        match_data += ss.format(match.godName, match.winStatus, match.matchMinutes,
+                                convert_match_type(match.mapGame), match.matchId, kda, kills, deaths, assists)
+        if count == amount:
+            break
+
+    title = str('{}\'s last {} match(s):\n\n').format(str(player_name), count)
+    title += str('{:10}{:4}  {:4} {:9} {:9} {:5} {}\n').format("Champion", "Win?", "Time", "Mode", "Match ID", "KDA",
+                                                               "Detailed")
+    title += match_data
+    return title
+
+
+# print(get_history("FeistyJalapeno"))
+
 
 # Returns simple match history details
 def get_history_simple(player_name):
@@ -110,12 +180,13 @@ def get_history_simple(player_name):
         deaths = match.deaths
         assists = match.assists
         kda = cal_kda(kills, deaths, assists)
-        match_data += ss.format(match.winStatus, match.matchMinutes, match.godName, kda, kills, deaths, assists, match.damage,
-                                match.damageTaken, match.healing)
+        match_data += ss.format(match.winStatus, match.matchMinutes, match.godName, kda, kills, deaths, assists,
+                                match.damage, match.damageTaken, match.healing)
         return match_data
 
 
-print(get_history_simple(7241948))
+#print(get_history_simple(7241948))
+
 
 def currentTime():
     return datetime.utcnow()

@@ -94,6 +94,8 @@ def pick_random_champ():
 
 # Calculates the kda
 def cal_kda(kills, deaths, assist):
+    if deaths == 0:  # Prefect KDA
+        return str(kills + assist)
     return str('{0:.2f}'.format(float(kills + assist)/deaths))
 
 
@@ -118,8 +120,8 @@ def convert_match_type(match_name):
 
 # Returns simple match history details for many matches
 def get_history(player_name, amount):
-    if amount > 30 or amount <= 0:
-        return "Please enter an amount between 1-30"
+    if amount > 30 or amount <= 1:
+        return "Please enter an amount between 2-30"
     player_id = get_player_id(player_name)
     paladins_data = paladinsAPI.getMatchHistory(player_id)
     count = 0
@@ -147,7 +149,7 @@ def get_history(player_name, amount):
         if count == amount:
             break
 
-    title = str('{}\'s last {} match(s):\n\n').format(str(player_name), count)
+    title = str('{}\'s last {} matches:\n\n').format(str(player_name), count)
     title += str('{:11}{:4}  {:4} {:9} {:9} {:5} {}\n').format("Champion", "Win?", "Time", "Mode", "Match ID", "KDA",
                                                                "Detailed")
     title += match_data
@@ -325,7 +327,7 @@ def create_json(raw_data):
 def get_global_kda(player_name):
     url = "http://paladins.guru/profile/pc/" + player_name
 
-    soup = BeautifulSoup(requests.get(url).text, 'html.parser')
+    soup = BeautifulSoup(requests.get(url, headers={'Connection': 'close'}).text, 'html.parser')
     sup = str(soup.get_text())
 
     sup = sup.split(" ")
@@ -474,7 +476,7 @@ def return_mode(name):
 # Elo?
 def get_player_elo(player_name):
     url = "http://paladins.guru/profile/pc/" + str(player_name) + "/casual"
-    soup = BeautifulSoup(requests.get(url).text, 'html.parser')
+    soup = BeautifulSoup(requests.get(url, headers={'Connection': 'close'}).text, 'html.parser')
     soup = str(soup.get_text()).split(" ")
     data = list(filter(None, soup))
 

@@ -13,8 +13,8 @@ BOT_PREFIX = ("!!", ">>")
 BOT_STATUS = "!!help or >>help"
 
 BOT_AUTHOR = "FeistyJalapeno#9045"
-BOT_VERSION = "Version 2.2 Beta"
-UPDATE_NOTES = "Last command to get stats for a players last match."
+BOT_VERSION = "Version 2.3.1 Beta"
+UPDATE_NOTES = "History command to get simple stats for a players last X amount of matches."
 ABOUT_BOT = "This bot was created since when Paladins selects random champions its not random. Some people are highly "\
             "likely to get certain roles and if you have a full team not picking champions sometime the game fails to "\
             "fill the last person causing the match to fail to start and kick everyone. This could be due to the game" \
@@ -147,7 +147,11 @@ async def on_message(message):
     # Seeing if someone is using the bot_prefix and calling a command
     if message.content.startswith(">> ") or message.content.startswith("!! "):
         msg = 'Opps looks like you have a space after the bot prefix {0.author.mention}'.format(message)
-        await client.send_message(message.channel, msg)
+        try:
+            await client.send_message(message.author, msg)
+        except:
+            print("Bot does not have permission to print to this channel")  # Temp fix
+        # await client.send_message(message.channel, msg)
     """
     if message.content.startswith('*hello'):
         msg = 'Hello {0.author.mention}'.format(message)

@@ -103,16 +103,19 @@ def get_player_id(player_name):
 
 # Calculates the kda
 def cal_kda(kills, deaths, assist):
+    if deaths == 0:  # Prefect KDA
+        return str(kills + assist)
     return str('{0:.2f}'.format(float(kills + assist)/deaths))
 
 
 # Returns simple match history details
-def get_history_two(player_name):
-    paladins_data = paladinsAPI.getMatchHistory(player_name)
-    match_id = 0
-    for match in paladins_data:
-        match_id = match.matchId
-        break
+def get_history_two(player_name, match_id):
+    if match_id == -1:
+        paladins_data = paladinsAPI.getMatchHistory(player_name)
+        match_id = 0
+        for match in paladins_data:
+            match_id = match.matchId
+            break
 
     print(match_id)
     match_data = paladinsAPI.getMatchDetails(match_id)  # Currently here cause it does not seem to be working
@@ -120,7 +123,8 @@ def get_history_two(player_name):
         print(match)
 
 
-# get_history_two(7241948)
+#get_history_two("FeistyJalapeno", 800518584)
+
 
 # Converts the match name so that its small enough to fit on one line
 def convert_match_type(match_name):
@@ -167,7 +171,7 @@ def get_history(player_name, amount=10):
     return title
 
 
-# print(get_history("FeistyJalapeno"))
+print(get_history("InfernalSeris"))
 
 
 # Returns simple match history details
@@ -205,7 +209,7 @@ def create_json(raw_data):
 def get_global_kda(player_name):
     url = "http://paladins.guru/profile/pc/" + player_name
 
-    soup = BeautifulSoup(requests.get(url).text, 'html.parser')
+    soup = BeautifulSoup(requests.get(url, headers={'Connection': 'close'}).text, 'html.parser')
     sup = str(soup.get_text())
 
     sup = sup.split(" ")
@@ -245,6 +249,8 @@ def get_global_kda(player_name):
     #                stats.pop(0) + "\n" + "Global KDA: " + stats.pop(0)
     # return global_stats
     return stats
+
+print(get_global_kda("FeistyJalapeno"))
 
 
 def get_player_in_match(player_name):

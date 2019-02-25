@@ -7,3 +7,4 @@ Version 1.6 Alpha: Added sub-command to stats command for elo stats.
 Version 2.0 Beta: Switched to using Paladins API to get most stats for players.
 Version 2.1 Beta: Current command to get current stats for a match.
 Version 2.2 Beta: Last command to get stats for a players last match.
+Version 2.3.1 Beta: History command to get simple stats for a players last X amount of matches.

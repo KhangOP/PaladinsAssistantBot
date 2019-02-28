@@ -3,6 +3,8 @@ from discord import Game
 from discord.ext import commands
 from discord.ext.commands import Bot
 
+from concurrent.futures import ThreadPoolExecutor
+
 import time
 import asyncio
 import random
@@ -15,8 +17,8 @@ BOT_PREFIX = ("!!", ">>")
 BOT_STATUS = "!!help or >>help"
 
 BOT_AUTHOR = "FeistyJalapeno#9045"
-BOT_VERSION = "Version 2.3.1 Beta"
-UPDATE_NOTES = "History command to get simple stats for a players last X amount of matches."
+BOT_VERSION = "Version 3.0.0 Beta"
+UPDATE_NOTES = "Added executor to prevent blocking which causes delays or crashes the bot when returning the results"
 ABOUT_BOT = "This bot was created since when Paladins selects random champions its not random. Some people are highly "\
             "likely to get certain roles and if you have a full team not picking champions sometime the game fails to "\
             "fill the last person causing the match to fail to start and kick everyone. This could be due to the game" \
@@ -41,8 +43,12 @@ client = Bot(command_prefix=BOT_PREFIX)
                 pass_context=True)
 async def history(ctx, player_name, amount=10):
     await client.send_typing(ctx.message.channel)  # It works... pretty cool
-    await client.send_typing(ctx.message.channel)  # It works... pretty cool
-    await client.say("```diff\n" + Pf.get_history(player_name, amount) + "```")
+    # Prevents blocking so that function calls are not delayed
+    executor = ThreadPoolExecutor(max_workers=1)
+    loop = asyncio.get_event_loop()
+    result = await loop.run_in_executor(executor, Pf.get_history, player_name, amount)
+    await client.say("```diff\n" + result + "```")
+    # await client.say("```diff\n" + Pf.get_history(player_name, amount) + "```")
 
 
 # Get the some stats for a player while they are in a match.
@@ -50,7 +56,12 @@ async def history(ctx, player_name, amount=10):
                 description="Get stats for a player in their match.",
                 brief="Get stats for a player in their match.")
 async def last(player_name):
-    await client.say("```" + Pf.get_history_simple(player_name) + "```")
+    # Prevents blocking so that function calls are not delayed
+    executor = ThreadPoolExecutor(max_workers=1)
+    loop = asyncio.get_event_loop()
+    result = await loop.run_in_executor(executor, Pf.get_history_simple, player_name)
+    await client.say("```" + result + "```")
+    # await client.say("```" + Pf.get_history_simple(player_name) + "```")
 
 
 # Get the some stats for a player while they are in a match.
@@ -61,9 +72,11 @@ async def last(player_name):
                 aliases=['cur', 'c'])
 async def current(ctx, player_name):
     await client.send_typing(ctx.message.channel)  # It works... pretty cool
-    await client.send_typing(ctx.message.channel)  # It works... pretty cool
-    message = Pf.get_player_in_match(player_name)
-    await client.say("```diff\n" + message + "```")
+    # Prevents blocking so that function calls are not delayed
+    executor = ThreadPoolExecutor(max_workers=1)
+    loop = asyncio.get_event_loop()
+    result = await loop.run_in_executor(executor, Pf.get_player_in_match, player_name)
+    await client.say("```diff\n" + result + "```")
 
 
 # Calls different random functions based on input
@@ -126,7 +139,12 @@ async def about():
 async def stats(player_name, champ="me", space=""):
     if space != "":
         champ += " " + space
-    await client.say("```" + Pf.get_champ_stats(player_name, champ) + "```")
+    # Prevents blocking so that function calls are not delayed
+    executor = ThreadPoolExecutor(max_workers=1)
+    loop = asyncio.get_event_loop()
+    result = await loop.run_in_executor(executor, Pf.get_champ_stats, player_name, champ)
+    await client.say("```" + result + "```")
+    # await client.say("```" + Pf.get_champ_stats(player_name, champ) + "```")
 
 
 # Handles errors when a user messes up the spelling or forgets an argument to a command

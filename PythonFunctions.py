@@ -6,6 +6,8 @@ from pytz import timezone
 
 import json
 
+import time
+
 from pyrez.api import PaladinsAPI
 
 
@@ -44,7 +46,6 @@ def get_player_id(player_name):
     else:
         player = paladinsAPI.getPlayer(player_name)
         if not player:  # invalid name
-            print("Bad name")
             return -1
         new_id = player.playerId
         player_ids[player_name] = new_id

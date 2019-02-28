@@ -1,8 +1,8 @@
+import discord
 from discord import Game
 from discord.ext import commands
 from discord.ext.commands import Bot
 
-import asyncio
 import time
 
 import PythonFunctions as Pf
@@ -34,8 +34,11 @@ client = Bot(command_prefix=BOT_PREFIX)
 # Get the some stats for a player while they are in a match.
 @client.command(name='history',
                 description="Get simple stats for a player's last amount of matches.",
-                brief="Get simple stats for a player's last amount of matches.")
-async def history(player_name, amount=10):
+                brief="Get simple stats for a player's last amount of matches.",
+                pass_context=True)
+async def history(ctx, player_name, amount=10):
+    await client.send_typing(ctx.message.channel)  # It works... pretty cool
+    await client.send_typing(ctx.message.channel)  # It works... pretty cool
     await client.say("```diff\n" + Pf.get_history(player_name, amount) + "```")
 
 
@@ -55,8 +58,9 @@ async def last(player_name):
                 aliases=['cur', 'c'])
 async def current(ctx, player_name):
     await client.send_typing(ctx.message.channel)  # It works... pretty cool
+    await client.send_typing(ctx.message.channel)  # It works... pretty cool
     message = Pf.get_player_in_match(player_name)
-    await client.say("```" + message + "```")
+    await client.say("```diff\n" + message + "```")
 
 
 # Calls different random functions based on input
@@ -76,19 +80,19 @@ async def current(ctx, player_name):
 async def rand(command):
     command = str(command).lower()
     if command == "damage":
-        await client.say("Your random Damage champion is: " + "```css\n" + Pf.pick_damage() + "\n```")
+        await client.say("Your random Damage champion is: " + "```css\n" + Pf.pick_damage() + "```")
     elif command == "flank":
-        await client.say("Your random Flank champion is: " + "```" + Pf.pick_flank() + "```")
+        await client.say("Your random Flank champion is: " + "```css\n" + Pf.pick_flank() + "```")
     elif command == "healer":
-        await client.say("Your random Support/Healer champion is: " + "```" + Pf.pick_support() + "```")
+        await client.say("Your random Support/Healer champion is: " + "```css\n" + Pf.pick_support() + "```")
     elif command == "tank":
-        await client.say("Your random FrontLine/Tank champion is: " + "```" + Pf.pick_tank() + "```")
+        await client.say("Your random FrontLine/Tank champion is: " + "```css\n" + Pf.pick_tank() + "```")
     elif command == "champ":
-        await client.say("Your random champion is: " + "```" + Pf.pick_random_champ() + "```")
+        await client.say("Your random champion is: " + "```css\n" + Pf.pick_random_champ() + "```")
     elif command == "team":
-        await  client.say("Your random team is: " + "```" + Pf.gen_team() + "```")
+        await  client.say("Your random team is: " + "```css\n" + Pf.gen_team() + "```")
     elif command == "map" or command == "stage":
-        await  client.say("Your random map is: " + "```" + Pf.pick_map() + "```")
+        await  client.say("Your random map is: " + "```css\n" + Pf.pick_map() + "```")
     else:
         await client.say("Invalid command. For the random command please choose from one following options: "
                          "damage, flank, healer, tank, champ, team, or map. "
@@ -132,6 +136,8 @@ async def on_command_error(error, ctx):
         await client.send_message(channel, "Now you done messed up son.")
     elif isinstance(error, commands.CommandNotFound):
         await client.send_message(channel, f"\N{WARNING SIGN} {error}")
+    else:
+        print("An uncaught error occurred: ", error)  # More error checking
 
 
 # We can use this code to track when people message this bot (a.k.a asking it commands)
@@ -164,6 +170,10 @@ async def on_message(message):
     await client.process_commands(message)
 
 
+sleep_time = 5
+backoff_multiplier = 1
+
+
 # Launching the bot function
 @client.event
 async def on_ready():
@@ -172,8 +182,10 @@ async def on_ready():
     print(client.user.id)
     print('------')
     # Status of the bot
-    await client.change_presence(game=Game(name=BOT_STATUS))
-
+    global backoff_multiplier
+    backoff_multiplier = 1
+    # Online, idle, invisible, dnd
+    await client.change_presence(game=Game(name=BOT_STATUS), status='dnd')
 
 """
 async def list_servers():
@@ -185,20 +197,16 @@ async def list_servers():
         await asyncio.sleep(600)
 """
 
-"""
-@client.command()
-async def stats():
-    url = "http://paladins.guru/profile/pc/FeistyJalapeno"
-    response = requests.get(url)
-    value = response.json()
-    print(value)
-    await client.say(value)
-"""
 
 # client.loop.create_task(list_servers())
 
 # Must be called after Discord functions
 # Starts the bot (its online)
-client.run(TOKEN)
 
-# client.close()
+while True:
+    try:
+        client.loop.run_until_complete(client.start(TOKEN))
+    except BaseException:  # Bad practice but is fine to use in this case
+        print("Disconnected, going to try to reconnect in " + str(sleep_time*backoff_multiplier) + " seconds.")
+        time.sleep(sleep_time*backoff_multiplier)
+        backoff_multiplier += 1

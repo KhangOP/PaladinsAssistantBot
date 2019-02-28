@@ -128,14 +128,17 @@ def get_history_two(player_name, match_id):
 
 # Converts the match name so that its small enough to fit on one line
 def convert_match_type(match_name):
+    print(match_name)
     if "TDM" in match_name:
         return "TDM"
     elif "Onslaught" in match_name:
         return "Onslaught"
     elif "Ranked" in match_name:
         return "Ranked"
-    elif "Crazy King" in match_name:  # Event name
+    elif "Crazy King" in match_name:    # Event name
         return "End Times"
+    elif "(Siege)" in match_name:       # Test Maps (WIP Thrones)
+        return "Test Maps"
     else:
         return "Siege"
 
@@ -171,7 +174,7 @@ def get_history(player_name, amount=10):
     return title
 
 
-print(get_history("InfernalSeris"))
+print(get_history("FeistyJalapeno"))
 
 
 # Returns simple match history details

@@ -45,6 +45,7 @@ def get_player_id(player_name):
     else:
         player = paladinsAPI.getPlayer(player_name)
         if not player:  # invalid name
+            print("Bad name")
             return -1
         new_id = player.playerId
         player_ids[player_name] = new_id
@@ -112,8 +113,10 @@ def convert_match_type(match_name):
         return "Onslaught"
     elif "Ranked" in match_name:
         return "Ranked"
-    elif "Crazy King" in match_name:  # Event name
+    elif "Crazy King" in match_name:    # Event name
         return "End Times"
+    elif "(Siege)" in match_name:       # Test Maps (WIP Thrones)
+        return "Test Maps"
     else:
         return "Siege"
 
@@ -123,6 +126,9 @@ def get_history(player_name, amount):
     if amount > 30 or amount <= 1:
         return "Please enter an amount between 2-30"
     player_id = get_player_id(player_name)
+    if player_id == -1:
+        return "Can't find the player: " + player_name + \
+               ". Please make sure the name is spelled correctly (Capitalization does not matter)."
     paladins_data = paladinsAPI.getMatchHistory(player_id)
     count = 0
     match_data = ""
@@ -159,6 +165,9 @@ def get_history(player_name, amount):
 # Returns simple match history details
 def get_history_simple(player_name):
     player_id = get_player_id(player_name)
+    if player_id == -1:
+        return "Can't find the player: " + player_name + \
+               ". Please make sure the name is spelled correctly (Capitalization does not matter)."
     paladins_data = paladinsAPI.getMatchHistory(player_id)
     for match in paladins_data:
         # Check to see if this player does have match history
@@ -242,6 +251,7 @@ def convert_rank(x):
     }.get(x, "Un-Ranked")
 
 
+# ReWork JSON
 # Player stats
 def get_player_stats_api(player_name):
     # Player level, played hours, etc
@@ -249,11 +259,14 @@ def get_player_stats_api(player_name):
         info = paladinsAPI.getPlayer(player_name)
     except:
         return "Player not found. Capitalization does not matter."
+    if info is None:
+        return "Player not found. Capitalization does not matter."
 
     json_data = str(info).replace("'", "\"").replace("None", "0")
 
     # Works amazingly
     j = json.loads(json_data)
+    print(j)
     ss = ""
 
     # Basic Stats
@@ -288,6 +301,7 @@ def get_player_stats_api(player_name):
     return ss
 
 
+# ReWork JSON
 def get_champ_stats_api(player_name, champ):
     # Gets player id and error checks
     player_id = get_player_id(player_name)
@@ -368,7 +382,7 @@ def get_global_kda(player_name):
     # return global_stats
     return stats
 
-
+#ReWork JSON
 def get_player_in_match(player_name):
     # Data Format
     # {'Match': 795950194, 'match_queue_id': 452, 'personal_status_message': 0, 'ret_msg': 0, 'status': 3,
@@ -422,7 +436,6 @@ def get_player_in_match(player_name):
     except:
         return "An problem occurred. Please make sure you are not using this command on the event mode."
     # print(players)
-    info = []
     team1 = []
     team2 = []
     for player in players:
@@ -441,22 +454,38 @@ def get_player_in_match(player_name):
     for player in team1:
         # print(get_global_kda(player))
         pl = get_global_kda(player)
-        ss = str('{:18} Lv. {:3}  {:7}  {:6}\n')
-        match_data += ss.format(pl.pop(0), pl.pop(0), pl.pop(0), pl.pop(0))
-
+        ss = str('*{:18} Lv. {:3}  {:7}  {:6}\n')
+        ss = ss.format(pl[0], pl[1], pl[2], pl[3])
+        """This Block of code adds color based on WinRate"""
+        if "???" in pl[2]:
+            pass
+        elif(float(pl[2].replace(" %", ""))) > 55.00:
+            ss = ss.replace("*", "+")
+        elif (float(pl[2].replace(" %", ""))) < 50.00:
+            ss = ss.replace("*", "-")
+        """^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"""
+        match_data += ss
     match_data += "\n"
 
     for player in team2:
         # print(get_global_kda(player))
-        info.append(get_global_kda(player))
         pl = get_global_kda(player)
-        ss = str('{:18} Lv. {:3}  {:7}  {:6}\n')
-        match_data += ss.format(pl.pop(0), pl.pop(0), pl.pop(0), pl.pop(0))
+        ss = str('*{:18} Lv. {:3}  {:7}  {:6}\n')
+        ss = ss.format(pl[0], pl[1], pl[2], pl[3])
+        """This Block of code adds color based on WinRate"""
+        if "???" in pl[2]:
+            pass
+        elif (float(pl[2].replace(" %", ""))) > 55.00:
+            ss = ss.replace("*", "+")
+        elif (float(pl[2].replace(" %", ""))) < 50.00:
+            ss = ss.replace("*", "-")
+        """^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"""
+        match_data += ss
 
     return match_data
 
 
-# print(get_player_in_match("FeistyJalapeno"))
+#print(get_player_in_match("DonPellegrino"))
 
 
 # Helper function to the get_player_elo(player_name) function
@@ -526,5 +555,7 @@ def get_champ_stats(player_name, champ):
 
     return get_champ_stats_api(player_name, champ)
 
+
+# print(get_champ_stats("crimstaggrt", "me"))
 
 """End of Python Functions"""

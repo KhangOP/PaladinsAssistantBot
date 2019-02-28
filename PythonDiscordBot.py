@@ -4,6 +4,8 @@ from discord.ext import commands
 from discord.ext.commands import Bot
 
 import time
+import asyncio
+import random
 
 import PythonFunctions as Pf
 
@@ -19,6 +21,7 @@ ABOUT_BOT = "This bot was created since when Paladins selects random champions i
             "likely to get certain roles and if you have a full team not picking champions sometime the game fails to "\
             "fill the last person causing the match to fail to start and kick everyone. This could be due to the game" \
             "trying to select a champion that has already been selected."
+GAME = ["Paladins", BOT_STATUS, BOT_VERSION, BOT_STATUS, "Errors"]
 
 
 file_name = "token"
@@ -150,6 +153,8 @@ async def on_message(message):
     # Seeing if someone is using the bot_prefix and calling a command
     if message.content.startswith(BOT_PREFIX):
         print(message.author, message.content, message.channel, message.server, Pf.get_est_time())
+        # if str(message.author) == "FeistyJalapeno#9045":  # This works ^_^
+        #    print("Hello creator.")
     # Seeing if someone is using the bot_prefix and calling a command
     if message.content.startswith(">> ") or message.content.startswith("!! "):
         msg = 'Opps looks like you have a space after the bot prefix {0.author.mention}'.format(message)
@@ -179,13 +184,14 @@ backoff_multiplier = 1
 async def on_ready():
     print('Logged in as')
     print(client.user.name)
-    print(client.user.id)
+    # print(client.user.id)
     print('------')
     # Status of the bot
     global backoff_multiplier
     backoff_multiplier = 1
     # Online, idle, invisible, dnd
-    await client.change_presence(game=Game(name=BOT_STATUS), status='dnd')
+    await client.change_presence(game=Game(name=BOT_STATUS, type=0), status='dnd')
+    print("Client is fully online and ready to go...")
 
 """
 async def list_servers():
@@ -198,7 +204,16 @@ async def list_servers():
 """
 
 
-# client.loop.create_task(list_servers())
+# Testing bot presence changing
+async def change_bot_presence():
+    await client.wait_until_ready()
+    secure_random = random.SystemRandom()
+    while not client.is_closed:
+        await client.change_presence(game=Game(name=secure_random.choice(GAME), type=0), status='dnd')
+        await asyncio.sleep(60)  # Ever min
+
+
+client.loop.create_task(change_bot_presence())
 
 # Must be called after Discord functions
 # Starts the bot (its online)

@@ -5,7 +5,6 @@ from datetime import datetime
 from pytz import timezone
 
 import json
-import asyncio
 
 from pyrez.api import PaladinsAPI
 
@@ -266,7 +265,6 @@ def get_player_stats_api(player_name):
 
     # Works amazingly
     j = json.loads(json_data)
-    print(j)
     ss = ""
 
     # Basic Stats

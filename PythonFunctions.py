@@ -218,6 +218,7 @@ def create_win_rate(n1, n2):
     return str('{0:.2f}'.format((n1 / n2) * 100))
 
 
+# (Currently unused)
 # Converts the number to the proper name
 def convert_rank(x):
     return {
@@ -251,56 +252,53 @@ def convert_rank(x):
     }.get(x, "Un-Ranked")
 
 
-# ReWork JSON
 # Player stats
 def get_player_stats_api(player_name):
     # Player level, played hours, etc
-    try:
-        info = paladinsAPI.getPlayer(player_name)
-    except:
-        return "Player not found. Capitalization does not matter."
-    if info is None:
-        return "Player not found. Capitalization does not matter."
+    player_id = get_player_id(player_name)
+    if player_id == -1:
+        return "Can't find the player: " + player_name + \
+               ". Please make sure the name is spelled correctly (Capitalization does not matter)."
+    info = paladinsAPI.getPlayer(player_id)
 
-    json_data = str(info).replace("'", "\"").replace("None", "0")
-
-    # Works amazingly
-    j = json.loads(json_data)
     ss = ""
 
     # Basic Stats
     ss += "Casual stats: \n"
-    ss += "Name: " + (j["Name"]) + "\n"
-    ss += "Account Level: " + str(j["Level"]) + "\n"
-    total = int(j["Wins"]) + int(j["Losses"])
-    ss += "WinRate: " + create_win_rate(int(j["Wins"]), total) + "% out of " + str(total) + \
-          " matches.\n"
-    ss += "Times Deserted: " + str(j["Leaves"]) + "\n\n"
+    ss += "Name: " + str(info.playerName) + "\n"
+    ss += "Account Level: " + str(info.accountLevel) + "\n"
+    total = int(info.wins) + int(info.losses)
+    ss += "WinRate: " + create_win_rate(int(info.wins), total) + "% out of " + str(total) + " matches.\n"
+    ss += "Times Deserted: " + str(info.leaves) + "\n\n"
 
     # Ranked Info
-    ss += "Ranked stats for Season " + str(j["RankedKBM"]["Season"]) + ":\n"
+    ranked = info.rankedKeyboard
+    ss += "Ranked stats for Season " + str(ranked.currentSeason) + ":\n"
     # Rank (Masters, GM, Diamond, etc)
-    ss += "Rank: " + convert_rank(j["RankedKBM"]["Tier"]) + "\nTP: " + str(j["RankedKBM"]["Points"]) + " Position: " +\
-          str(j["RankedKBM"]["Rank"]) + "\n"
+    ss += "Rank: " + str(ranked.currentRank) + "\nTP: " + str(ranked.currentTrumpPoints) + " Position: " + \
+          str(ranked.leaderboardIndex) + "\n"
 
-    win = int(j["RankedKBM"]["Wins"])
-    lose = int(j["RankedKBM"]["Losses"])
+    win = int(ranked.wins)
+    lose = int(ranked.losses)
 
     ss += "WinRate: " + create_win_rate(win, win + lose) + "% (" + '{}-{}'.format(win, lose) + ")\n"
-    ss += "Times Deserted: " + str(j["RankedKBM"]["Leaves"]) + "\n\n"
+    ss += "Times Deserted: " + str(ranked.leaves) + "\n\n"
 
     # Extra info
     ss += "Extra details: \n"
-    ss += "Account created on: " + str(j["Created_Datetime"]).split()[0] + "\n"
-    ss += "Last login on: " + str(j["Last_Login_Datetime"]).split()[0] + "\n"
-    ss += "Platform: " + str(j["Platform"]) + "\n"
-    ss += "MasteryLevel: " + str(j["MasteryLevel"]) + "\n"
-    ss += "Steam Achievements completed: " + str(j["Total_Achievements"]) + "/58\n"
+    ss += "Account created on: " + str(info.createdDatetime).split()[0] + "\n"
+    ss += "Last login on: " + str(info.lastLoginDatetime).split()[0] + "\n"
+    ss += "Platform: " + str(info.platform) + "\n"
+    # data = info.json
+    # print(type(data))
+    # print(data["MasteryLevel"])
+    # ss += "MasteryLevel: " + str(j["MasteryLevel"]) + "\n" "JSON-FIX"
+    ss += "Steam Achievements completed: " + str(info.totalAchievements) + "/58\n"
 
     return ss
 
 
-# ReWork JSON
+# Gets stats for a champ using Paladins API
 def get_champ_stats_api(player_name, champ):
     # Gets player id and error checks
     player_id = get_player_id(player_name)
@@ -315,15 +313,13 @@ def get_champ_stats_api(player_name, champ):
     ss = ""
 
     for stat in stats:
-        json_data = str(stat).replace("'", "\"").replace("None", "0").replace("Mal\"", "Mal\'")
-        j = json.loads(json_data)
         wins = stat.wins
         loses = stat.losses
         kda = stat.getKDA()
         if stat.godName == champ:
             ss = str('Champion: {} (Lv {})\nKDA: {} ({}-{}-{}) \nWinRate: {}% ({}-{}) \nLast Played: {}')
             ss = ss.format(stat.godName, stat.godLevel, kda, stat.kills, stat.deaths, stat.assists,
-                           create_win_rate(wins, wins+loses), stat.wins, stat.losses, str(j["LastPlayed"]).split()[0])
+                           create_win_rate(wins, wins+loses), stat.wins, stat.losses, str(stat.lastPlayed).split()[0])
         # They have not played this champion yet
         if ss == "":
             ss += "No data for champion: " + champ + "\n"
@@ -331,6 +327,7 @@ def get_champ_stats_api(player_name, champ):
     return ss
 
 
+# Creates Json we can use
 def create_json(raw_data):
     json_data = str(raw_data).replace("'", "\"").replace("None", "0").replace("Mal\"", "Mal\'")
     return json.loads(json_data)
@@ -381,7 +378,8 @@ def get_global_kda(player_name):
     # return global_stats
     return stats
 
-#ReWork JSON
+
+# Gets details about a player in a current match
 def get_player_in_match(player_name):
     # Data Format
     # {'Match': 795950194, 'match_queue_id': 452, 'personal_status_message': 0, 'ret_msg': 0, 'status': 3,
@@ -438,9 +436,10 @@ def get_player_in_match(player_name):
     team1 = []
     team2 = []
     for player in players:
-        j = create_json(player)
-        name = (j["playerName"])
-        if (j["taskForce"]) == 1:
+        # j = create_json(player)
+        # name = (j["playerName"])
+        name = str(player.playerName)  # Some names are not strings (example: symbols, etc.)
+        if int(player.taskForce) == 1:
             team1.append(name)
         else:
             team2.append(name)

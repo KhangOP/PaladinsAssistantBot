@@ -25,7 +25,7 @@ paladinsAPI = PaladinsAPI(devId=ID, authKey=KEY)
 # List of Champs by Class
 DAMAGES = ["Cassie", "Kinessa", "Drogoz", "Bomb King", "Viktor", "Sha Lin", "Tyra", "Willo", "Lian", "Strix", "Vivian",
            "Dredge", "Imani"]
-FLANKS = ["Skye", "Buck", "Evie", "Androxus", "Meave", "Lex", "Zhin", "Talus", "Moji", "Koga"]
+FLANKS = ["Skye", "Buck", "Evie", "Androxus", "Maeve", "Lex", "Zhin", "Talus", "Moji", "Koga"]
 FRONTLINES = ["Barik", "Fernando", "Ruckus", "Makoa", "Torvald", "Inara", "Ash", "Terminus", "Khan"]
 SUPPORTS = ["Grohk", "Grover", "Ying", "Mal Damba", "Seris", "Jenos", "Furia"]
 
@@ -51,7 +51,7 @@ def get_player_id(player_name):
         player_ids[player_name] = new_id
 
         # need to update the file now
-        print("Added a new player the dictionary" + player_name)
+        print("Added a new player the dictionary: " + player_name)
         with open("player_ids", 'w') as f:
             json.dump(player_ids, f)
         return new_id
@@ -113,7 +113,7 @@ def convert_match_type(match_name):
         return "Onslaught"
     elif "Ranked" in match_name:
         return "Ranked"
-    elif "Crazy King" in match_name:    # Event name
+    elif "End Times" in match_name:     # Event name
         return "End Times"
     elif "(Siege)" in match_name:       # Test Maps (WIP Thrones)
         return "Test Maps"
@@ -391,6 +391,15 @@ def get_player_in_match(player_name):
         return "Can't find the player: " + player_name + \
                ". Please make sure the name is spelled correctly (Capitalization does not matter)."
     j = create_json(paladinsAPI.getPlayerStatus(player_id))
+    """ JSON FIX
+    data = paladinsAPI.getPlayerStatus(player_id)
+    print(type(data))
+    print(type(data.json))
+    """
+    # print(type(paladinsAPI.getPlayerStatus(player_id)))
+    # data = paladinsAPI.getPlayerStatus(player_id)
+    # print(data)
+
     if j == 0:
         return str("Player " + player_name + " is not found.")
     match_id = j["Match"]
@@ -439,6 +448,8 @@ def get_player_in_match(player_name):
         # j = create_json(player)
         # name = (j["playerName"])
         name = str(player.playerName)  # Some names are not strings (example: symbols, etc.)
+        # testing to see if character name is avaiable
+        # print(player.playerName, player.godName) # Yes it is
         if int(player.taskForce) == 1:
             team1.append(name)
         else:
@@ -446,7 +457,7 @@ def get_player_in_match(player_name):
 
     match_data = ""
     match_data += player_name + " is in a " + match_string + " match."  # Match Type
-    #print(match_data)
+    # print(match_data)
     match_data += str('\n\n{:18} {:7}  {:7}  {:6}\n\n').format("Player name", "Level", "WinRate", "KDA")
 
     for player in team1:
@@ -483,7 +494,7 @@ def get_player_in_match(player_name):
     return match_data
 
 
-#print(get_player_in_match("DonPellegrino"))
+# print(get_player_in_match("DonPellegrino"))
 
 
 # Helper function to the get_player_elo(player_name) function

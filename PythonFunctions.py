@@ -94,10 +94,12 @@ def pick_random_champ():
 
 
 # Calculates the kda
-def cal_kda(kills, deaths, assist):
+def cal_kda(kills, deaths, assists):
+    if assists == 0:  # Could happen
+        assists = 1
     if deaths == 0:  # Prefect KDA
-        return str(kills + assist)
-    return str('{0:.2f}'.format(float(kills + assist)/deaths))
+        return str(kills + (assists/2))
+    return str('{0:.2f}'.format(float(kills + (assists/2))/deaths))
 
 
 # Est Time zone for logging function calls
@@ -209,8 +211,6 @@ def gen_team():
     return team_string
 
 
-# Paladins API Code ----------------------------------------------------------------------------------------------------
-
 # n1 = wins and n2 = total matches
 def create_win_rate(n1, n2):
     if n2 == 0:  # This means they have no data for the ranked split/season
@@ -252,7 +252,7 @@ def convert_rank(x):
     }.get(x, "Un-Ranked")
 
 
-# Player stats
+# Uses Paladins API to get overall stats for a player
 def get_player_stats_api(player_name):
     # Player level, played hours, etc
     player_id = get_player_id(player_name)
@@ -333,7 +333,7 @@ def create_json(raw_data):
     return json.loads(json_data)
 
 
-# Gets kda and Winrate for a player
+# Gets kda and WinRate for a player
 def get_global_kda(player_name):
     url = "http://paladins.guru/profile/pc/" + player_name
 
@@ -379,8 +379,8 @@ def get_global_kda(player_name):
     return stats
 
 
-# Gets details about a player in a current match
-def get_player_in_match(player_name):
+# Gets details about a player in a current match using the Paladins API
+def get_player_in_match(player_name, option):
     # Data Format
     # {'Match': 795950194, 'match_queue_id': 452, 'personal_status_message': 0, 'ret_msg': 0, 'status': 3,
     # 'status_string': 'In Game'}
@@ -409,10 +409,6 @@ def get_player_in_match(player_name):
         return "Player is in lobby."
     elif j['status'] == 2:
         return "Player in champion selection."
-    # Need to test for champ banning and selection
-    # print(match_id)
-
-    # ValueError: 2509 is not a valid Champions (Imani)
 
     # match_queue_id = 424 = Siege
     # match_queue_id = 445 = Test Maps (NoneType) --> no json data
@@ -443,28 +439,34 @@ def get_player_in_match(player_name):
         return "An problem occurred. Please make sure you are not using this command on the event mode."
     # print(players)
     team1 = []
+    team1_champs = []
     team2 = []
+    team2_champs = []
     for player in players:
         # j = create_json(player)
         # name = (j["playerName"])
         name = str(player.playerName)  # Some names are not strings (example: symbols, etc.)
+
         # testing to see if character name is avaiable
         # print(player.playerName, player.godName) # Yes it is
+
         if int(player.taskForce) == 1:
             team1.append(name)
+            team1_champs.append(player.godName)
         else:
             team2.append(name)
+            team2_champs.append(player.godName)
 
     match_data = ""
     match_data += player_name + " is in a " + match_string + " match."  # Match Type
     # print(match_data)
-    match_data += str('\n\n{:18} {:7}  {:7}  {:6}\n\n').format("Player name", "Level", "WinRate", "KDA")
+    match_data += str('\n\n{:18}  {:7}  {:7}  {:6}\n\n').format("Player name", "Level", "WinRate", "KDA")
 
-    for player in team1:
+    for player, champ in zip(team1, team1_champs):
         # print(get_global_kda(player))
         pl = get_global_kda(player)
         ss = str('*{:18} Lv. {:3}  {:7}  {:6}\n')
-        ss = ss.format(pl[0], pl[1], pl[2], pl[3])
+        ss = ss.format(pl[0], str(pl[1]), pl[2], pl[3])
         """This Block of code adds color based on WinRate"""
         if "???" in pl[2]:
             pass
@@ -474,13 +476,19 @@ def get_player_in_match(player_name):
             ss = ss.replace("*", "-")
         """^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"""
         match_data += ss
+
+        # Add in champ stats
+        if option == "-a":
+            # match_data += get_champ_stats_my_paladins(player, champ)
+            return "This option is being "
+
     match_data += "\n"
 
-    for player in team2:
+    for player, champ in zip(team2, team2_champs):
         # print(get_global_kda(player))
         pl = get_global_kda(player)
         ss = str('*{:18} Lv. {:3}  {:7}  {:6}\n')
-        ss = ss.format(pl[0], pl[1], pl[2], pl[3])
+        ss = ss.format(pl[0], str(pl[1]), pl[2], pl[3])
         """This Block of code adds color based on WinRate"""
         if "???" in pl[2]:
             pass
@@ -491,10 +499,12 @@ def get_player_in_match(player_name):
         """^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"""
         match_data += ss
 
+        # Add in champ stats
+        if option == "-a":
+            # match_data += get_champ_stats_my_paladins(player, champ)
+            print("NO")
+
     return match_data
-
-
-# print(get_player_in_match("DonPellegrino"))
 
 
 # Helper function to the get_player_elo(player_name) function
@@ -511,7 +521,7 @@ def return_mode(name):
     return mode
 
 
-# Elo?
+# Gets elos for a player from the Paladins Guru site?
 def get_player_elo(player_name):
     url = "http://paladins.guru/profile/pc/" + str(player_name) + "/casual"
     soup = BeautifulSoup(requests.get(url, headers={'Connection': 'close'}).text, 'html.parser')
@@ -548,23 +558,19 @@ def get_player_elo(player_name):
     return stats
 
 
-def get_champ_stats(player_name, champ):
+# based on the user input decides which function to call
+def get_stats(player_name, champ):
     player_name = str(player_name)
-    # champ = str(champ).lower().capitalize()
     champ = str(champ).lower().title()  # Need since some champ names are two words
 
-    # Personal stats
+    # Personal overall stats
     if champ == "Me":
         # return get_global_stats(player_name)
         return get_player_stats_api(player_name)
 
-    # Personal stats
+    # Personal elo stats
     if champ == "Elo":
         return get_player_elo(player_name)
 
+    # Stats for a certain champion
     return get_champ_stats_api(player_name, champ)
-
-
-# print(get_champ_stats("crimstaggrt", "me"))
-
-"""End of Python Functions"""

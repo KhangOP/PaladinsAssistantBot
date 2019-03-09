@@ -9,3 +9,4 @@ Version 2.1 Beta: Current command to get current stats for a match.
 Version 2.2 Beta: Last command to get stats for a players last match.
 Version 2.3.1 Beta: History command to get simple stats for a players last X amount of matches.
 Version 3.0.0 Beta: Added executor to prevent blocking which causes delays or crashes the bot when returning the results.
+Version 3.1.0 Beta:Overrode the default helps commands to make them easier to understand.

@@ -3,6 +3,8 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 from pytz import timezone
 
+import time
+
 
 # Est Time zone for logging function calls
 def get_est_time():
@@ -185,11 +187,28 @@ def get_global_kda(player_name):
     return stats
 
 
-player_name = "feistyjalapeno"
-print(get_global_kda(player_name))
+# player_name = "feistyjalapeno"
+# print(get_global_kda(player_name))
 
 
-def get_champ_stats(player_name, champ):
+# Calculates the kda
+def cal_kda(kills, deaths, assists):
+    if assists == 0:  # Could happen
+        assists = 1
+    if deaths == 0:  # Prefect KDA
+        return str(kills + (assists/2))
+    return str('{0:.2f}'.format(float(kills + (assists/2))/deaths))
+
+
+# n1 = wins and n2 = total matches
+def create_win_rate(n1, n2):
+    if n2 == 0:  # This means they have no data for the ranked split/season
+        return "0"
+    return str('{0:.2f}'.format((n1 / n2) * 100))
+
+
+# Gets stats for a champ from the my paladins site
+def get_champ_stats_my_paladins(player_name, champ):
     player_name = str(player_name)
     champ = str(champ).lower().capitalize()
 
@@ -211,7 +230,23 @@ def get_champ_stats(player_name, champ):
     if "https://mypaladins.com/player" not in url:
         error = "Could not the find player " + player_name + \
                 ". Please make sure the name is spelled right (capitalization does not matter)."
-        return str(error)
+        ss = str('*{:18} Lv. {:3}  {:7}  {:6}\n')
+        ss = ss.format(champ, "???", "???", "???")
+        return ss
+
+    #################
+    # UMMMMM
+    check_url = url.replace(".com/", ".com/api/") + "checkdata"
+    soup = BeautifulSoup(requests.get(check_url).text, 'html.parser')
+    print("New data: ", soup)
+
+    # Force the site to refresh?
+    data_url = url + "refresh"
+    print(data_url)
+    soup = BeautifulSoup(requests.get(data_url).text, 'html.parser')
+
+    time.sleep(4)  # Wait for the site to refresh
+    #################
 
     url = url + "/champions"
     soup = BeautifulSoup(requests.get(url).text, 'html.parser')
@@ -225,26 +260,31 @@ def get_champ_stats(player_name, champ):
         return 1
     """
 
-    yes = 0
+    yes, wins, loses, kills, deaths, assists = 0, 0, 0, 0, 0, 0
     info = []
-    matches = 0
 
     # Gathering the info we want
     for i, row in enumerate(data):
         data[i] = data[i].replace("/", "").strip()
-        print(data[i])
+        # print(data[i])
         if data[i] == champ and data[i-1] != "Refresh Data":    # (if player name = champ name they are looking for)
             yes = 1
         if yes >= 1:
-            if yes == 3 or yes == 4 or yes == 5:
-                pass
+            if yes == 3:
+                kills = int(data[i])
+            if yes == 4:
+                deaths = int(data[i])
+            if yes == 5:
+                assists = int(data[i])
             elif yes == 7 or yes == 8:
                 if data[i] == "":  # Missing data on the site
-                    matches = "???"
                     info.append("???")
                     break
                 else:
-                    matches += int(data[i])
+                    if yes == 7:
+                        wins = int(data[i])
+                    else:
+                        loses = int(data[i])
             else:
                 info.append(data[i])
             yes += 1
@@ -255,18 +295,33 @@ def get_champ_stats(player_name, champ):
     if not info:
         error = "Could not the find champion " + champ + \
                 ". Please make sure the champion name is spelled right (capitalization does not matter)."
-        return str(error)
+        ss = str('*{:18} Lv. {:3}  {:7}  {:6}\n')
+        ss = ss.format(champ, "???", "???", "???")
+        return ss
 
     # Here is what we want
-    results = str("Champion: " + info.pop(0) + "\n" + info.pop(0) + "\n" + "KDA: " + info.pop(0) + "\n" + "WinRate: " +
-                  info.pop(0) + " out of " + str(matches) + " matches.")
-    return results
+    ss = str('*{:18} Lv. {:3}  {:7}  {:6}\n')
+    win_rate = create_win_rate(wins, wins+loses)
+    win_rate += " %"
+    level = info[1].replace("Level", "").strip()
+    kda = cal_kda(kills, deaths, assists)
+    kda = "(" + kda + ")"
+    ss = ss.format(champ, str(level), win_rate, kda)
+    """This Block of code adds color based on WinRate"""
+    if "???" in win_rate:
+        pass
+    elif (float(win_rate.replace(" %", ""))) > 55.00:
+        ss = ss.replace("*", "+")
+    elif (float(win_rate.replace(" %", ""))) < 50.00:
+        ss = ss.replace("*", "-")
+    """^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"""
+    return ss
 
 
-player_name = "rabbitgunner"
-champ = "makoa"
+player_name = "Frosho"
+champ = "barik"
 
-#print(get_champ_stats(player_name, champ))
+print(get_champ_stats_my_paladins(player_name, champ))
 
 """
 print(soup.prettify())

@@ -17,8 +17,8 @@ BOT_PREFIX = ("!!", ">>")
 BOT_STATUS = "!!help or >>help"
 
 BOT_AUTHOR = "FeistyJalapeno#9045"
-BOT_VERSION = "Version 3.0.0 Beta"
-UPDATE_NOTES = "Added executor to prevent blocking which causes delays or crashes the bot when returning the results"
+BOT_VERSION = "Version 3.1.0 Beta"
+UPDATE_NOTES = "Overrode the default helps commands to make them easier to understand."
 ABOUT_BOT = "This bot was created since when Paladins selects random champions its not random. Some people are highly "\
             "likely to get certain roles and if you have a full team not picking champions sometime the game fails to "\
             "fill the last person causing the match to fail to start and kick everyone. This could be due to the game" \
@@ -37,63 +37,44 @@ client = Bot(command_prefix=BOT_PREFIX)
 client.remove_command('help')  # Removing default help command.
 
 
-# Get the some stats for a player while they are in a match.
+# Get simple stats for a player's last amount of matches.
 @client.command(name='history',
-                description="Get simple stats for a player's last amount of matches.",
-                brief="Get simple stats for a player's last amount of matches.",
                 pass_context=True)
 async def history(ctx, player_name, amount=10):
-    await client.send_typing(ctx.message.channel)  # It works... pretty cool
+    await client.send_typing(ctx.message.channel)
     # Prevents blocking so that function calls are not delayed
     executor = ThreadPoolExecutor(max_workers=1)
     loop = asyncio.get_event_loop()
     result = await loop.run_in_executor(executor, Pf.get_history, player_name, amount)
     await client.say("```diff\n" + result + "```")
-    # await client.say("```diff\n" + Pf.get_history(player_name, amount) + "```")
 
 
-# Get the some stats for a player while they are in a match.
-@client.command(name='last',
-                description="Get stats for a player in their last match.",
-                brief="Get stats for a player in their last match.")
+# Get stats for a player in their last match.
+@client.command(name='last')
 async def last(player_name):
     # Prevents blocking so that function calls are not delayed
     executor = ThreadPoolExecutor(max_workers=1)
     loop = asyncio.get_event_loop()
     result = await loop.run_in_executor(executor, Pf.get_history_simple, player_name)
     await client.say("```" + result + "```")
-    # await client.say("```" + Pf.get_history_simple(player_name) + "```")
 
 
-# Get the some stats for a player while they are in a match.
+# Get stats for a player's current match.
 @client.command(name='current',
-                description="Get stats for a player's current match.",
-                brief="Get stats for a player's current match.",
                 pass_context=True,
                 aliases=['cur', 'c'])
-async def current(ctx, player_name):
-    await client.send_typing(ctx.message.channel)  # It works... pretty cool
+async def current(ctx, player_name, option="-s"):
+    await client.send_typing(ctx.message.channel)
     # Prevents blocking so that function calls are not delayed
     executor = ThreadPoolExecutor(max_workers=1)
     loop = asyncio.get_event_loop()
-    result = await loop.run_in_executor(executor, Pf.get_player_in_match, player_name)
+    result = await loop.run_in_executor(executor, Pf.get_player_in_match, player_name, option)
     await client.say("```diff\n" + result + "```")
 
 
 # Calls different random functions based on input
-@client.command(name='random',
-                description="Picks a random (champ, team, or map) based on the given input command which can be: \n\n"
-                            "damage - Picks a random Damage champion. \n"
-                            "healer - Picks a random Support/Healer champion. \n"
-                            "flank  - Picks a random Flank champion. \n"
-                            "tank   - Picks a random FrontLine/Tank champion. \n"
-                            "champ  - Picks a random champion from any class. \n"
-                            "team   - Picks a random team. "
-                            "It will always pick (1 Damage, 1 Flank, 1 Support, and 1 FrontLine, "
-                            "and then one other champion.) \n"
-                            "map    - Picks a random siege/ranked map.",
-                brief="Picks a random (champ, team, or map) based on the given input command.",
-                aliases=['rand', 'r'])
+@client.command(name='rand',
+                aliases=['random', 'r'])
 async def rand(command):
     command = str(command).lower()
     if command == "damage":
@@ -118,8 +99,6 @@ async def rand(command):
 
 # Says a little more about the bot to discord users
 @client.command(name='about',
-                description="Learn more about the bot.",
-                brief="Learn more about the bot.",
                 aliases=['info', 'update'])
 async def about():
     await client.say("Bot Author: " + BOT_AUTHOR + "\n"
@@ -128,13 +107,8 @@ async def about():
                      "About: " + ABOUT_BOT)
 
 
-# Uses Paladins API to return detailed stats on a player
+# Returns simple stats based on the option they choose (champ_name, me, or elo)
 @client.command(name='stats',
-                description="Returns simple stats based on the option they choose: \n\n"
-                ">>stats <player_name> Strix: \nwill return the player's stats on Strix. \n\n"
-                ">>stats <player_name> me: \nwill return the player's overall stats. \n\n"
-                ">>stats <player_name> elo: \nwill return the player's Guru elo.",
-                brief="Returns simple stats for a player.",
                 aliases=['stat'])
 async def stats(player_name, option="me", space=""):
     if space != "":
@@ -142,27 +116,24 @@ async def stats(player_name, option="me", space=""):
     # Prevents blocking so that function calls are not delayed
     executor = ThreadPoolExecutor(max_workers=1)
     loop = asyncio.get_event_loop()
-    result = await loop.run_in_executor(executor, Pf.get_champ_stats, player_name, option)
+    result = await loop.run_in_executor(executor, Pf.get_stats, player_name, option)
     await client.say("```" + result + "```")
-    # await client.say("```" + Pf.get_champ_stats(player_name, champ) + "```")
 
 
-# Handles errors when a user messes up the spelling or forgets an argument to a command
+# Handles errors when a user messes up the spelling or forgets an argument to a command or an error occurs
 @client.event
 async def on_command_error(error, ctx):
     channel = ctx.message.channel
     if isinstance(error, commands.MissingRequiredArgument):
         await client.send_message(channel, "A required argument to the command you called is missing"+"\N{CROSS MARK}")
-        return -1
+        return 0
     if isinstance(error, commands.BadArgument):  # This should do nothing since I check in functions for input error
-        await client.send_message(channel, "Now you done messed up son.")
-        return -1
+        await client.send_message(channel, "Make sure the command is in the correct format.")
     elif isinstance(error, commands.CommandNotFound):
         await client.send_message(channel, f"\N{WARNING SIGN} {error}")
-        return -1
     else:
         print("An uncaught error occurred: ", error)  # More error checking
-        return -1
+        await client.send_message(channel, "Not sure what you did other than its wrong.")
 
 
 # We can use this code to track when people message this bot (a.k.a asking it commands)
@@ -179,37 +150,34 @@ async def on_message(message):
         #    print("Hello creator.")
     # Seeing if someone is using the bot_prefix and calling a command
     if message.content.startswith(">> ") or message.content.startswith("!! "):
-        msg = 'Opps looks like you have a space after the bot prefix {0.author.mention}'.format(message)
+        msg = 'Oops looks like you have a space after the bot prefix {0.author.mention}'.format(message)
         try:
             await client.send_message(message.author, msg)
         except:
             print("Bot does not have permission to print to this channel")  # Temp fix
-        # await client.send_message(message.channel, msg)
-    """
-    if message.content.startswith('*hello'):
-        msg = 'Hello {0.author.mention}'.format(message)
-        await client.send_message(message.channel, msg)
-    elif message.content.startswith('*team'):
-        await client.send_message(message.channel, str(gen_team()))
-    """
 
-    # Magical command...because on_message has priority over function commands
+    # on_message has priority over function commands
     await client.process_commands(message)
 
 
 # Custom help commands
 @client.group(pass_context=True)
 async def help(ctx):
-    await client.say("Help commands are currently being reworked. If you have a question just dm FeistyJalapeno#9045")
+    # await client.say("Help commands are currently being reworked. If you have a question just dm FeistyJalapeno#9045")
 
     if ctx.invoked_subcommand is None:
+        await client.say("Check your dms for a full list of commands. For more help on a certain command just call help"
+                         " on that commands names.")
         author = ctx.message.author
         embed = discord.Embed(
             colour=discord.colour.Color.dark_teal()
         )
+        # Note to get the best experience when using PaladinsAssistant it is recommended that you use discord on
+        # desktop since over half of the commands use color and color does not show up on Mobil.
+
         embed.set_author(name='PaladinsAssistant Commands: ')
-        embed.set_thumbnail(url="https://mypaladins.com/images/paladins/champions/2417.jpg?v=nBF1oAzzG0m0XfoBSuWFwlHsLkORCTHVLyLdqDK1C9A")
-        embed.set_image(url="https://mypaladins.com/images/paladins/champions/2417.jpg?v=nBF1oAzzG0m0XfoBSuWFwlHsLkORCTHVLyLdqDK1C9A")
+        # embed.set_thumbnail(url="https://mypaladins.com/images/paladins/champions/2417.jpg?v=nBF1oAzzG0m0XfoBSuWFwlHsLkORCTHVLyLdqDK1C9A")
+        # embed.set_image(url="https://mypaladins.com/images/paladins/champions/2417.jpg?v=nBF1oAzzG0m0XfoBSuWFwlHsLkORCTHVLyLdqDK1C9A")
         embed.set_footer(icon_url="https://cdn.discordapp.com/embed/avatars/0.png",
                          text="Bot created by FeistyJalapeno#9045. If you have questions, suggestions, "
                               "found a bug, etc. feel free to DM me.")
@@ -223,8 +191,6 @@ async def help(ctx):
         embed.add_field(name='history', value='Returns simple stats for a player\'s last amount of matches.',
                         inline=False)
 
-        # Parameters: `player_name`
-
         await client.send_message(author, embed=embed)
 
 
@@ -234,40 +200,68 @@ async def about():
 
 
 @help.command(pass_context=True)
-async def last(ctx):
-    """
-    message = str("```{}\n\n{}\n{}```").format("Returns stats for a player\'s last match.",
-                                               "Command format:",
-                                               ">>random <player_name>")
-    """
-    '''
-    author = ctx.message.author
-    embed = discord.Embed(
-        colour=discord.colour.Color.dark_teal()
-    )
-    # embed.set_author(name='>>Last Returns stats for a player\'s last match.')
-    # embed.set_footer(icon_url="https://cdn.discordapp.com/embed/avatars/0.png",
-    #                 text="Bot created by FeistyJalapeno#9045. If you have questions, suggestions, "
-    #                      "found a bug, etc. feel free to DM me.")
-    """
-    embed.add_field(name='Command Name:', value='```fix\nlast```', inline=False)
-    embed.add_field(name='Command Description:', value='```\nReturns stats for a player\'s last match.```', inline=False)
-    embed.add_field(name='Command format:', value='```css\n>>last <player_name>```', inline=False)
-    embed.add_field(name='Command format:', value='Random message that is not important.', inline=False)
-    """
-
-    embed.add_field(name='Command Name:', value='```md\nlast```', inline=False)
-    embed.add_field(name='Description:', value='```fix\nReturns stats for a player\'s last match.```',
-                    inline=False)
-    embed.add_field(name='Format:', value='```md\n>>last <player_name>```', inline=False)
-    embed.add_field(name='Parameters:', value='```md\n <player_name> Players Paladins IGN```', inline=False)
-    
-    await client.say(embed=embed)
-    '''
-    await client.say(embed=create_embed("last", "Returns stats for a player\'s last match.", "player_name",
-                                        "Players Paladins IGN"))
+async def last():
+    command_name = "last"
+    command_description = "Returns stats for a player\'s last match."
+    parameters = ["player_name"]
+    descriptions = ["Player's Paladins IGN"]
+    await client.say(embed=create_embed(command_name, command_description, parameters, descriptions))
 
 
+@help.command()
+async def history():
+    command_name = "history"
+    command_description = "Returns simple stats for a player\'s last amount of matches."
+    parameters = ["player_name", "amount"]
+    descriptions = ["Player's Paladins IGN", "Amount of matches you want to see (2-30 matches)"]
+    await client.say(embed=create_embed(command_name, command_description, parameters, descriptions))
+
+
+@help.command()
+async def current():
+    command_name = "current"
+    command_description = "Get stats for a player's current match."
+    parameters = ["player_name"]
+    descriptions = ["Player's Paladins IGN"]
+    await client.say(embed=create_embed(command_name, command_description, parameters, descriptions))
+
+
+@help.command()
+async def stats():
+    command_name = "stats"
+    command_description = "Returns simple overall stats for a player."
+    parameters = ["player_name", "option"]
+    long_string = "can be one of the following: \n\n" \
+                  "1. <me>: will return the player's overall stats. \n" \
+                  "2. <elo>: will return the player's Guru elo.\n" \
+                  "3. <champion_name>: will return the player's stats on the name of the champion entered."
+    descriptions = ["Player's Paladins IGN", long_string]
+
+    await client.say(embed=create_embed(command_name, command_description, parameters, descriptions))
+
+
+@help.command()
+async def rand():
+    command_name = "rand"
+    command_description = "Returns a random (champ, team, or map)."
+    parameters = ["option"]
+    long_string = "can be one of the following: \n\n" \
+                  "1. <damage>: Picks a random Damage champion. \n" \
+                  "2. <healer>: Picks a random Support/Healer champion. \n" \
+                  "3. <flank>: Picks a random Flank champion. \n" \
+                  "4. <tank>: Picks a random FrontLine/Tank champion. \n"\
+                  "5. <champ>: Picks a random champion from any class. \n" \
+                  "6. <map>: Picks a random siege/ranked map. \n" \
+                  "7. <team>: Picks a random team. "\
+                  "It will always pick (1 Damage, 1 Flank, 1 Support, and 1 FrontLine, "\
+                  "and then one other random champion.)"
+    descriptions = [long_string]
+
+    await client.say(embed=create_embed(command_name, command_description, parameters, descriptions))
+
+
+# Creates an embed base for the help commands. This way if I every want to change the look of all my help commands
+# I can just change the look of all the help commands from this one function.
 def create_embed(name, info, pars, des):
     embed = discord.Embed(
         colour=discord.colour.Color.dark_teal()
@@ -276,16 +270,18 @@ def create_embed(name, info, pars, des):
     embed.add_field(name='Command Name:', value='```md\n' + name + '```', inline=False)
     embed.add_field(name='Description:', value='```fix\n' + info + '```',
                     inline=False)
-    # print(len(pars))
-    embed.add_field(name='Format:', value='```md\n>>' + name + " <" + pars + '>```', inline=False)
-    embed.add_field(name='Parameters:', value='```md\n<' + pars + "> " + des + '```', inline=False)
+    format_string = ""
+    description_string = ""
+    for par, de in zip(pars, des):
+        format_string += " <" + par + ">"
+        description_string += "<" + par + "> " + de + "\n"
+
+    embed.add_field(name='Format:', value='```md\n>>' + name + format_string + '```', inline=False)
+    embed.add_field(name='Parameters:', value='```md\n' + description_string + '```', inline=False)
+    embed.set_footer(text="Bot created by FeistyJalapeno#9045. If you have questions, suggestions, "
+                          "found a bug, etc. feel free to DM me.")
 
     return embed
-
-# @help.command()
-# async def last():
-#    await client.say("Bot Author: " + BOT_AUTHOR + "\n" + "Bot Version: " + BOT_VERSION + "\n" + "Updated Notes: " +
-#                     UPDATE_NOTES + "\n\n" + "About: " + ABOUT_BOT)
 
 
 sleep_time = 5
@@ -302,8 +298,7 @@ async def on_ready():
     # Status of the bot
     global backoff_multiplier
     backoff_multiplier = 1
-    # Online, idle, invisible, dnd
-    await client.change_presence(game=Game(name=BOT_STATUS, type=0), status='dnd')
+    await client.change_presence(game=Game(name=BOT_STATUS, type=0), status='dnd')  # Online, idle, invisible, dnd
     print("Client is fully online and ready to go...")
 
 """
@@ -326,11 +321,11 @@ async def change_bot_presence():
         await asyncio.sleep(60)  # Ever min
 
 
+# Fails if the server disconnects
 client.loop.create_task(change_bot_presence())
 
-# Must be called after Discord functions
-# Starts the bot (its online)
 
+# Loop that allows the bot to reconnect if the internet goes out
 while True:
     try:
         client.loop.run_until_complete(client.start(TOKEN))

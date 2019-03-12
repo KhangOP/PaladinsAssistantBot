@@ -4,7 +4,7 @@ from datetime import timedelta, datetime
 import json
 from bs4 import BeautifulSoup
 
-import testing
+# import testing
 
 import time
 """
@@ -33,6 +33,15 @@ r = requests.get(url)
 print(r.status_code)
 print(r.json())
 """
+
+file_name = "token"
+# Gets ID and KEY from a file
+with open(file_name, 'r') as f:
+    TOKEN = f.readline().strip()  # Does nothing
+    ID = int(f.readline())
+    KEY = f.readline()
+f.close()
+
 
 # n1 = wins and n2 = total matches
 def create_win_rate(n1, n2):
@@ -74,7 +83,7 @@ def convert_rank(x):
     }.get(x, "Un-Ranked")
 
 
-paladinsAPI = PaladinsAPI(devId=3046, authKey="BB8E882EADB0431E990CD95E05C2B8C9")
+paladinsAPI = PaladinsAPI(devId=ID, authKey=KEY)
 print(paladinsAPI.getDataUsed())
 
 
@@ -174,7 +183,7 @@ def get_history(player_name, amount=10):
     return title
 
 
-print(get_history("FeistyJalapeno"))
+# print(get_history("FeistyJalapeno"))
 
 
 # Returns simple match history details
@@ -253,7 +262,7 @@ def get_global_kda(player_name):
     # return global_stats
     return stats
 
-print(get_global_kda("FeistyJalapeno"))
+# print(get_global_kda("FeistyJalapeno"))
 
 
 def get_player_in_match(player_name):

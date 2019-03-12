@@ -56,7 +56,8 @@ async def last(player_name):
     executor = ThreadPoolExecutor(max_workers=1)
     loop = asyncio.get_event_loop()
     result = await loop.run_in_executor(executor, Pf.get_history_simple, player_name)
-    await client.say("```" + result + "```")
+    # await client.say("```" + result + "```")
+    await client.say(embed=result)
 
 
 # Get stats for a player's current match.
@@ -94,7 +95,7 @@ async def rand(command):
     else:
         await client.say("Invalid command. For the random command please choose from one following options: "
                          "damage, flank, healer, tank, champ, team, or map. "
-                         "\n For example: ```>>random damage``` will pick a random damage champion")
+                         "\n For example: `>>random damage` will pick a random damage champion")
 
 
 # Says a little more about the bot to discord users
@@ -117,7 +118,11 @@ async def stats(player_name, option="me", space=""):
     executor = ThreadPoolExecutor(max_workers=1)
     loop = asyncio.get_event_loop()
     result = await loop.run_in_executor(executor, Pf.get_stats, player_name, option)
-    await client.say("```" + result + "```")
+    if option == "me" or option == "elo":
+        await client.say("```" + result + "```")
+    else:
+        # await client.say("```" + result + "```")
+        await client.say(embed=result) #WHY IS THIS NoT WORKING?
 
 
 # Handles errors when a user messes up the spelling or forgets an argument to a command or an error occurs
@@ -133,7 +138,8 @@ async def on_command_error(error, ctx):
         await client.send_message(channel, f"\N{WARNING SIGN} {error}")
     else:
         print("An uncaught error occurred: ", error)  # More error checking
-        await client.send_message(channel, "Not sure what you did other than its wrong.")
+        await client.send_message(channel, "Welp, something messed up. If you entered the command correctly just wait a"
+                                           "few seconds and then try again.")
 
 
 # We can use this code to track when people message this bot (a.k.a asking it commands)
@@ -160,27 +166,53 @@ async def on_message(message):
     await client.process_commands(message)
 
 
+@client.command(name='test',
+                aliases=['t'])
+async def test():
+    """
+    embed = discord.Embed(
+        colour=discord.colour.Color.dark_teal()
+    )
+    embed.add_field(name="image", value="http://paladins.guru/assets/img/champions/maldamba.jpg", inline=False)
+    await client.say(embed=embed)
+    """
+    await client.say("<:yinglove:544651722371366924> <:yinglove:544651722371366924> <:yinglove:544651722371366924> "
+                     "<:yinglove:544651722371366924> <:yinglove:544651722371366924>")
+
+
 # Custom help commands
 @client.group(pass_context=True)
 async def help(ctx):
     # await client.say("Help commands are currently being reworked. If you have a question just dm FeistyJalapeno#9045")
 
     if ctx.invoked_subcommand is None:
-        await client.say("Check your dms for a full list of commands. For more help on a certain command just call help"
-                         " on that commands names.")
+        embed = discord.Embed(
+            description="Check your dms for a full list of commands. For more help on a specific command call `>>help "
+                        "<command>`",
+            colour=discord.colour.Color.dark_teal()
+        )
+        await client.say(embed=embed)
+        # Also if you want more information on help with the bot feel free to "
+        #                 "join the bots help server [here](https://discord.gg/JTZ6cJQ) [https://discord.gg/JTZ6cJQ]")
+
+
+
         author = ctx.message.author
         embed = discord.Embed(
             colour=discord.colour.Color.dark_teal()
         )
-        # Note to get the best experience when using PaladinsAssistant it is recommended that you use discord on
-        # desktop since over half of the commands use color and color does not show up on Mobil.
+
+        my_message = "Note to get the best experience when using PaladinsAssistant it is recommended that you use " \
+                     "discord on desktop since over half of the commands use color and colors do not show up on Mobil."\
+                     " Also if you want more information on how to use the bot to its full extent, feel free to join " \
+                     "the support server here: https://discord.gg/JTZ6cJQ"
 
         embed.set_author(name='PaladinsAssistant Commands: ')
-        # embed.set_thumbnail(url="https://mypaladins.com/images/paladins/champions/2417.jpg?v=nBF1oAzzG0m0XfoBSuWFwlHsLkORCTHVLyLdqDK1C9A")
+        embed.set_thumbnail(url="http://paladins.guru/assets/img/champions/grohk.jpg")
         # embed.set_image(url="https://mypaladins.com/images/paladins/champions/2417.jpg?v=nBF1oAzzG0m0XfoBSuWFwlHsLkORCTHVLyLdqDK1C9A")
         embed.set_footer(icon_url="https://cdn.discordapp.com/embed/avatars/0.png",
-                         text="Bot created by FeistyJalapeno#9045. If you have questions, suggestions, "
-                              "found a bug, etc. feel free to DM me.")
+                         text="Bot created by FeistyJalapeno#9045.")
+        # If you have questions, suggestions, found a bug, etc. feel free to DM me.")
         embed.add_field(name='help', value='Returns this message.', inline=False)
         embed.add_field(name='about', value='Returns more information about the bot.', inline=False)
         embed.add_field(name='last', value='Returns stats for a player\'s last match.', inline=False)
@@ -191,6 +223,7 @@ async def help(ctx):
         embed.add_field(name='history', value='Returns simple stats for a player\'s last amount of matches.',
                         inline=False)
 
+        await client.send_message(author, my_message)
         await client.send_message(author, embed=embed)
 
 
@@ -300,16 +333,17 @@ async def on_ready():
     backoff_multiplier = 1
     await client.change_presence(game=Game(name=BOT_STATUS, type=0), status='dnd')  # Online, idle, invisible, dnd
     print("Client is fully online and ready to go...")
+    await list_servers()
 
-"""
+
 async def list_servers():
     await client.wait_until_ready()
     while not client.is_closed:
-        print("Current servers: ")
-        for server in client.servers:
-            print(server.name)
-        await asyncio.sleep(600)
-"""
+        print("Current servers: ", len(client.servers))
+        # for server in client.servers:
+        #    print(server.name)
+        break
+        # await asyncio.sleep(600)
 
 
 # Testing bot presence changing

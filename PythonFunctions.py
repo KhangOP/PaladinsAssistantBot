@@ -5,7 +5,7 @@ from datetime import datetime
 from pytz import timezone
 
 import json
-
+import discord
 import time
 
 from pyrez.api import PaladinsAPI
@@ -104,7 +104,21 @@ def cal_kda(kills, deaths, assists):
 
 # Est Time zone for logging function calls
 def get_est_time():
-    return datetime.now(timezone('EST')).strftime("%H:%M:%S %Y/%m/%d")
+    return datetime.now(timezone('EST')).strftime("%H:%M:%S %m/%d/%Y")
+
+
+def get_champ_image(champ_name):
+    champ_name = champ_name.lower()
+    # These are special cases that need to ge checked
+    if "bomb" in champ_name:
+        return "http://paladins.guru/assets/img/champions/bomb-king.jpg"
+    if "mal" in champ_name:
+        return "http://paladins.guru/assets/img/champions/maldamba.jpg"
+    if "sha" in champ_name:
+        return "http://paladins.guru/assets/img/champions/sha-lin.jpg"
+
+    url = "http://paladins.guru/assets/img/champions/" + str(champ_name) + ".jpg"
+    return url
 
 
 # Converts the match name so that its small enough to fit on one line
@@ -167,9 +181,16 @@ def get_history(player_name, amount):
 # Returns simple match history details
 def get_history_simple(player_name):
     player_id = get_player_id(player_name)
+
     if player_id == -1:
-        return "Can't find the player: " + player_name + \
+        match_data = "Can't find the player: " + player_name + \
                ". Please make sure the name is spelled correctly (Capitalization does not matter)."
+        embed = discord.Embed(
+            description=match_data,
+            colour=discord.colour.Color.dark_teal()
+        )
+        return embed
+
     paladins_data = paladinsAPI.getMatchHistory(player_id)
     for match in paladins_data:
         # Check to see if this player does have match history
@@ -177,15 +198,27 @@ def get_history_simple(player_name):
             break
         match_data = str('{}\'s {} match:\n\n').format(str(player_name), str(match.mapGame).replace("LIVE", ""))
         ss = str(
-            'Match Status: {} ({} mins)\nChampion: {}\nKDA: {} ({}-{}-{})\nDamage: {}\nDamage Taken: {}\nHealing: {}\n')
+            '`Match Status: {} ({} mins)\nChampion: {}\nKDA: {} ({}-{}-{})\nDamage: {}\nDamage Taken: {}\nHealing: {}`\n')
         kills = match.kills
         deaths = match.deaths
         assists = match.assists
         kda = cal_kda(kills, deaths, assists)
         match_data += ss.format(match.winStatus, match.matchMinutes, match.godName, kda, kills, deaths, assists,
                                 match.damage, match.damageTaken, match.healing)
-        return match_data
-    return "Player does not have recent match data."
+
+        embed = discord.Embed(
+            description=match_data,
+            colour=discord.colour.Color.dark_teal()
+        )
+
+        embed.set_thumbnail(url=get_champ_image(match.godName))
+        return embed
+
+    embed = discord.Embed(
+        description="Player does not have recent match data.",
+        colour=discord.colour.Color.dark_teal()
+    )
+    return embed
 
 
 # Uses the random functions about to generate team of random champions
@@ -299,7 +332,7 @@ def get_player_stats_api(player_name):
 
 
 # Gets stats for a champ using Paladins API
-def get_champ_stats_api(player_name, champ):
+def get_champ_stats_api(player_name, champ, simple):
     # Gets player id and error checks
     player_id = get_player_id(player_name)
     if player_id == -1:
@@ -313,18 +346,49 @@ def get_champ_stats_api(player_name, champ):
     ss = ""
 
     for stat in stats:
-        wins = stat.wins
-        loses = stat.losses
-        kda = stat.getKDA()
+        # champ we want to get the stats on
         if stat.godName == champ:
+            wins = stat.wins
+            losses = stat.losses
+            win_rate = create_win_rate(wins, wins + losses)
+            level = stat.godLevel
+            kda = cal_kda(stat.kills, stat.deaths, stat.assists)
+
             ss = str('Champion: {} (Lv {})\nKDA: {} ({}-{}-{}) \nWinRate: {}% ({}-{}) \nLast Played: {}')
-            ss = ss.format(stat.godName, stat.godLevel, kda, stat.kills, stat.deaths, stat.assists,
-                           create_win_rate(wins, wins+loses), stat.wins, stat.losses, str(stat.lastPlayed).split()[0])
+            ss = ss.format(champ, level, kda, stat.kills, stat.deaths, stat.assists,
+                           win_rate, wins, losses, str(stat.lastPlayed).split()[0])
+            if simple == 1:
+                win_rate += " %"
+                kda = "(" + kda + ")"
+                ss = str('*{:18} Lv. {:3}  {:7}  {:6}\n')
+                ss = ss.format(champ, str(level), win_rate, kda)
+                """This Block of code adds color based on WinRate"""
+                if "???" in win_rate:
+                    pass
+                elif (float(win_rate.replace(" %", ""))) > 55.00:
+                    ss = ss.replace("*", "+")
+                elif (float(win_rate.replace(" %", ""))) < 50.00:
+                    ss = ss.replace("*", "-")
+                """^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"""
         # They have not played this champion yet
-        if ss == "":
-            ss += "No data for champion: " + champ + "\n"
+    if ss == "":
+        ss = "No data for champion: " + champ + "\n"
+        if simple == 1:
+            ss = str('*{:18} Lv. {:3}  {:7}  {:6}\n')
+            ss = ss.format(champ, "???", "???", "???")
+
+    # Create an embed
+    if simple != 1:
+        embed = discord.Embed(
+            colour=discord.colour.Color.dark_teal()
+        )
+        embed.add_field(name='Your stats: ', value='`' + ss + '`', inline=False)
+        embed.set_thumbnail(url=get_champ_image(champ))
+        return embed
 
     return ss
+
+# print(get_champ_stats_api("FeistyJalapeno", "evie", 0))
 
 
 # Creates Json we can use
@@ -480,7 +544,7 @@ def get_player_in_match(player_name, option):
         # Add in champ stats
         if option == "-a":
             # match_data += get_champ_stats_my_paladins(player, champ)
-            return "This option is being "
+            match_data += get_champ_stats_api(player, champ, 1) #TESTT ME PLEASE
 
     match_data += "\n"
 
@@ -501,8 +565,7 @@ def get_player_in_match(player_name, option):
 
         # Add in champ stats
         if option == "-a":
-            # match_data += get_champ_stats_my_paladins(player, champ)
-            print("NO")
+            match_data += get_champ_stats_api(player, champ, 1)  # TESTT ME PLEASE
 
     return match_data
 
@@ -573,4 +636,4 @@ def get_stats(player_name, champ):
         return get_player_elo(player_name)
 
     # Stats for a certain champion
-    return get_champ_stats_api(player_name, champ)
+    return get_champ_stats_api(player_name, champ, simple=0)

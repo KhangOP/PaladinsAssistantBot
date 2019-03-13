@@ -17,8 +17,8 @@ BOT_PREFIX = ("!!", ">>")
 BOT_STATUS = "!!help or >>help"
 
 BOT_AUTHOR = "FeistyJalapeno#9045"
-BOT_VERSION = "Version 3.1.0 Beta"
-UPDATE_NOTES = "Overrode the default helps commands to make them easier to understand."
+BOT_VERSION = "Version 3.2.2 Beta"
+UPDATE_NOTES = "Changed 3 functions to be embeds to include images."
 ABOUT_BOT = "This bot was created since when Paladins selects random champions its not random. Some people are highly "\
             "likely to get certain roles and if you have a full team not picking champions sometime the game fails to "\
             "fill the last person causing the match to fail to start and kick everyone. This could be due to the game" \
@@ -148,42 +148,60 @@ async def stats(player_name, option="me", space=""):
         await client.say(embed=result)
 
 
+# Bot tries to message the error in the channel where its caused and then tries to dm the error to the user
+@client.event
+async def send_error(cont, msg):
+    channel = cont.message.channel
+    try:  # First lets try to send the message to the channel the command was called
+        await client.send_message(channel, msg)
+    except:
+        try:  # Next lets try to DM the message to the user
+            await client.send_message(cont.message.author, msg)
+        except:  # Bad sign if we end up here but is possible if the user blocks some DM's
+            print("The bot can't message the user in their DM's or in the channel they called the function.")
+
+
 # Handles errors when a user messes up the spelling or forgets an argument to a command or an error occurs
 @client.event
 async def on_command_error(error, ctx):
-    channel = ctx.message.channel
     if isinstance(error, commands.MissingRequiredArgument):
-        await client.send_message(channel, "A required argument to the command you called is missing"+"\N{CROSS MARK}")
+        await send_error(cont=ctx, msg="A required argument to the command you called is missing"+"\N{CROSS MARK}")
         return 0
     if isinstance(error, commands.BadArgument):  # This should do nothing since I check in functions for input error
-        await client.send_message(channel, "Make sure the command is in the correct format.")
+        await send_error(cont=ctx, msg="Make sure the command is in the correct format.")
     elif isinstance(error, commands.CommandNotFound):
-        await client.send_message(channel, f"\N{WARNING SIGN} {error}")
+        msg = f"\N{WARNING SIGN} {error}"
+        await send_error(cont=ctx, msg=msg)
     else:
         print("An uncaught error occurred: ", error)  # More error checking
-        await client.send_message(channel, "Welp, something messed up. If you entered the command correctly just wait a"
-                                           "few seconds and then try again.")
+        msg = "Welp, something messed up. If you entered the command correctly just wait a few seconds and then try " \
+              "again."
+        await send_error(cont=ctx, msg=msg)
 
 
 # We can use this code to track when people message this bot (a.k.a asking it commands)
 @client.event
 async def on_message(message):
+    channel = message.channel
     # we do not want the bot to reply to itself
     if message.author == client.user:
         return
 
     # Seeing if someone is using the bot_prefix and calling a command
     if message.content.startswith(BOT_PREFIX):
-        print(message.author, message.content, message.channel, message.server, Pf.get_est_time())
+        print(message.author, message.content, channel, message.server, Pf.get_est_time())
         # if str(message.author) == "FeistyJalapeno#9045":  # This works ^_^
         #    print("Hello creator.")
     # Seeing if someone is using the bot_prefix and calling a command
     if message.content.startswith(">> ") or message.content.startswith("!! "):
         msg = 'Oops looks like you have a space after the bot prefix {0.author.mention}'.format(message)
-        try:
-            await client.send_message(message.author, msg)
+        try:  # First lets try to send the message to the channel the command was called
+            await client.send_message(channel, msg)
         except:
-            print("Bot does not have permission to print to this channel")  # Temp fix
+            try:    # Next lets try to DM the message to the user
+                await client.send_message(message.author, msg)
+            except:  # Bad sign if we end up here but is possible if the user blocks some DM's
+                print("The bot can't message the user in their DM's or in the channel they called the function.")
 
     # on_message has priority over function commands
     await client.process_commands(message)

@@ -382,7 +382,7 @@ def get_champ_stats_api(player_name, champ, simple):
         embed = discord.Embed(
             colour=discord.colour.Color.dark_teal()
         )
-        embed.add_field(name='Your stats: ', value='`' + ss + '`', inline=False)
+        embed.add_field(name=player_name + "'s stats: ", value='`' + ss + '`', inline=False)
         embed.set_thumbnail(url=get_champ_image(champ))
         return embed
 
@@ -617,6 +617,9 @@ def get_player_elo(player_name):
         if data[i] == "Siege":
             if data[i+1] == "Normal:":
                 break
+
+        if stats == "":
+            return "The player: " + player_name + " does not have any matches this season."
 
     return stats
 

@@ -78,18 +78,40 @@ async def current(ctx, player_name, option="-s"):
                 aliases=['random', 'r'])
 async def rand(command):
     command = str(command).lower()
+    embed = discord.Embed(
+        colour=discord.colour.Color.dark_teal()
+    )
     if command == "damage":
-        await client.say("Your random Damage champion is: " + "```css\n" + Pf.pick_damage() + "```")
+        champ = Pf.pick_damage()
+        embed.add_field(name="Your random Damage champion is: ", value=champ)
+        embed.set_image(url=Pf.get_champ_image(champ))
+        await client.say(embed=embed)
     elif command == "flank":
-        await client.say("Your random Flank champion is: " + "```css\n" + Pf.pick_flank() + "```")
+        champ = Pf.pick_flank()
+        embed.add_field(name="Your random Flank champion is: ", value=champ)
+        embed.set_image(url=Pf.get_champ_image(champ))
+        await client.say(embed=embed)
     elif command == "healer":
-        await client.say("Your random Support/Healer champion is: " + "```css\n" + Pf.pick_support() + "```")
+        champ = Pf.pick_support()
+        embed.add_field(name="Your random Support/Healer champion is: ", value=champ)
+        embed.set_image(url=Pf.get_champ_image(champ))
+        await client.say(embed=embed)
     elif command == "tank":
-        await client.say("Your random FrontLine/Tank champion is: " + "```css\n" + Pf.pick_tank() + "```")
+        champ = Pf.pick_tank()
+        embed.add_field(name="Your random FrontLine/Tank champion is: ", value=champ)
+        embed.set_image(url=Pf.get_champ_image(champ))
+        await client.say(embed=embed)
     elif command == "champ":
-        await client.say("Your random champion is: " + "```css\n" + Pf.pick_random_champ() + "```")
+        champ = Pf.pick_random_champ()
+        embed.add_field(name="Your random champion is: ", value=champ)
+        embed.set_image(url=Pf.get_champ_image(champ))
+        await client.say(embed=embed)
     elif command == "team":
-        await  client.say("Your random team is: " + "```css\n" + Pf.gen_team() + "```")
+        await client.say("Your random team is: \n" + "```css\n" + Pf.gen_team()+"```")
+        # space = "      "
+        # await client.say("<:yinglove:544651722371366924>"+space+"<:yinglove:544651722371366924>"+space +
+        #                 "<:yinglove:544651722371366924>"+space+"<:yinglove:544651722371366924>"+space +
+        #                 "<:yinglove:544651722371366924>")
     elif command == "map" or command == "stage":
         await  client.say("Your random map is: " + "```css\n" + Pf.pick_map() + "```")
     else:
@@ -114,6 +136,8 @@ async def about():
 async def stats(player_name, option="me", space=""):
     if space != "":
         option += " " + space
+    else:  # If the user capitalize the option it cause a bug because if calls the wrong function
+        option = option.lower()
     # Prevents blocking so that function calls are not delayed
     executor = ThreadPoolExecutor(max_workers=1)
     loop = asyncio.get_event_loop()
@@ -121,8 +145,7 @@ async def stats(player_name, option="me", space=""):
     if option == "me" or option == "elo":
         await client.say("```" + result + "```")
     else:
-        # await client.say("```" + result + "```")
-        await client.say(embed=result) #WHY IS THIS NoT WORKING?
+        await client.say(embed=result)
 
 
 # Handles errors when a user messes up the spelling or forgets an argument to a command or an error occurs
@@ -167,8 +190,9 @@ async def on_message(message):
 
 
 @client.command(name='test',
+                pass_context=True,
                 aliases=['t'])
-async def test():
+async def test(ctx):
     """
     embed = discord.Embed(
         colour=discord.colour.Color.dark_teal()
@@ -176,8 +200,31 @@ async def test():
     embed.add_field(name="image", value="http://paladins.guru/assets/img/champions/maldamba.jpg", inline=False)
     await client.say(embed=embed)
     """
-    await client.say("<:yinglove:544651722371366924> <:yinglove:544651722371366924> <:yinglove:544651722371366924> "
-                     "<:yinglove:544651722371366924> <:yinglove:544651722371366924>")
+    author = ctx.message.author
+
+    embed = discord.Embed(
+        colour=discord.colour.Color.dark_teal()
+    )
+    embed.add_field(name='Player 1', value="http://paladins.guru/assets/img/champions/grohk.jpg", inline=True)
+    embed.add_field(name='Player 2', value="<:yinglove:544651722371366924>", inline=True)
+    embed.add_field(name='Player 3', value="<:yinglove:544651722371366924>", inline=True)
+    embed.add_field(name='Player 4', value="<:yinglove:544651722371366924>", inline=True)
+    embed.add_field(name='Player 5', value="<:yinglove:544651722371366924>", inline=True)
+
+    await client.send_message(author, embed=embed)
+
+    embed = discord.Embed(
+        colour=discord.colour.Color.dark_gold()
+    )
+    embed.set_image(url="http://paladins.guru/assets/img/champions/grohk.jpg")
+    embed.set_image(url="http://paladins.guru/assets/img/champions/lian.jpg")
+    await client.send_message(author, embed=embed)
+
+    # file = discord.File("asd.png", file_name="asd.png")
+    await client.send_file(author, "asd.png")
+
+    await client.say("<:yinglove:544651722371366924>     <:yinglove:544651722371366924> <:yinglove:544651722371366924> "
+                     "<:yinglove:544651722371366924>     <:yinglove:544651722371366924>")
 
 
 # Custom help commands
@@ -192,10 +239,6 @@ async def help(ctx):
             colour=discord.colour.Color.dark_teal()
         )
         await client.say(embed=embed)
-        # Also if you want more information on help with the bot feel free to "
-        #                 "join the bots help server [here](https://discord.gg/JTZ6cJQ) [https://discord.gg/JTZ6cJQ]")
-
-
 
         author = ctx.message.author
         embed = discord.Embed(
@@ -203,9 +246,12 @@ async def help(ctx):
         )
 
         my_message = "Note to get the best experience when using PaladinsAssistant it is recommended that you use " \
-                     "discord on desktop since over half of the commands use color and colors do not show up on Mobil."\
-                     " Also if you want more information on how to use the bot to its full extent, feel free to join " \
-                     "the support server here: https://discord.gg/JTZ6cJQ"
+                     "discord on desktop since over half of the commands use colors and colors do not show up on " \
+                     "Mobile. Below are listed all the different types of commands this bot offers." \
+                     "\n\nFor example, if someone " \
+                     "wants to know how to use the `stats` command, they would type `>>help stats`" \
+                     "\n\nAlso if you want more information on how to use the bot to its full extent, feel free to " \
+                     "join the support server here: https://discord.gg/BD34QCa"
 
         embed.set_author(name='PaladinsAssistant Commands: ')
         embed.set_thumbnail(url="http://paladins.guru/assets/img/champions/grohk.jpg")
@@ -223,8 +269,8 @@ async def help(ctx):
         embed.add_field(name='history', value='Returns simple stats for a player\'s last amount of matches.',
                         inline=False)
 
-        await client.send_message(author, my_message)
-        await client.send_message(author, embed=embed)
+        await client.send_message(author, my_message, embed=embed)
+        # await client.send_message(author, embed=embed)
 
 
 @help.command()
@@ -339,14 +385,14 @@ async def on_ready():
 async def list_servers():
     await client.wait_until_ready()
     while not client.is_closed:
-        print("Current servers: ", len(client.servers))
+        print("Current servers:", len(client.servers))
         # for server in client.servers:
         #    print(server.name)
         break
         # await asyncio.sleep(600)
 
 
-# Testing bot presence changing
+# Changing bot presence changing
 async def change_bot_presence():
     await client.wait_until_ready()
     secure_random = random.SystemRandom()

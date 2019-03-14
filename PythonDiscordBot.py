@@ -162,6 +162,7 @@ async def send_error(cont, msg):
 
 
 # Handles errors when a user messes up the spelling or forgets an argument to a command or an error occurs
+# """
 @client.event
 async def on_command_error(error, ctx):
     if isinstance(error, commands.MissingRequiredArgument):
@@ -177,6 +178,7 @@ async def on_command_error(error, ctx):
         msg = "Welp, something messed up. If you entered the command correctly just wait a few seconds and then try " \
               "again."
         await send_error(cont=ctx, msg=msg)
+# """
 
 
 # We can use this code to track when people message this bot (a.k.a asking it commands)
@@ -236,6 +238,7 @@ async def test(ctx):
     )
     embed.set_image(url="http://paladins.guru/assets/img/champions/grohk.jpg")
     embed.set_image(url="http://paladins.guru/assets/img/champions/lian.jpg")
+    # embed.set_image(url="asd.png") does not work
     await client.send_message(author, embed=embed)
 
     # file = discord.File("asd.png", file_name="asd.png")
@@ -272,8 +275,7 @@ async def help(ctx):
                      "join the support server here: https://discord.gg/BD34QCa"
 
         embed.set_author(name='PaladinsAssistant Commands: ')
-        embed.set_thumbnail(url="http://paladins.guru/assets/img/champions/grohk.jpg")
-        # embed.set_image(url="https://mypaladins.com/images/paladins/champions/2417.jpg?v=nBF1oAzzG0m0XfoBSuWFwlHsLkORCTHVLyLdqDK1C9A")
+        embed.set_thumbnail(url="http://web.eecs.utk.edu/~ehicks8/Androxus.png")  # Upload to website
         embed.set_footer(icon_url="https://cdn.discordapp.com/embed/avatars/0.png",
                          text="Bot created by FeistyJalapeno#9045.")
         # If you have questions, suggestions, found a bug, etc. feel free to DM me.")

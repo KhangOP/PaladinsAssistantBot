@@ -336,8 +336,13 @@ def get_champ_stats_api(player_name, champ, simple):
     # Gets player id and error checks
     player_id = get_player_id(player_name)
     if player_id == -1:
-        return "Can't find the player: " + player_name + \
-               ". Please make sure the name is spelled correctly (Capitalization does not matter)."
+        match_data = "Can't find the player: " + player_name + \
+                     ". Please make sure the name is spelled correctly (Capitalization does not matter)."
+        embed = discord.Embed(
+            description=match_data,
+            colour=discord.colour.Color.dark_teal()
+        )
+        return embed
     stats = paladinsAPI.getChampionRanks(player_id)
 
     if "Mal" in champ:
@@ -592,6 +597,7 @@ def get_player_elo(player_name):
     data = list(filter(None, soup))
 
     stats = ""
+    mode = ""
 
     # Gets elo information below
     for i, row in enumerate(data):
@@ -618,8 +624,9 @@ def get_player_elo(player_name):
             if data[i+1] == "Normal:":
                 break
 
-        if stats == "":
-            return "The player: " + player_name + " does not have any matches this season."
+    # Checking if the player has any data for this season
+    if mode == "":
+        return "The player: " + player_name + " does not have any matches this season."
 
     return stats
 

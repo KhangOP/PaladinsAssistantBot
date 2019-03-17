@@ -360,15 +360,20 @@ def get_champ_stats_api(player_name, champ, simple):
         champ = "Mal Damba"
 
     ss = ""
+    t_wins = 0
+    t_loses = 0
+    t_kda = 0
+    count = 0
 
     for stat in stats:
+        count += 1
+        wins = stat.wins
+        losses = stat.losses
+        kda = cal_kda(stat.kills, stat.deaths, stat.assists)
         # champ we want to get the stats on
         if stat.godName == champ:
-            wins = stat.wins
-            losses = stat.losses
             win_rate = create_win_rate(wins, wins + losses)
             level = stat.godLevel
-            kda = cal_kda(stat.kills, stat.deaths, stat.assists)
 
             ss = str('Champion: {} (Lv {})\nKDA: {} ({}-{}-{}) \nWin Rate: {}% ({}-{}) \nLast Played: {}')
             ss = ss.format(champ, level, kda, stat.kills, stat.deaths, stat.assists,
@@ -386,7 +391,19 @@ def get_champ_stats_api(player_name, champ, simple):
                 elif (float(win_rate.replace(" %", ""))) < 50.00:
                     ss = ss.replace("*", "-")
                 """^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"""
-        # They have not played this champion yet
+        # Global win rate and kda
+        t_wins += wins
+        t_loses += losses
+        t_kda += float(kda)
+
+    # Global win rate and kda
+    global_ss = str("\n\nGlobal KDA: {}\nGlobal WinRate: {}% ({}-{})")
+    win_rate = create_win_rate(t_wins, t_wins + t_loses)
+    t_kda = str('{0:.2f}').format(t_kda / count)
+    global_ss = global_ss.format(t_kda, win_rate, t_wins, t_loses)
+    ss += global_ss
+
+    # They have not played this champion yet
     if ss == "":
         ss = "No data for champion: " + champ + "\n"
         if simple == 1:

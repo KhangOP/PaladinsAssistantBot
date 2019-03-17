@@ -51,11 +51,11 @@ async def history(ctx, player_name, amount=10):
 
 # Get stats for a player in their last match.
 @client.command(name='last')
-async def last(player_name):
+async def last(player_name, match_id=-1):
     # Prevents blocking so that function calls are not delayed
     executor = ThreadPoolExecutor(max_workers=1)
     loop = asyncio.get_event_loop()
-    result = await loop.run_in_executor(executor, Pf.get_history_simple, player_name)
+    result = await loop.run_in_executor(executor, Pf.get_last, player_name, match_id)
     # await client.say("```" + result + "```")
     await client.say(embed=result)
 

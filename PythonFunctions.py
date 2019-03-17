@@ -41,6 +41,7 @@ def get_player_id(player_name):
     with open("player_ids") as f:
         player_ids = json.load(f)
 
+    # This player is already in the dictionary and therefor we don't need to waste an api call to get the player id.
     if player_name in player_ids:
         return player_ids[player_name]
     else:
@@ -48,7 +49,7 @@ def get_player_id(player_name):
         if not player:  # invalid name
             return -1
         new_id = player.playerId
-        player_ids[player_name] = new_id
+        player_ids[player_name] = new_id  # store the new id in the dictionary
 
         # need to update the file now
         print("Added a new player the dictionary: " + player_name)
@@ -104,7 +105,8 @@ def cal_kda(kills, deaths, assists):
 
 # Est Time zone for logging function calls
 def get_est_time():
-    return datetime.now(timezone('EST')).strftime("%H:%M:%S %m/%d/%Y")
+    # using just timezone 'EST' does not include daylight savings
+    return datetime.now(timezone('US/Eastern')).strftime("%H:%M:%S %m/%d/%Y")
 
 
 def get_champ_image(champ_name):
@@ -179,7 +181,7 @@ def get_history(player_name, amount):
 
 
 # Returns simple match history details
-def get_history_simple(player_name):
+def get_last(player_name, match_id):
     player_id = get_player_id(player_name)
 
     if player_id == -1:
@@ -196,28 +198,37 @@ def get_history_simple(player_name):
         # Check to see if this player does have match history
         if match.playerName is None:
             break
-        match_data = str('{}\'s {} match:\n\n').format(str(player_name), str(match.mapGame).replace("LIVE", ""))
-        ss = str(
-            '`Match Status: {} ({} mins)\nChampion: {}\nKDA: {} ({}-{}-{})\nDamage: {}\nDamage Taken: {}\nHealing: {}`\n')
-        kills = match.kills
-        deaths = match.deaths
-        assists = match.assists
-        kda = cal_kda(kills, deaths, assists)
-        match_data += ss.format(match.winStatus, match.matchMinutes, match.godName, kda, kills, deaths, assists,
-                                match.damage, match.damageTaken, match.healing)
 
-        embed = discord.Embed(
-            description=match_data,
-            colour=discord.colour.Color.dark_teal()
-        )
+        if match_id == -1 or match_id == match.matchId:
+            match_data = str('{}\'s {} match:\n\n').format(str(player_name), str(match.mapGame).replace("LIVE", ""))
+            ss = str('`Match Status: {} ({} mins)\nChampion: {}\nKDA: {} ({}-{}-{})\nDamage: {}\nDamage Taken: {}'
+                     '\nHealing: {} \nObjective Time: {}`\n')
+            kills = match.kills
+            deaths = match.deaths
+            assists = match.assists
+            kda = cal_kda(kills, deaths, assists)
+            match_data += ss.format(match.winStatus, match.matchMinutes, match.godName, kda, kills, deaths, assists,
+                                    match.damage, match.damageTaken, match.healing, match.objectiveAssists)
 
-        embed.set_thumbnail(url=get_champ_image(match.godName))
-        return embed
+            embed = discord.Embed(
+                description=match_data,
+                colour=discord.colour.Color.dark_teal()
+            )
 
+            embed.set_thumbnail(url=get_champ_image(match.godName))
+
+            return embed
+
+    # If the match id could not be found
     embed = discord.Embed(
-        description="Player does not have recent match data.",
+        description="Could not find a match with the match id: " + str(match_id),
         colour=discord.colour.Color.dark_teal()
     )
+
+    # If player has not played recently
+    if match_id == -1:
+        embed.description = "Player does not have recent match data."
+
     return embed
 
 
@@ -301,7 +312,7 @@ def get_player_stats_api(player_name):
     ss += "Name: " + str(info.playerName) + "\n"
     ss += "Account Level: " + str(info.accountLevel) + "\n"
     total = int(info.wins) + int(info.losses)
-    ss += "WinRate: " + create_win_rate(int(info.wins), total) + "% out of " + str(total) + " matches.\n"
+    ss += "Win Rate: " + create_win_rate(int(info.wins), total) + "% out of " + str(total) + " matches.\n"
     ss += "Times Deserted: " + str(info.leaves) + "\n\n"
 
     # Ranked Info
@@ -314,7 +325,7 @@ def get_player_stats_api(player_name):
     win = int(ranked.wins)
     lose = int(ranked.losses)
 
-    ss += "WinRate: " + create_win_rate(win, win + lose) + "% (" + '{}-{}'.format(win, lose) + ")\n"
+    ss += "Win Rate: " + create_win_rate(win, win + lose) + "% (" + '{}-{}'.format(win, lose) + ")\n"
     ss += "Times Deserted: " + str(ranked.leaves) + "\n\n"
 
     # Extra info
@@ -359,7 +370,7 @@ def get_champ_stats_api(player_name, champ, simple):
             level = stat.godLevel
             kda = cal_kda(stat.kills, stat.deaths, stat.assists)
 
-            ss = str('Champion: {} (Lv {})\nKDA: {} ({}-{}-{}) \nWinRate: {}% ({}-{}) \nLast Played: {}')
+            ss = str('Champion: {} (Lv {})\nKDA: {} ({}-{}-{}) \nWin Rate: {}% ({}-{}) \nLast Played: {}')
             ss = ss.format(champ, level, kda, stat.kills, stat.deaths, stat.assists,
                            win_rate, wins, losses, str(stat.lastPlayed).split()[0])
             if simple == 1:
@@ -367,7 +378,7 @@ def get_champ_stats_api(player_name, champ, simple):
                 kda = "(" + kda + ")"
                 ss = str('*{:18} Lv. {:3}  {:7}  {:6}\n')
                 ss = ss.format(champ, str(level), win_rate, kda)
-                """This Block of code adds color based on WinRate"""
+                """This Block of code adds color based on Win Rate"""
                 if "???" in win_rate:
                     pass
                 elif (float(win_rate.replace(" %", ""))) > 55.00:
@@ -402,7 +413,7 @@ def create_json(raw_data):
     return json.loads(json_data)
 
 
-# Gets kda and WinRate for a player
+# Gets KDA and Win Rate for a player
 def get_global_kda(player_name):
     url = "http://paladins.guru/profile/pc/" + player_name
 
@@ -442,7 +453,7 @@ def get_global_kda(player_name):
         return error
 
     # Puts all the info into one string to print
-    # global_stats = "Name: " + stats.pop(0) + " (Lv. " + stats.pop(0) + ")\n" + "WinRate: " + \
+    # global_stats = "Name: " + stats.pop(0) + " (Lv. " + stats.pop(0) + ")\n" + "Win Rate: " + \
     #                stats.pop(0) + "\n" + "Global KDA: " + stats.pop(0)
     # return global_stats
     return stats
@@ -529,14 +540,14 @@ def get_player_in_match(player_name, option):
     match_data = ""
     match_data += player_name + " is in a " + match_string + " match."  # Match Type
     # print(match_data)
-    match_data += str('\n\n{:18}  {:7}  {:7}  {:6}\n\n').format("Player name", "Level", "WinRate", "KDA")
+    match_data += str('\n\n{:18}  {:7}  {:8}  {:6}\n\n').format("Player name", "Level", "Win Rate", "KDA")
 
     for player, champ in zip(team1, team1_champs):
         # print(get_global_kda(player))
         pl = get_global_kda(player)
-        ss = str('*{:18} Lv. {:3}  {:7}  {:6}\n')
+        ss = str('*{:18} Lv. {:3}  {:8}  {:6}\n')
         ss = ss.format(pl[0], str(pl[1]), pl[2], pl[3])
-        """This Block of code adds color based on WinRate"""
+        """This Block of code adds color based on Win Rate"""
         if "???" in pl[2]:
             pass
         elif(float(pl[2].replace(" %", ""))) > 55.00:
@@ -556,9 +567,9 @@ def get_player_in_match(player_name, option):
     for player, champ in zip(team2, team2_champs):
         # print(get_global_kda(player))
         pl = get_global_kda(player)
-        ss = str('*{:18} Lv. {:3}  {:7}  {:6}\n')
+        ss = str('*{:18} Lv. {:3}  {:8}  {:6}\n')
         ss = ss.format(pl[0], str(pl[1]), pl[2], pl[3])
-        """This Block of code adds color based on WinRate"""
+        """This Block of code adds color based on Win Rate"""
         if "???" in pl[2]:
             pass
         elif (float(pl[2].replace(" %", ""))) > 55.00:
@@ -581,7 +592,7 @@ def return_mode(name):
     if name == "Siege":
         mode += "Siege rating: \n"
     elif name == "Survival":
-        mode += "Survival rating: \n"
+        mode += "Onslaught rating: \n"  # Rename to onslaught
     elif name == "Deathmatch":
         mode += "Team Deathmatch rating: \n"
     else:
@@ -607,7 +618,7 @@ def get_player_elo(player_name):
                 mode += str("Rank: " + data[i + 2])             # Rank
                 mode += str(" (Top " + data[i + 5] + ")\n")     # Rank %
                 mode += str("Elo: " + data[i + 6] + "\n")       # Elo
-                mode += str("WinRate: " + data[i + 8])          # WinRate
+                mode += str("Win Rate: " + data[i + 8])         # Win Rate
                 mode += str(" (" + data[i + 10] + "-")          # Wins
                 mode += data[i + 11] + ")"                      # Loses
                 stats += mode + "\n\n"
@@ -616,7 +627,7 @@ def get_player_elo(player_name):
                 mode += str("Rank: ???")                    # Rank
                 mode += str(" (Top " + "???" + ")\n")       # Rank %
                 mode += str("Elo: " + data[i + 2] + "\n")   # Elo
-                mode += str("WinRate: " + data[i + 4])      # WinRate
+                mode += str("Win Rate: " + data[i + 4])     # Win Rate
                 mode += str(" (" + data[i + 6] + "-")       # Wins
                 mode += data[i + 7] + ")"                   # Loses
                 stats += mode + "\n\n"

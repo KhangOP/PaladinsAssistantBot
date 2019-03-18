@@ -6,7 +6,6 @@ from pytz import timezone
 
 import json
 import discord
-import time
 
 from pyrez.api import PaladinsAPI
 
@@ -375,7 +374,12 @@ def get_champ_stats_api(player_name, champ, simple):
             win_rate = create_win_rate(wins, wins + losses)
             level = stat.godLevel
 
+            last_played = str(stat.lastPlayed)
+            if not last_played:  # Bought the champ but never played them
+                break
+
             ss = str('Champion: {} (Lv {})\nKDA: {} ({}-{}-{}) \nWin Rate: {}% ({}-{}) \nLast Played: {}')
+
             ss = ss.format(champ, level, kda, stat.kills, stat.deaths, stat.assists,
                            win_rate, wins, losses, str(stat.lastPlayed).split()[0])
             if simple == 1:
@@ -396,19 +400,19 @@ def get_champ_stats_api(player_name, champ, simple):
         t_loses += losses
         t_kda += float(kda)
 
-    # Global win rate and kda
-    global_ss = str("\n\nGlobal KDA: {}\nGlobal WinRate: {}% ({}-{})")
-    win_rate = create_win_rate(t_wins, t_wins + t_loses)
-    t_kda = str('{0:.2f}').format(t_kda / count)
-    global_ss = global_ss.format(t_kda, win_rate, t_wins, t_loses)
-    ss += global_ss
-
     # They have not played this champion yet
     if ss == "":
         ss = "No data for champion: " + champ + "\n"
         if simple == 1:
             ss = str('*{:18} Lv. {:3}  {:7}  {:6}\n')
             ss = ss.format(champ, "???", "???", "???")
+
+    # Global win rate and kda
+    global_ss = str("\n\nGlobal KDA: {}\nGlobal WinRate: {}% ({}-{})")
+    win_rate = create_win_rate(t_wins, t_wins + t_loses)
+    t_kda = str('{0:.2f}').format(t_kda / count)
+    global_ss = global_ss.format(t_kda, win_rate, t_wins, t_loses)
+    ss += global_ss
 
     # Create an embed
     if simple != 1:

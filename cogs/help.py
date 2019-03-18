@@ -76,10 +76,6 @@ class HelpCog(commands.Cog, name="Help Commands"):
             await author.send(my_message, embed=embed)
 
     @help.command()
-    async def about(self, ctx):
-        await ctx.send("```Returns more information about the bot.```")
-
-    @help.command(pass_context=True)
     async def last(self, ctx):
         command_name = "last"
         command_description = "Returns stats for a player\'s last match."

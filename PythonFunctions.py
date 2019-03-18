@@ -8,6 +8,7 @@ import json
 import discord
 
 from pyrez.api import PaladinsAPI
+import MyException as MyException
 
 
 file_name = "token"
@@ -37,8 +38,8 @@ MAPS = ["Frog Isle", "Jaguar Falls", "Serpent Beach", "Frozen Guard", "Ice Mines
 # it does an API call to get the player's id. Then it writes that id to the dictionary. Helps save API calls.
 def get_player_id(player_name):
     player_name = player_name.lower()
-    with open("player_ids") as f:
-        player_ids = json.load(f)
+    with open("player_ids") as json_f:
+        player_ids = json.load(json_f)
 
     # This player is already in the dictionary and therefor we don't need to waste an api call to get the player id.
     if player_name in player_ids:
@@ -52,8 +53,8 @@ def get_player_id(player_name):
 
         # need to update the file now
         print("Added a new player the dictionary: " + player_name)
-        with open("player_ids", 'w') as f:
-            json.dump(player_ids, f)
+        with open("player_ids", 'w') as json_f:
+            json.dump(player_ids, json_f)
         return new_id
 
 
@@ -112,13 +113,13 @@ def get_champ_image(champ_name):
     champ_name = champ_name.lower()
     # These are special cases that need to ge checked
     if "bomb" in champ_name:
-        return "http://paladins.guru/assets/img/champions/bomb-king.jpg"
+        return "https://web2.hirez.com/paladins/champion-icons/bomb-king.jpg"
     if "mal" in champ_name:
-        return "http://paladins.guru/assets/img/champions/maldamba.jpg"
+        return "https://web2.hirez.com/paladins/champion-icons/maldamba.jpg"
     if "sha" in champ_name:
-        return "http://paladins.guru/assets/img/champions/sha-lin.jpg"
+        return "https://web2.hirez.com/paladins/champion-icons/sha-lin.jpg"
 
-    url = "http://paladins.guru/assets/img/champions/" + str(champ_name) + ".jpg"
+    url = "https://web2.hirez.com/paladins/champion-icons/" + str(champ_name) + ".jpg"
     return url
 
 
@@ -408,7 +409,7 @@ def get_champ_stats_api(player_name, champ, simple):
             ss = ss.format(champ, "???", "???", "???")
 
     # Global win rate and kda
-    global_ss = str("\n\nGlobal KDA: {}\nGlobal WinRate: {}% ({}-{})")
+    global_ss = str("\n\nGlobal KDA: {}\nGlobal Win Rate: {}% ({}-{})")
     win_rate = create_win_rate(t_wins, t_wins + t_loses)
     t_kda = str('{0:.2f}').format(t_kda / count)
     global_ss = global_ss.format(t_kda, win_rate, t_wins, t_loses)
@@ -536,7 +537,7 @@ def get_player_in_match(player_name, option):
     # 'playerName': 'NabbitOW', 'ret_msg': None, 'taskForce': 1, 'tierLosses': 0, 'tierWins': 0}
     try:
         players = paladinsAPI.getMatchPlayerDetails(match_id)
-    except:
+    except MyException:
         return "An problem occurred. Please make sure you are not using this command on the event mode."
     # print(players)
     team1 = []
@@ -580,8 +581,7 @@ def get_player_in_match(player_name, option):
 
         # Add in champ stats
         if option == "-a":
-            # match_data += get_champ_stats_my_paladins(player, champ)
-            match_data += get_champ_stats_api(player, champ, 1) #TESTT ME PLEASE
+            match_data += get_champ_stats_api(player, champ, 1)
 
     match_data += "\n"
 
@@ -602,7 +602,7 @@ def get_player_in_match(player_name, option):
 
         # Add in champ stats
         if option == "-a":
-            match_data += get_champ_stats_api(player, champ, 1)  # TESTT ME PLEASE
+            match_data += get_champ_stats_api(player, champ, 1)
 
     return match_data
 

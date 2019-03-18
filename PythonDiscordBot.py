@@ -7,7 +7,7 @@ from concurrent.futures import ThreadPoolExecutor
 import asyncio
 
 import PythonFunctions as Pf
-
+import MyException as MyException
 
 # Discord Variables
 BOT_PREFIX = ("!!", ">>")
@@ -16,10 +16,6 @@ BOT_STATUS = "!!help or >>help"
 BOT_AUTHOR = "FeistyJalapeno#9045"
 BOT_VERSION = "Version 3.2.2 Beta"
 UPDATE_NOTES = "Changed 3 functions to be embeds to include images."
-ABOUT_BOT = "This bot was created since when Paladins selects random champions its not random. Some people are highly "\
-            "likely to get certain roles and if you have a full team not picking champions sometime the game fails to "\
-            "fill the last person causing the match to fail to start and kick everyone. This could be due to the game" \
-            "trying to select a champion that has already been selected."
 GAME = ["Paladins", BOT_STATUS, BOT_VERSION, BOT_STATUS, "Errors"]
 
 
@@ -82,51 +78,37 @@ async def rand(ctx, command):
     if command == "damage":
         champ = Pf.pick_damage()
         embed.add_field(name="Your random Damage champion is: ", value=champ)
-        embed.set_image(url=Pf.get_champ_image(champ))
+        embed.set_thumbnail(url=Pf.get_champ_image(champ))
         # await client.say(embed=embed)
         await ctx.send(embed=embed)
     elif command == "flank":
         champ = Pf.pick_flank()
         embed.add_field(name="Your random Flank champion is: ", value=champ)
-        embed.set_image(url=Pf.get_champ_image(champ))
+        embed.set_thumbnail(url=Pf.get_champ_image(champ))
         await ctx.send(embed=embed)
     elif command == "healer":
         champ = Pf.pick_support()
         embed.add_field(name="Your random Support/Healer champion is: ", value=champ)
-        embed.set_image(url=Pf.get_champ_image(champ))
+        embed.set_thumbnail(url=Pf.get_champ_image(champ))
         await ctx.send(embed=embed)
     elif command == "tank":
         champ = Pf.pick_tank()
         embed.add_field(name="Your random FrontLine/Tank champion is: ", value=champ)
-        embed.set_image(url=Pf.get_champ_image(champ))
+        embed.set_thumbnail(url=Pf.get_champ_image(champ))
         await ctx.send(embed=embed)
     elif command == "champ":
         champ = Pf.pick_random_champ()
         embed.add_field(name="Your random champion is: ", value=champ)
-        embed.set_image(url=Pf.get_champ_image(champ))
+        embed.set_thumbnail(url=Pf.get_champ_image(champ))
         await ctx.send(embed=embed)
     elif command == "team":
         await ctx.send("Your random team is: \n" + "```css\n" + Pf.gen_team()+"```")
-        # space = "      "
-        # await client.say("<:yinglove:544651722371366924>"+space+"<:yinglove:544651722371366924>"+space +
-        #                 "<:yinglove:544651722371366924>"+space+"<:yinglove:544651722371366924>"+space +
-        #                 "<:yinglove:544651722371366924>")
     elif command == "map" or command == "stage":
         await  ctx.send("Your random map is: " + "```css\n" + Pf.pick_map() + "```")
     else:
         await ctx.send("Invalid command. For the random command please choose from one following options: "
                        "damage, flank, healer, tank, champ, team, or map. "
                        "\n For example: `>>random damage` will pick a random damage champion")
-
-
-# Says a little more about the bot to discord users
-@client.command(name='about',
-                aliases=['info', 'update'])
-async def about(ctx):
-    await ctx.send("Bot Author: " + BOT_AUTHOR + "\n"
-                   "Bot Version: " + BOT_VERSION + "\n"
-                   "Updated Notes: " + UPDATE_NOTES + "\n\n"
-                   "About: " + ABOUT_BOT)
 
 
 # Returns simple stats based on the option they choose (champ_name, me, or elo)
@@ -152,11 +134,11 @@ async def stats(ctx, player_name, option="me", space=""):
 async def send_error(cont, msg):
     try:  # First lets try to send the message to the channel the command was called
         await cont.send(msg)
-    except:
+    except MyException:
         try:  # Next lets try to DM the message to the user
             # await client.send_message(cont.message.author, msg)
             await cont.send(msg)
-        except:  # Bad sign if we end up here but is possible if the user blocks some DM's
+        except MyException:  # Bad sign if we end up here but is possible if the user blocks some DM's
             print("The bot can't message the user in their DM's or in the channel they called the function.")
 
 
@@ -199,11 +181,11 @@ async def on_message(message):
         try:  # First lets try to send the message to the channel the command was called
             # await client.send_message(channel, msg)
             await message.channel.send(msg)
-        except:
+        except MyException:
             try:    # Next lets try to DM the message to the user
                 # await client.send_message(message.author, msg)
                 await message.channel.send(msg)
-            except:  # Bad sign if we end up here but is possible if the user blocks some DM's
+            except MyException:  # Bad sign if we end up here but is possible if the user blocks some DM's
                 print("The bot can't message the user in their DM's or in the channel they called the function.")
 
     # on_message has priority over function commands
@@ -301,10 +283,8 @@ def load_cogs():
         try:
             client.load_extension(extension)
             print("loaded extension:", extension)
-        except Exception as e:
+        except MyException:
             print("failed to load: ", extension)
-            # print(f'Failed to load extension {extension}.', file=sys.stderr)
-            # traceback.print_exc()
 
 
 load_cogs()

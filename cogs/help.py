@@ -35,7 +35,6 @@ class HelpCog(commands.Cog, name="Help Commands"):
     # Custom help commands
     @commands.group(pass_context=True)
     async def help(self, ctx):
-        await ctx.send("The cogs are working")
 
         if ctx.invoked_subcommand is None:
             embed = discord.Embed(
@@ -64,7 +63,7 @@ class HelpCog(commands.Cog, name="Help Commands"):
                              text="Bot created by FeistyJalapeno#9045.")
             # If you have questions, suggestions, found a bug, etc. feel free to DM me.")
             embed.add_field(name='help', value='Returns this message.', inline=False)
-            embed.add_field(name='about', value='Returns more information about the bot.', inline=False)
+            # embed.add_field(name='about', value='Returns more information about the bot.', inline=False)
             embed.add_field(name='last', value='Returns stats for a player\'s last match.', inline=False)
             embed.add_field(name='stats', value='Returns simple overall stats for a player.', inline=False)
             embed.add_field(name='random', value='Randomly chooses a map, champion, or team to help with '
@@ -73,7 +72,15 @@ class HelpCog(commands.Cog, name="Help Commands"):
             embed.add_field(name='history', value='Returns simple stats for a player\'s last amount of matches.',
                             inline=False)
 
-            await author.send(my_message, embed=embed)
+            # Try to first dm the user the help commands, then try to post it the channel where it was called
+            try:
+                await author.send(my_message, embed=embed)
+            except None:
+                print("Could not dm the help command to the person who called the command.")
+                try:
+                    await ctx.send(my_message, embed=embed)
+                except None:
+                    print("We have failed to message the help commands to the person.")
 
     @help.command()
     async def last(self, ctx):

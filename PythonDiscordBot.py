@@ -134,7 +134,7 @@ async def stats(ctx, player_name, option="me", space=""):
 async def send_error(cont, msg):
     try:  # First lets try to send the message to the channel the command was called
         await cont.send(msg)
-    except MyException:
+    except None:
         try:  # Next lets try to DM the message to the user
             # await client.send_message(cont.message.author, msg)
             await cont.send(msg)
@@ -245,21 +245,18 @@ async def on_ready():
     # Status of the bot
     global backoff_multiplier
     backoff_multiplier = 1
-    # await client.change_presence(game=Game(name=BOT_STATUS, type=0), status='dnd')  # Online, idle, invisible, dnd
+    # Online, idle, invisible, dnd
     await client.change_presence(status=discord.Status.dnd, activity=discord.Game(name=BOT_STATUS, type=0))
+    await count_servers()
     print("Client is fully online and ready to go...")
     # await list_servers()
 
-"""
-async def list_servers():
+
+@client.event
+async def count_servers():
     await client.wait_until_ready()
-    while not client.is_closed:
-        print("Current servers:", len(client.servers))
-        # for server in client.servers:
-        #    print(server.name)
-        break
-        # await asyncio.sleep(600)
-"""
+    if not client.is_closed():
+        print("Current servers:", len(client.guilds))
 
 """
 # Changing bot presence changing

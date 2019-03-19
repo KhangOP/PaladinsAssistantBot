@@ -125,7 +125,9 @@ def get_champ_image(champ_name):
 
 # Converts the match name so that its small enough to fit on one line
 def convert_match_type(match_name):
-    if "TDM" in match_name:
+    if "Practice" in match_name:
+        return "Bot Match"
+    elif "TDM" in match_name:
         return "TDM"
     elif "Onslaught" in match_name:
         return "Onslaught"
@@ -140,6 +142,7 @@ def convert_match_type(match_name):
 
 
 # Returns simple match history details for many matches
+# TODO Once this is in a cog just have the client send two messages once amount > 30
 def get_history(player_name, amount):
     if amount > 30 or amount <= 1:
         return "Please enter an amount between 2-30"
@@ -148,6 +151,7 @@ def get_history(player_name, amount):
         return "Can't find the player: " + player_name + \
                ". Please make sure the name is spelled correctly (Capitalization does not matter)."
     paladins_data = paladinsAPI.getMatchHistory(player_id)
+    # paladins_data = paladinsAPI.getMatchDetailsBatch(player_id) # Need to look into this
     count = 0
     match_data = ""
     for match in paladins_data:

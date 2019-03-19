@@ -13,3 +13,7 @@ Version 3.1.0 Beta: Overrode the default helps commands to make them easier to u
 Version 3.2.0 Beta: Changed 3 functions to be embeds to include images.
 Version 3.2.1 Beta: Smashed 2 bugs.
 Version 3.2.2 Beta: Smashed 2 bugs related to lack of permissions when sending messages.
+Version 4.0.0 Beta: Upgraded the bot to using Discord rewrite.
+Version 4.0.1 Beta: Fixed server list function.
+Version 4.0.2 Beta:
+Version 4.0.0 Beta:

@@ -5,6 +5,7 @@ from discord.ext.commands import Bot
 from concurrent.futures import ThreadPoolExecutor
 
 import asyncio
+import random
 
 import PythonFunctions as Pf
 import MyException as MyException
@@ -14,7 +15,7 @@ BOT_PREFIX = ("!!", ">>")
 BOT_STATUS = "!!help or >>help"
 
 BOT_AUTHOR = "FeistyJalapeno#9045"
-BOT_VERSION = "Version 3.2.2 Beta"
+BOT_VERSION = "Version 4.0.1 Beta"
 UPDATE_NOTES = "Changed 3 functions to be embeds to include images."
 GAME = ["Paladins", BOT_STATUS, BOT_VERSION, BOT_STATUS, "Errors"]
 
@@ -67,50 +68,6 @@ async def current(ctx, player_name, option="-s"):
         await ctx.send("```diff\n" + result + "```")
 
 
-# Calls different random functions based on input
-@client.command(name='rand',
-                aliases=['random', 'r'])
-async def rand(ctx, command):
-    command = str(command).lower()
-    embed = discord.Embed(
-        colour=discord.colour.Color.dark_teal()
-    )
-    if command == "damage":
-        champ = Pf.pick_damage()
-        embed.add_field(name="Your random Damage champion is: ", value=champ)
-        embed.set_thumbnail(url=Pf.get_champ_image(champ))
-        # await client.say(embed=embed)
-        await ctx.send(embed=embed)
-    elif command == "flank":
-        champ = Pf.pick_flank()
-        embed.add_field(name="Your random Flank champion is: ", value=champ)
-        embed.set_thumbnail(url=Pf.get_champ_image(champ))
-        await ctx.send(embed=embed)
-    elif command == "healer":
-        champ = Pf.pick_support()
-        embed.add_field(name="Your random Support/Healer champion is: ", value=champ)
-        embed.set_thumbnail(url=Pf.get_champ_image(champ))
-        await ctx.send(embed=embed)
-    elif command == "tank":
-        champ = Pf.pick_tank()
-        embed.add_field(name="Your random FrontLine/Tank champion is: ", value=champ)
-        embed.set_thumbnail(url=Pf.get_champ_image(champ))
-        await ctx.send(embed=embed)
-    elif command == "champ":
-        champ = Pf.pick_random_champ()
-        embed.add_field(name="Your random champion is: ", value=champ)
-        embed.set_thumbnail(url=Pf.get_champ_image(champ))
-        await ctx.send(embed=embed)
-    elif command == "team":
-        await ctx.send("Your random team is: \n" + "```css\n" + Pf.gen_team()+"```")
-    elif command == "map" or command == "stage":
-        await  ctx.send("Your random map is: " + "```css\n" + Pf.pick_map() + "```")
-    else:
-        await ctx.send("Invalid command. For the random command please choose from one following options: "
-                       "damage, flank, healer, tank, champ, team, or map. "
-                       "\n For example: `>>random damage` will pick a random damage champion")
-
-
 # Returns simple stats based on the option they choose (champ_name, me, or elo)
 @client.command(name='stats',
                 aliases=['stat'])
@@ -134,11 +91,11 @@ async def stats(ctx, player_name, option="me", space=""):
 async def send_error(cont, msg):
     try:  # First lets try to send the message to the channel the command was called
         await cont.send(msg)
-    except None:
+    except BaseException:
         try:  # Next lets try to DM the message to the user
             # await client.send_message(cont.message.author, msg)
             await cont.send(msg)
-        except MyException:  # Bad sign if we end up here but is possible if the user blocks some DM's
+        except BaseException:  # Bad sign if we end up here but is possible if the user blocks some DM's
             print("The bot can't message the user in their DM's or in the channel they called the function.")
 
 
@@ -240,38 +197,37 @@ backoff_multiplier = 1
 async def on_ready():
     print('Logged in as')
     print(client.user.name)
-    # print(client.user.id)
     print('------')
-    # Status of the bot
-    global backoff_multiplier
-    backoff_multiplier = 1
-    # Online, idle, invisible, dnd
-    await client.change_presence(status=discord.Status.dnd, activity=discord.Game(name=BOT_STATUS, type=0))
     await count_servers()
+    await change_bot_presence()
     print("Client is fully online and ready to go...")
-    # await list_servers()
 
 
+# Prints the number of servers the bot is in
 @client.event
 async def count_servers():
     await client.wait_until_ready()
     if not client.is_closed():
         print("Current servers:", len(client.guilds))
 
-"""
-# Changing bot presence changing
+
+# Changing bot presence
 async def change_bot_presence():
-    await client.wait_until_ready()
     secure_random = random.SystemRandom()
-    while not client.is_closed:
-        # await client.change_presence(game=Game(name=secure_random.choice(GAME), type=0), status='dnd')
+    while 1:
+        # This will throw a connection error once the bot goes offline but nothing seems to prevent this so a try
+        # except code block must be used to prevent an error from being thrown
+        try:
+            await client.change_presence(status=discord.Status.dnd,  # Online, idle, invisible, dnd
+                                         activity=discord.Game(name=secure_random.choice(GAME), type=0))
+        except BaseException:
+            pass
         await asyncio.sleep(60)  # Ever min
-"""
 
 
-# Below cogs represents our folder our cogs are in. Following is the file name. So 'meme.py' in cogs, would be cogs.meme
+# Below cogs represents the folder our cogs are in. Following is the file name. So 'meme.py' in cogs, would be cogs.meme
 # Think of it like a dot path import
-initial_extensions = ['cogs.help']
+initial_extensions = ['cogs.help', 'cogs.rand']
 
 
 # Here we load our extensions(cogs) listed above in [initial_extensions].
@@ -287,10 +243,6 @@ def load_cogs():
 load_cogs()
 
 client.run(TOKEN, bot=True, reconnect=True)
-
-# Does not work with discord rewrite
-# client.loop.create_task(change_bot_presence())
-
 
 # Loop that allows the bot to reconnect if the internet goes out
 """

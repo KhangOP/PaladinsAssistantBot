@@ -1,4 +1,3 @@
-import random
 import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
@@ -21,17 +20,6 @@ f.close()
 
 
 paladinsAPI = PaladinsAPI(devId=ID, authKey=KEY)
-
-# List of Champs by Class
-DAMAGES = ["Cassie", "Kinessa", "Drogoz", "Bomb King", "Viktor", "Sha Lin", "Tyra", "Willo", "Lian", "Strix", "Vivian",
-           "Dredge", "Imani"]
-FLANKS = ["Skye", "Buck", "Evie", "Androxus", "Maeve", "Lex", "Zhin", "Talus", "Moji", "Koga"]
-FRONTLINES = ["Barik", "Fernando", "Ruckus", "Makoa", "Torvald", "Inara", "Ash", "Terminus", "Khan"]
-SUPPORTS = ["Grohk", "Grover", "Ying", "Mal Damba", "Seris", "Jenos", "Furia"]
-
-# Map Names
-MAPS = ["Frog Isle", "Jaguar Falls", "Serpent Beach", "Frozen Guard", "Ice Mines", "Ice Mines", "Fish Market",
-        "Timber Mill", "Stone Keep", "Brightmarsh", "Splitstone Quarry", "Ascension Peak", "Warder's Gate"]
 
 
 # Get the player id for a player based on their name. First it checks a dictionary and if they are not in there then
@@ -56,42 +44,6 @@ def get_player_id(player_name):
         with open("player_ids", 'w') as json_f:
             json.dump(player_ids, json_f)
         return new_id
-
-
-# Picks a random damage champion.
-def pick_damage():
-    secure_random = random.SystemRandom()
-    return secure_random.choice(DAMAGES)
-
-
-# Picks a random flank champion.
-def pick_flank():
-    secure_random = random.SystemRandom()
-    return secure_random.choice(FLANKS)
-
-
-# Picks a random tank champion.
-def pick_tank():
-    secure_random = random.SystemRandom()
-    return secure_random.choice(FRONTLINES)
-
-
-# Picks a random support champion.
-def pick_support():
-    secure_random = random.SystemRandom()
-    return secure_random.choice(SUPPORTS)
-
-
-# Picks a random Siege/Ranked map.
-def pick_map():
-    secure_random = random.SystemRandom()
-    return secure_random.choice(MAPS)
-
-
-# Picks a random champion from any class.
-def pick_random_champ():
-    secure_random = random.SystemRandom()
-    return secure_random.choice([pick_damage, pick_support, pick_tank, pick_flank])()
 
 
 # Calculates the kda
@@ -234,29 +186,6 @@ def get_last(player_name, match_id):
         embed.description = "Player does not have recent match data."
 
     return embed
-
-
-# Uses the random functions about to generate team of random champions
-# It will always pick (1 Damage, 1 Flank, 1 Support, and 1 FrontLine, and then one other champion.)
-def gen_team():
-    team = [pick_damage(), pick_flank(), pick_support(), pick_tank()]
-
-    fill = pick_random_champ()
-    """Keep Generating a random champ until its not one we already have"""
-    while fill in team:
-        fill = pick_random_champ()
-
-    team.append(fill)
-
-    """Shuffle the team so people get different roles"""
-    random.shuffle(team)
-    random.shuffle(team)
-    random.shuffle(team)
-
-    team_string = "\n"
-    for champ in team:
-        team_string += champ + "\n"
-    return team_string
 
 
 # n1 = wins and n2 = total matches

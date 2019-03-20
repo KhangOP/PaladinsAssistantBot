@@ -266,10 +266,8 @@ def get_player_stats_api(player_name):
     ss += "Account created on: " + str(info.createdDatetime).split()[0] + "\n"
     ss += "Last login on: " + str(info.lastLoginDatetime).split()[0] + "\n"
     ss += "Platform: " + str(info.platform) + "\n"
-    # data = info.json
-    # print(type(data))
-    # print(data["MasteryLevel"])
-    # ss += "MasteryLevel: " + str(j["MasteryLevel"]) + "\n" "JSON-FIX"
+    data = info.json
+    ss += "MasteryLevel: " + str(data["MasteryLevel"]) + "\n"
     ss += "Steam Achievements completed: " + str(info.totalAchievements) + "/58\n"
 
     return ss
@@ -368,7 +366,7 @@ def create_json(raw_data):
     return json.loads(json_data)
 
 
-# Gets KDA and Win Rate for a player
+# Gets KDA and Win Rate for a player from Guru
 def get_global_kda(player_name):
     url = "http://paladins.guru/profile/pc/" + player_name
 
@@ -425,24 +423,23 @@ def get_player_in_match(player_name, option):
     if player_id == -1:
         return "Can't find the player: " + player_name + \
                ". Please make sure the name is spelled correctly (Capitalization does not matter)."
-    j = create_json(paladinsAPI.getPlayerStatus(player_id))
-    """ JSON FIX
+    # j = create_json(paladinsAPI.getPlayerStatus(player_id))
+    # """ JSON FIX
     data = paladinsAPI.getPlayerStatus(player_id)
-    print(type(data))
-    print(type(data.json))
-    """
+    data = data.json
+    # """
     # print(type(paladinsAPI.getPlayerStatus(player_id)))
     # data = paladinsAPI.getPlayerStatus(player_id)
     # print(data)
 
-    if j == 0:
+    if data == 0:
         return str("Player " + player_name + " is not found.")
-    match_id = j["Match"]
-    if j['status'] == 0:
+    match_id = data["Match"]
+    if data['status'] == 0:
         return "Player is offline."
-    elif j['status'] == 1:
+    elif data['status'] == 1:
         return "Player is in lobby."
-    elif j['status'] == 2:
+    elif data['status'] == 2:
         return "Player in champion selection."
 
     # match_queue_id = 424 = Siege
@@ -452,15 +449,15 @@ def get_player_in_match(player_name, option):
     # match_queue_id = 486 = Ranked (Invalid)
 
     match_string = "Unknown match Type"
-    if j["match_queue_id"] == 424:
+    if data["match_queue_id"] == 424:
         match_string = "Siege"
-    elif j["match_queue_id"] == 445:
+    elif data["match_queue_id"] == 445:
         return "No data for Test Maps."
-    elif j["match_queue_id"] == 452:
+    elif data["match_queue_id"] == 452:
         match_string = "Onslaught"
-    elif j["match_queue_id"] == 469:
+    elif data["match_queue_id"] == 469:
         match_string = "Team Death Match"
-    elif j["match_queue_id"] == 486:  # Should be fixed now
+    elif data["match_queue_id"] == 486:  # Should be fixed now
         match_string = "Ranked"
         # return "Ranked is currently not working."
 
@@ -554,7 +551,7 @@ def return_mode(name):
     return mode
 
 
-# Gets elos for a player from the Paladins Guru site?
+# Gets elo's for a player from the Paladins Guru site?
 def get_player_elo(player_name):
     url = "http://paladins.guru/profile/pc/" + str(player_name) + "/casual"
     soup = BeautifulSoup(requests.get(url, headers={'Connection': 'close'}).text, 'html.parser')

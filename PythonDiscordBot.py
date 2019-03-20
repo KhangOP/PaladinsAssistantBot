@@ -31,61 +31,6 @@ client = Bot(command_prefix=BOT_PREFIX)
 client.remove_command('help')  # Removing default help command.
 
 
-# Get simple stats for a player's last amount of matches.
-@client.command(name='history',
-                pass_context=True)
-async def history(ctx, player_name, amount=10):
-    async with ctx.channel.typing():
-        # Prevents blocking so that function calls are not delayed
-        executor = ThreadPoolExecutor(max_workers=1)
-        loop = asyncio.get_event_loop()
-        result = await loop.run_in_executor(executor, Pf.get_history, player_name, amount)
-        await ctx.send("```diff\n" + result + "```")
-
-
-# Get stats for a player in their last match.
-@client.command(name='last')
-async def last(ctx, player_name, match_id=-1):
-    # Prevents blocking so that function calls are not delayed
-    executor = ThreadPoolExecutor(max_workers=1)
-    loop = asyncio.get_event_loop()
-    result = await loop.run_in_executor(executor, Pf.get_last, player_name, match_id)
-    # await client.say("```" + result + "```")
-    await ctx.send(embed=result)
-
-
-# Get stats for a player's current match.
-@client.command(name='current',
-                pass_context=True,
-                aliases=['cur', 'c'])
-async def current(ctx, player_name, option="-s"):
-    # await client.send_typing(ctx.message.channel)
-    async with ctx.channel.typing():
-        # Prevents blocking so that function calls are not delayed
-        executor = ThreadPoolExecutor(max_workers=1)
-        loop = asyncio.get_event_loop()
-        result = await loop.run_in_executor(executor, Pf.get_player_in_match, player_name, option)
-        await ctx.send("```diff\n" + result + "```")
-
-
-# Returns simple stats based on the option they choose (champ_name, me, or elo)
-@client.command(name='stats',
-                aliases=['stat'])
-async def stats(ctx, player_name, option="me", space=""):
-    if space != "":
-        option += " " + space
-    else:  # If the user capitalize the option it cause a bug because if calls the wrong function
-        option = option.lower()
-    # Prevents blocking so that function calls are not delayed
-    executor = ThreadPoolExecutor(max_workers=1)
-    loop = asyncio.get_event_loop()
-    result = await loop.run_in_executor(executor, Pf.get_stats, player_name, option)
-    if option == "me" or option == "elo":
-        await ctx.send("```" + result + "```")
-    else:
-        await ctx.send(embed=result)
-
-
 # Bot tries to message the error in the channel where its caused and then tries to dm the error to the user
 @client.event
 async def send_error(cont, msg):
@@ -227,7 +172,7 @@ async def change_bot_presence():
 
 # Below cogs represents the folder our cogs are in. Following is the file name. So 'meme.py' in cogs, would be cogs.meme
 # Think of it like a dot path import
-initial_extensions = ['cogs.help', 'cogs.rand']
+initial_extensions = ['cogs.help', 'cogs.rand', 'cogs.PaladinsAPI']
 
 
 # Here we load our extensions(cogs) listed above in [initial_extensions].

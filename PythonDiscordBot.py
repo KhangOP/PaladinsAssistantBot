@@ -6,7 +6,6 @@ import asyncio
 import random
 
 import my_utils as helper
-import MyException as MyException
 
 # Discord Variables
 BOT_PREFIX = ("!!", ">>")
@@ -78,10 +77,10 @@ async def on_message(message):
         msg = 'Oops looks like you have a space after the bot prefix {0.author.mention}'.format(message)
         try:  # First lets try to send the message to the channel the command was called
             await message.channel.send(msg)
-        except MyException:
+        except BaseException:
             try:    # Next lets try to DM the message to the user
                 await message.channel.send(msg)
-            except MyException:  # Bad sign if we end up here but is possible if the user blocks some DM's
+            except BaseException:  # Bad sign if we end up here but is possible if the user blocks some DM's
                 print("The bot can't message the user in their DM's or in the channel they called the function.")
 
     # on_message has priority over function commands
@@ -131,7 +130,7 @@ def load_cogs():
         try:
             client.load_extension(extension)
             print("loaded extension:", extension)
-        except MyException:
+        except helper.MyException:
             print("failed to load: ", extension)
 
 

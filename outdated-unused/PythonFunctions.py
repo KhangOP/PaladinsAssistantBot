@@ -7,7 +7,7 @@ import json
 import discord
 
 from pyrez.api import PaladinsAPI
-import MyException as MyException
+import my_utils as helper
 
 
 file_name = "token"
@@ -467,7 +467,7 @@ def get_player_in_match(player_name, option):
     # 'playerName': 'NabbitOW', 'ret_msg': None, 'taskForce': 1, 'tierLosses': 0, 'tierWins': 0}
     try:
         players = paladinsAPI.getMatchPlayerDetails(match_id)
-    except MyException:
+    except helper.MyException:
         return "An problem occurred. Please make sure you are not using this command on the event mode."
     # print(players)
     team1 = []

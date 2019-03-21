@@ -23,3 +23,11 @@ async def get_champ_image(champ_name):
 
     url = "https://web2.hirez.com/paladins/champion-icons/" + str(champ_name) + ".jpg"
     return url
+
+
+class MyException(Exception):
+    def __init__(self, error):
+        self.error = error
+
+    def __str__(self):
+        return repr(self.error)

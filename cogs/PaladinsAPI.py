@@ -544,7 +544,9 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 if option == "-a":
                     match_data += self.get_champ_stats_api(player, champ, 1)
 
-        await ctx.send("```diff\n" + match_data + "```")
+            buffer = await helper.create_match_image(team1_champs, team2_champs)
+            file = discord.File(filename="Team.png", fp=buffer)
+            await ctx.send("```diff\n" + match_data + "```", file=file)
 
     # Returns simple stats based on the option they choose (champ_name, me, or elo)
     @commands.command(name='stats', aliases=['stat'])

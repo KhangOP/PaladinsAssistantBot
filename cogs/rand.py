@@ -29,7 +29,7 @@ class RandomCog(commands.Cog, name="Random Commands"):
         champ = secure_random.choice(class_type)
         return champ
 
-    def gen_team(self):
+    async def gen_team(self):
         sr = random.SystemRandom()
         team = [sr.choice(self.DAMAGES), sr.choice(self.FLANKS), sr.choice(self.SUPPORTS), sr.choice(self.FRONTLINES)]
 
@@ -68,7 +68,7 @@ class RandomCog(commands.Cog, name="Random Commands"):
         elif command == "flank":
             champ = secure_random.choice(self.FLANKS)
             embed.add_field(name="Your random Flank champion is: ", value=champ)
-            embed.set_thumbnail(url= await helper.get_champ_image(champ))
+            embed.set_thumbnail(url=await helper.get_champ_image(champ))
             await ctx.send(embed=embed)
         elif command == "healer":
             champ = secure_random.choice(self.SUPPORTS)
@@ -86,7 +86,11 @@ class RandomCog(commands.Cog, name="Random Commands"):
             embed.set_thumbnail(url=await helper.get_champ_image(champ))
             await ctx.send(embed=embed)
         elif command == "team":
-            await ctx.send("Your random team is: \n" + "```css\n" + self.gen_team()+"```")
+            async with ctx.channel.typing():
+                team = await self.gen_team()
+                buffer = await helper.create_team_image(list(filter(None, team.splitlines())))
+                file = discord.File(filename="Team.png", fp=buffer)
+                await ctx.send("Your random team is: \n" + "```css\n" + team + "```", file=file)
         elif command == "map":
             await  ctx.send("Your random map is: " + "```css\n" + secure_random.choice(self.MAPS) + "```")
         else:

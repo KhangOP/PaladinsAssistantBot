@@ -1,3 +1,13 @@
+from datetime import datetime
+from pytz import timezone
+
+'''This file servers to provide helper functions that our used in more than one other program.'''
+
+
+# Est Time zone for logging function calls
+async def get_est_time():
+    # using just timezone 'EST' does not include daylight savings
+    return datetime.now(timezone('US/Eastern')).strftime("%H:%M:%S %m/%d/%Y")
 
 
 # Get the image of champion's name passed in

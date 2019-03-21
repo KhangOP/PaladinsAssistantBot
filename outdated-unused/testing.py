@@ -323,6 +323,47 @@ champ = "barik"
 
 print(get_champ_stats_my_paladins(player_name, champ))
 
+'''
+@client.command(name='test',
+                pass_context=True,
+                aliases=['t'])
+async def test(ctx):
+    """
+    embed = discord.Embed(
+        colour=discord.colour.Color.dark_teal()
+    )
+    embed.add_field(name="image", value="http://paladins.guru/assets/img/champions/maldamba.jpg", inline=False)
+    await client.say(embed=embed)
+    """
+    author = ctx.message.author
+
+    embed = discord.Embed(
+        colour=discord.colour.Color.dark_teal()
+    )
+    embed.add_field(name='Player 1', value="http://paladins.guru/assets/img/champions/grohk.jpg", inline=True)
+    embed.add_field(name='Player 2', value="<:yinglove:544651722371366924>", inline=True)
+    embed.add_field(name='Player 3', value="<:yinglove:544651722371366924>", inline=True)
+    embed.add_field(name='Player 4', value="<:yinglove:544651722371366924>", inline=True)
+    embed.add_field(name='Player 5', value="<:yinglove:544651722371366924>", inline=True)
+
+    await client.send_message(author, embed=embed)
+
+    embed = discord.Embed(
+        colour=discord.colour.Color.dark_gold()
+    )
+    embed.set_image(url="http://paladins.guru/assets/img/champions/grohk.jpg")
+    embed.set_image(url="http://paladins.guru/assets/img/champions/lian.jpg")
+    # embed.set_image(url="asd.png") does not work
+    await client.send_message(author, embed=embed)
+
+    # file = discord.File("asd.png", file_name="asd.png")
+    await client.send_file(author, "asd.png")
+
+    await client.say("<:yinglove:544651722371366924>     <:yinglove:544651722371366924> <:yinglove:544651722371366924> "
+                     "<:yinglove:544651722371366924>     <:yinglove:544651722371366924>")
+'''
+
+
 """
 print(soup.prettify())
 

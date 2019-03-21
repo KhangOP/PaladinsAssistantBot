@@ -2,12 +2,10 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import Bot
 
-from concurrent.futures import ThreadPoolExecutor
-
 import asyncio
 import random
 
-import PythonFunctions as Pf
+import my_utils as helper
 import MyException as MyException
 
 # Discord Variables
@@ -74,67 +72,20 @@ async def on_message(message):
 
     # Seeing if someone is using the bot_prefix and calling a command
     if message.content.startswith(BOT_PREFIX):
-        print(message.author, message.content, channel, message.guild, Pf.get_est_time())
-        # if str(message.author) == "FeistyJalapeno#9045":  # This works ^_^
-        #    print("Hello creator.")
+        print(message.author, message.content, channel, message.guild, await helper.get_est_time())
     # Seeing if someone is using the bot_prefix and calling a command
     if message.content.startswith(">> ") or message.content.startswith("!! "):
         msg = 'Oops looks like you have a space after the bot prefix {0.author.mention}'.format(message)
         try:  # First lets try to send the message to the channel the command was called
-            # await client.send_message(channel, msg)
             await message.channel.send(msg)
         except MyException:
             try:    # Next lets try to DM the message to the user
-                # await client.send_message(message.author, msg)
                 await message.channel.send(msg)
             except MyException:  # Bad sign if we end up here but is possible if the user blocks some DM's
                 print("The bot can't message the user in their DM's or in the channel they called the function.")
 
     # on_message has priority over function commands
     await client.process_commands(message)
-
-'''
-@client.command(name='test',
-                pass_context=True,
-                aliases=['t'])
-async def test(ctx):
-    """
-    embed = discord.Embed(
-        colour=discord.colour.Color.dark_teal()
-    )
-    embed.add_field(name="image", value="http://paladins.guru/assets/img/champions/maldamba.jpg", inline=False)
-    await client.say(embed=embed)
-    """
-    author = ctx.message.author
-
-    embed = discord.Embed(
-        colour=discord.colour.Color.dark_teal()
-    )
-    embed.add_field(name='Player 1', value="http://paladins.guru/assets/img/champions/grohk.jpg", inline=True)
-    embed.add_field(name='Player 2', value="<:yinglove:544651722371366924>", inline=True)
-    embed.add_field(name='Player 3', value="<:yinglove:544651722371366924>", inline=True)
-    embed.add_field(name='Player 4', value="<:yinglove:544651722371366924>", inline=True)
-    embed.add_field(name='Player 5', value="<:yinglove:544651722371366924>", inline=True)
-
-    await client.send_message(author, embed=embed)
-
-    embed = discord.Embed(
-        colour=discord.colour.Color.dark_gold()
-    )
-    embed.set_image(url="http://paladins.guru/assets/img/champions/grohk.jpg")
-    embed.set_image(url="http://paladins.guru/assets/img/champions/lian.jpg")
-    # embed.set_image(url="asd.png") does not work
-    await client.send_message(author, embed=embed)
-
-    # file = discord.File("asd.png", file_name="asd.png")
-    await client.send_file(author, "asd.png")
-
-    await client.say("<:yinglove:544651722371366924>     <:yinglove:544651722371366924> <:yinglove:544651722371366924> "
-                     "<:yinglove:544651722371366924>     <:yinglove:544651722371366924>")
-'''
-
-sleep_time = 5
-backoff_multiplier = 1
 
 
 # Launching the bot function
@@ -156,7 +107,7 @@ async def count_servers():
         print("Current servers:", len(client.guilds))
 
 
-# Changing bot presence
+# Changes bot presence every min
 async def change_bot_presence():
     secure_random = random.SystemRandom()
     while 1:
@@ -170,8 +121,7 @@ async def change_bot_presence():
         await asyncio.sleep(60)  # Ever min
 
 
-# Below cogs represents the folder our cogs are in. Following is the file name. So 'meme.py' in cogs, would be cogs.meme
-# Think of it like a dot path import
+# Below cogs represents the folder our cogs are in. The dot is like an import path.
 initial_extensions = ['cogs.help', 'cogs.rand', 'cogs.PaladinsAPI']
 
 
@@ -187,15 +137,5 @@ def load_cogs():
 
 load_cogs()
 
+# Start the bot
 client.run(TOKEN, bot=True, reconnect=True)
-
-# Loop that allows the bot to reconnect if the internet goes out
-"""
-while True:
-    try:
-        client.loop.run_until_complete(client.start(TOKEN))
-    except BaseException:  # Bad practice but is fine to use in this case
-        print("Disconnected, going to try to reconnect in " + str(sleep_time*backoff_multiplier) + " seconds.")
-        time.sleep(sleep_time*backoff_multiplier)
-        backoff_multiplier += 1
-"""

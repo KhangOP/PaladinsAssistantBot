@@ -1,7 +1,7 @@
 from PIL import Image, ImageFont, ImageDraw
 import requests
 from io import BytesIO
-from datetime import datetime
+from datetime import datetime, timedelta
 from pytz import timezone
 import json
 import os
@@ -70,6 +70,30 @@ async def store_commands(discord_id, command_name, used=-1):  # if used == -1 th
 async def get_est_time():
     # using just timezone 'EST' does not include daylight savings
     return datetime.now(timezone('US/Eastern')).strftime("%H:%M:%S %m/%d/%Y")
+
+
+# Resets command uses back to 4
+async def reset_command_uses():
+    for filename in os.listdir(directory):
+        with open(directory + "/" + filename) as json_f:
+            user_info = json.load(json_f)
+            user_info[limits]['current'] = 4  # Reset
+        # Save changes to the file
+        with open((directory + "/" + filename), 'w') as json_d:
+            json.dump(user_info, json_d)
+    print("Finished resetting command uses.")
+
+
+# This function will get the number of second until 6est. when I want to reset data
+async def get_seconds_until_reset():
+    """Get the number of seconds until 6am est."""
+    # code from----> http://jacobbridges.github.io/post/how-many-seconds-until-midnight/
+    tomorrow = datetime.now() + timedelta(1)
+    midnight = datetime(year=tomorrow.year, month=tomorrow.month,
+                        day=tomorrow.day, hour=6, minute=0, second=0)
+    hours = str(int((midnight - datetime.now()).seconds / (60 * 60)))
+    print("Time until reset: {} hours.".format(hours))
+    return (midnight - datetime.now()).seconds
 
 
 class MyException(Exception):

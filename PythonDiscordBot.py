@@ -89,14 +89,27 @@ async def on_message(message):
     await client.process_commands(message)
 
 
+# Changes bot presence every min
+@client.event
+async def reset_uses():
+    await client.wait_until_ready()
+    sleep_time = await helper.get_seconds_until_reset()
+    await asyncio.sleep(sleep_time)
+    while not client.is_closed():
+        await helper.reset_command_uses()
+        await asyncio.sleep(60*60*24)  # day
+
+
 # Launching the bot function
 @client.event
 async def on_ready():
     print('Logged in as')
     print(client.user.name)
     print('------')
+    client.loop.create_task(reset_uses())
+    client.loop.create_task(change_bot_presence())
     await count_servers()
-    await change_bot_presence()
+    # await change_bot_presence()
     print("Client is fully online and ready to go...")
 
 
@@ -109,6 +122,7 @@ async def count_servers():
 
 
 # Changes bot presence every min
+@client.event
 async def change_bot_presence():
     secure_random = random.SystemRandom()
     while 1:

@@ -15,5 +15,5 @@ Version 3.2.1 Beta: Smashed 2 bugs.
 Version 3.2.2 Beta: Smashed 2 bugs related to lack of permissions when sending messages.
 Version 4.0.0 Beta: Upgraded the bot to using Discord rewrite.
 Version 4.0.1 Beta: Fixed server list function.
-Version 4.0.2 Beta:
-Version 4.0.0 Beta:
+Version 4.1.0 Beta: Team images are now created for the random and current commands. Pretty neat.
+Version 4.1.1 Beta: Fixed Global KDA by making it weighted.

@@ -284,7 +284,9 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             # Global win rate and kda
             t_wins += wins
             t_loses += losses
-            t_kda += float(kda)
+            if wins + losses > 20:  # Player needs to have over 20 matches with a champ for it to affect kda
+                t_kda += float(kda) * (wins + losses)  # These two lines allow the kda to be weighted
+                count += 1 + (wins + losses)  # aka the more a champ is played the more it affects global kda
 
         # They have not played this champion yet
         if ss == "":

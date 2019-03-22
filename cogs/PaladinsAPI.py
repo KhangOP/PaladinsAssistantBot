@@ -434,19 +434,17 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                                ". Please make sure the name is spelled correctly (Capitalization does not matter).")
                 return 0
             data = paladinsAPI.getPlayerStatus(player_id)
-            data = data.json
 
             if data == 0:
                 await ctx.send(str("Player " + player_name + " is not found."))
                 return 0
-            match_id = data["Match"]
-            if data['status'] == 0:
+            if data.playerStatusId == 0:
                 await ctx.send("Player is offline.")
                 return 0
-            elif data['status'] == 1:
+            elif data.playerStatusId == 1:
                 await ctx.send("Player is in lobby.")
                 return 0
-            elif data['status'] == 2:
+            elif data.playerStatusId == 2:
                 await ctx.send("Player in champion selection.")
                 return 0
 
@@ -457,16 +455,16 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             # match_queue_id = 486 = Ranked (Invalid)
 
             match_string = "Unknown match Type"
-            if data["match_queue_id"] == 424:
+            if data.currentMatchQueueId == 424:
                 match_string = "Siege"
-            elif data["match_queue_id"] == 445:
+            elif data.currentMatchQueueId == 445:
                 await ctx.send("No data for Test Maps.")
                 return 0
-            elif data["match_queue_id"] == 452:
+            elif data.currentMatchQueueId == 452:
                 match_string = "Onslaught"
-            elif data["match_queue_id"] == 469:
+            elif data.currentMatchQueueId == 469:
                 match_string = "Team Death Match"
-            elif data["match_queue_id"] == 486:  # Should be fixed now
+            elif data.currentMatchQueueId == 486:  # Should be fixed now
                 match_string = "Ranked"
                 # return "Ranked is currently not working."
 
@@ -475,7 +473,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             # 'Queue': '424', 'SkinId': 0, 'Tier': 0, 'playerCreated': '11/10/2017 10:00:03 PM', 'playerId': '12368291',
             # 'playerName': 'NabbitOW', 'ret_msg': None, 'taskForce': 1, 'tierLosses': 0, 'tierWins': 0}
             try:
-                players = paladinsAPI.getMatchPlayerDetails(match_id)
+                players = paladinsAPI.getMatchPlayerDetails(data.currentMatchId)
             except BaseException:
                 await ctx.send("An problem occurred. Please make sure you are not using this command on the event mode.")
                 return 0

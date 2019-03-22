@@ -16,12 +16,7 @@ BOT_VERSION = "Version 4.0.1 Beta"
 UPDATE_NOTES = "Changed 3 functions to be embeds to include images."
 GAME = ["Paladins", BOT_STATUS, BOT_VERSION, BOT_STATUS, "Errors"]
 
-
-file_name = "token"
-# Gets token from a file
-with open(file_name, 'r') as f:
-    TOKEN = f.readline().strip()
-f.close()
+TOKEN = helper.envVariable("BOT_TOKEN")
 
 # Creating client for bot
 client = Bot(command_prefix=BOT_PREFIX)

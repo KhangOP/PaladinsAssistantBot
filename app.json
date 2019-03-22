@@ -1,0 +1,27 @@
+{
+    "buildpacks": [ { "url": "https://github.com/heroku/heroku-buildpack-python" } ],
+    "description": "Discord Bot used to get Paladins stats and preform other tasks to help with custom games.",
+    "env": {
+    	"BOT_TOKEN": {
+            "description": "Token used for authentication. This is the token generated to your Discord Bot",
+            "required": "true",
+            "value": ""
+        },
+        "HIREZ_DEV_ID": {
+    		"description": "DevId used for Pyrez to authentication. This is the developer ID that you receive from Hi-Rez Studios.",
+    		"required": "true",
+    		"value": ""
+    	},
+        "HIREZ_AUTH_ID": {
+            "description": "AuthId used for Pyrez to authentication. This is the authentication key that you receive from Hi-Rez Studios.",
+            "required": "true",
+            "value": ""
+        }
+	},
+    "keywords": [ "hirez", "hi-rez", "paladins", "paladins-api", "open-source", "discord" ],
+    "logo": "https://web2.hirez.com/paladins/assets/paladins-logo.png",
+    "name": "Paladins Discord Helper Bot",
+    "repository": "https://github.com/EthanHicks1/PaladinsAssistantBot",
+    "success_url": "",
+    "website": ""
+}

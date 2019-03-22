@@ -10,16 +10,7 @@ from pyrez.api import PaladinsAPI
 import my_utils as helper
 
 
-file_name = "token"
-# Gets ID and KEY from a file
-with open(file_name, 'r') as f:
-    TOKEN = f.readline().strip()  # Does nothing
-    ID = int(f.readline())
-    KEY = f.readline()
-f.close()
-
-
-paladinsAPI = PaladinsAPI(devId=ID, authKey=KEY)
+paladinsAPI = PaladinsAPI(devId=helper.envVariable("HIREZ_DEV_ID"), authKey=helper.envVariable("HIREZ_AUTH_ID"))
 
 
 # Get the player id for a player based on their name. First it checks a dictionary and if they are not in there then

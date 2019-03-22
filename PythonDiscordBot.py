@@ -53,6 +53,8 @@ async def on_command_error(ctx, error):
     elif isinstance(error, commands.CommandNotFound):
         msg = f"\N{WARNING SIGN} {error}"
         await send_error(cont=ctx, msg=msg)
+    elif isinstance(error, commands.CommandOnCooldown):
+        await send_error(cont=ctx, msg=error)
     else:
         print("An uncaught error occurred: ", error)  # More error checking
         msg = "Unfortunately, something messed up. If you entered the command correctly just wait a few seconds " \

@@ -315,6 +315,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
     '''Commands below ############################################################'''
     @commands.command(name='history', pass_context=True)
+    @commands.cooldown(2, 30, commands.BucketType.user)
     async def history(self, ctx, player_name, amount=10):
         async with ctx.channel.typing():
             if amount > 50 or amount <= 1:
@@ -367,6 +368,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
     # Returns simple match history details
     @commands.command(name='last')
+    @commands.cooldown(2, 30, commands.BucketType.user)
     async def last(self, ctx, player_name, match_id=-1):
         player_id = self.get_player_id(player_name)
 
@@ -421,6 +423,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     # Gets details about a player in a current match using the Paladins API
     # Get stats for a player's current match.
     @commands.command(name='current', pass_context=True, aliases=['cur', 'c'])
+    @commands.cooldown(2, 30, commands.BucketType.user)
     async def current(self, ctx, player_name, option="-s"):
         async with ctx.channel.typing():
             # Data Format
@@ -550,6 +553,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
     # Returns simple stats based on the option they choose (champ_name, me, or elo)
     @commands.command(name='stats', aliases=['stat'])
+    @commands.cooldown(3, 30, commands.BucketType.user)
     async def stats(self, ctx, player_name, option="me", space=""):
         if space != "":  # This is for Mal damba, Bomb King, and Sha lin.
             option += " " + space

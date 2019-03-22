@@ -3,8 +3,67 @@ import requests
 from io import BytesIO
 from datetime import datetime
 from pytz import timezone
+import json
+import os
 
 '''This file servers to provide helper functions that our used in more than one other program.'''
+
+
+directory = 'user_info'
+usage = "usage"
+limits = "limits"
+current_uses_per_day = 4
+
+command_list = ['last', 'stats', 'random', 'current', 'history']
+command_limits = ['current']
+
+
+# Logs how many times someone uses a command
+async def store_commands(discord_id, command_name, used=-1):  # if used == -1 then don't worry about tracking limits
+    discord_id = str(discord_id)
+    found = False
+    for filename in os.listdir(directory):
+        if filename == discord_id:
+            found = True
+            break
+        else:
+            continue
+
+    # if we found the player in the player dir
+    if found:
+        with open(directory + "/" + discord_id) as json_f:
+            user_info = json.load(json_f)
+
+        user_info[usage][command_name] += 1
+
+        if command_name == 'current' and used != -1:
+            uses = user_info[limits]['current']
+            # take away one use from the user
+            if uses > 0:
+                user_info[limits]['current'] = (uses - used)
+            else:
+                return False  # They can't use this command anymore today
+        # Save changes to the file
+        with open((directory + "/" + discord_id), 'w') as json_f:
+            json.dump(user_info, json_f)
+
+    # we did not find the user in the player dir so we need to make their file
+    else:
+        user_info = {usage: {}, limits: {}}
+
+        # Set everything to zero since its a new user
+        for command in command_list:
+            user_info[usage][command] = 0
+
+        # Sets the limit of times a command can be used per day
+        for command in command_limits:
+            user_info[limits][command] = 4
+
+        # Write data to file
+        with open((directory + "/" + discord_id), 'w') as json_f:
+            json.dump(user_info, json_f)
+
+    return True
 
 
 # Est Time zone for logging function calls

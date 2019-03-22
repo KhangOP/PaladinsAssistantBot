@@ -51,7 +51,9 @@ class RandomCog(commands.Cog, name="Random Commands"):
 
     # Calls different random functions based on input
     @commands.command(name='rand', aliases=['random', 'r'])
+    @commands.cooldown(3, 30, commands.BucketType.user)
     async def rand(self, ctx, command):
+        await helper.store_commands(ctx.author.id, "random")
         command = str(command).lower()
         embed = discord.Embed(
             colour=discord.colour.Color.dark_teal()

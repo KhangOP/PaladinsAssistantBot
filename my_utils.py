@@ -6,6 +6,16 @@ from pytz import timezone
 
 '''This file servers to provide helper functions that our used in more than one other program.'''
 
+from decouple import config, Csv
+import os
+def envVariable(name, default=None, cast=None):
+    try:
+        return config(name, cast=cast) if cast is not None else config(name)
+    except:
+        try:
+            return os.environ[name]
+        except KeyError:
+            return default
 
 # Est Time zone for logging function calls
 async def get_est_time():

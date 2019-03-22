@@ -7,6 +7,7 @@ from bs4 import BeautifulSoup
 # import testing
 
 import time
+import my_utils as helper
 """
 ResponseFormat = "JSON"
 
@@ -33,15 +34,6 @@ r = requests.get(url)
 print(r.status_code)
 print(r.json())
 """
-
-file_name = "token"
-# Gets ID and KEY from a file
-with open(file_name, 'r') as f:
-    TOKEN = f.readline().strip()  # Does nothing
-    ID = int(f.readline())
-    KEY = f.readline()
-f.close()
-
 
 # n1 = wins and n2 = total matches
 def create_win_rate(n1, n2):
@@ -83,7 +75,7 @@ def convert_rank(x):
     }.get(x, "Un-Ranked")
 
 
-paladinsAPI = PaladinsAPI(devId=ID, authKey=KEY)
+paladinsAPI = PaladinsAPI(devId=helper.envVariable("HIREZ_DEV_ID"), authKey=helper.envVariable("HIREZ_AUTH_ID"))
 print(paladinsAPI.getDataUsed())
 
 

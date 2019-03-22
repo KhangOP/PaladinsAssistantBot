@@ -1,4 +1,6 @@
 # Paladins Discord Helper Bot
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/EthanHicks1/PaladinsAssistantBot/tree/master)
+
 Bot that does a lot of useful things for people who play the game Paladins.
 
 This bot uses [PaladinsGuru](http://paladins.guru/) and Paladins API (through the wrapper [Pyrez](https://github.com/luissilva1044894/Pyrez)) to get stats for players.

@@ -7,15 +7,7 @@ import my_utils as helper
 from pyrez.api import PaladinsAPI
 import json
 
-file_name = "token"
-# Gets ID and KEY from a file
-with open(file_name, 'r') as f:
-    TOKEN = f.readline().strip()  # Does nothing
-    ID = int(f.readline())
-    KEY = f.readline()
-f.close()
-
-paladinsAPI = PaladinsAPI(devId=ID, authKey=KEY)
+paladinsAPI = PaladinsAPI(devId=helper.envVariable("HIREZ_DEV_ID"), authKey=helper.envVariable("HIREZ_AUTH_ID"))
 
 
 # All functions in this class use Pyrez wrapper to access Paladins API
@@ -30,7 +22,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     @classmethod
     def get_player_id(cls, player_name):
         player_name = player_name.lower()
-        with open("player_ids") as json_f:
+        with open("player_ids", 'r', encoding="utf-8") as json_f:
             player_ids = json.load(json_f)
 
         # This player is already in the dictionary and therefor we don't need to waste an api call to get the player id.
@@ -45,7 +37,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
             # need to update the file now
             print("Added a new player the dictionary: " + player_name)
-            with open("player_ids", 'w') as json_f:
+            with open("player_ids", 'w', encoding="utf-8") as json_f:
                 json.dump(player_ids, json_f)
             return new_id
 

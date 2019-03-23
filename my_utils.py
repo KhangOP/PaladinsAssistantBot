@@ -53,7 +53,10 @@ async def store_commands(discord_id, command_name, used=-1):  # if used == -1 th
 
         # Set everything to zero since its a new user
         for command in command_list:
-            user_info[usage][command] = 0
+            if command == command_name:
+                user_info[usage][command] = 1
+            else:
+                user_info[usage][command] = 0
 
         # Sets the limit of times a command can be used per day
         for command in command_limits:

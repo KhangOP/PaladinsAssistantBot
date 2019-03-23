@@ -271,7 +271,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 if simple == 1:
                     win_rate += " %"
                     kda = "(" + kda + ")"
-                    ss = str('*{:18} Lv. {:3}  {:7}  {:6}\n')
+                    ss = str('*{:18} Lv. {:3}  {:7}   {:6}\n')
                     ss = ss.format(champ, str(level), win_rate, kda)
                     """This Block of code adds color based on Win Rate"""
                     if "???" in win_rate:
@@ -281,6 +281,8 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                     elif (float(win_rate.replace(" %", ""))) < 50.00:
                         ss = ss.replace("*", "-")
                     """^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"""
+                    return ss
+
             # Global win rate and kda
             t_wins += wins
             t_loses += losses
@@ -292,8 +294,9 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         if ss == "":
             ss = "No data for champion: " + champ + "\n"
             if simple == 1:
-                ss = str('*{:18} Lv. {:3}  {:7}  {:6}\n')
+                ss = str('*{:18} Lv. {:3}  {:7}   {:6}\n')
                 ss = ss.format(champ, "???", "???", "???")
+                return ss
 
         # Global win rate and kda
         global_ss = str("\n\nGlobal KDA: {}\nGlobal Win Rate: {}% ({}-{})")
@@ -303,15 +306,12 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         ss += global_ss
 
         # Create an embed
-        if simple != 1:
-            embed = discord.Embed(
-                colour=discord.colour.Color.dark_teal()
-            )
-            embed.add_field(name=player_name + "'s stats: ", value='`' + ss + '`', inline=False)
-            embed.set_thumbnail(url=await helper.get_champ_image(champ))
-            return embed
-
-        return ss
+        embed = discord.Embed(
+            colour=discord.colour.Color.dark_teal()
+        )
+        embed.add_field(name=player_name + "'s stats: ", value='`' + ss + '`', inline=False)
+        embed.set_thumbnail(url=await helper.get_champ_image(champ))
+        return embed
 
     '''Commands below ############################################################'''
     @commands.command(name='history', pass_context=True)
@@ -529,7 +529,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 # Add in champ stats
                 # ToDO Fix this later
                 if option == "-a" and can_use:
-                    match_data += self.get_champ_stats_api(player, champ, 1)
+                    match_data += await self.get_champ_stats_api(player, champ, 1)
 
             match_data += "\n"
 
@@ -551,7 +551,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 # Add in champ stats
                 # ToDO Fix this later
                 if option == "-a" and can_use:
-                    match_data += self.get_champ_stats_api(player, champ, 1)
+                    match_data += await self.get_champ_stats_api(player, champ, 1)
 
             buffer = await helper.create_match_image(team1_champs, team2_champs)
             file = discord.File(filename="Team.png", fp=buffer)

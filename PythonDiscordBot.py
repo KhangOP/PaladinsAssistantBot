@@ -55,6 +55,12 @@ async def on_command_error(ctx, error):
         await send_error(cont=ctx, msg=msg)
     elif isinstance(error, commands.CommandOnCooldown):
         await send_error(cont=ctx, msg=error)
+    elif isinstance(error, commands.MissingPermissions):
+        await send_error(cont=ctx, msg=error)
+    elif isinstance(error, commands.NotOwner):
+        await send_error(cont=ctx, msg=error)
+    elif isinstance(error, commands.CheckFailure):
+        await send_error(cont=ctx, msg=error)
     else:
         print("An uncaught error occurred: ", error)  # More error checking
         msg = "Unfortunately, something messed up. If you entered the command correctly just wait a few seconds " \
@@ -137,7 +143,7 @@ async def change_bot_presence():
 
 
 # Below cogs represents the folder our cogs are in. The dot is like an import path.
-initial_extensions = ['cogs.help', 'cogs.rand', 'cogs.PaladinsAPI']
+initial_extensions = ['cogs.help', 'cogs.rand', 'cogs.PaladinsAPI', 'cogs.solo_commands']
 
 
 # Here we load our extensions(cogs) listed above in [initial_extensions].

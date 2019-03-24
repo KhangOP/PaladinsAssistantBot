@@ -271,7 +271,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 if simple == 1:
                     win_rate += " %"
                     kda = "(" + kda + ")"
-                    ss = str('*{:18} Lv. {:3}  {:7}   {:6}\n')
+                    ss = str('*   {:15} Lv. {:3}  {:7}   {:6}\n')
                     ss = ss.format(champ, str(level), win_rate, kda)
                     """This Block of code adds color based on Win Rate"""
                     if "???" in win_rate:
@@ -491,6 +491,8 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             team1_champs = []
             team2 = []
             team2_champs = []
+            team1_ranks = []
+            team2_ranks = []
             for player in players:
                 # j = create_json(player)
                 # name = (j["playerName"])
@@ -502,9 +504,13 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 if int(player.taskForce) == 1:
                     team1.append(name)
                     team1_champs.append(player.godName)
+                    if data.currentMatchQueueId == 486 or data.currentMatchQueueId == 428:  # TODO I think it should work
+                        team1_ranks.append(str(player.tier))
                 else:
                     team2.append(name)
                     team2_champs.append(player.godName)
+                    if data.currentMatchQueueId == 486 or data.currentMatchQueueId == 428:  # TODO
+                        team2_ranks.append(str(player.tier))
 
             match_data = ""
             match_data += player_name + " is in a " + match_string + " match."  # Match Type
@@ -529,7 +535,8 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 # Add in champ stats
                 # ToDO Fix this later
                 if option == "-a" and can_use:
-                    match_data += await self.get_champ_stats_api(player, champ, 1)
+                    player_champ_data = await self.get_champ_stats_api(player, champ, 1)
+                    match_data += player_champ_data
 
             match_data += "\n"
 
@@ -551,9 +558,10 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 # Add in champ stats
                 # ToDO Fix this later
                 if option == "-a" and can_use:
-                    match_data += await self.get_champ_stats_api(player, champ, 1)
+                    player_champ_data = await self.get_champ_stats_api(player, champ, 1)
+                    match_data += player_champ_data
 
-            buffer = await helper.create_match_image(team1_champs, team2_champs)
+            buffer = await helper.create_match_image(team1_champs, team2_champs, team1_ranks, team2_ranks)
             file = discord.File(filename="Team.png", fp=buffer)
             await ctx.send("```diff\n" + match_data + "```", file=file)
 

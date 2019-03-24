@@ -42,7 +42,7 @@ async def send_error(cont, msg):
 
 
 # Handles errors when a user messes up the spelling or forgets an argument to a command or an error occurs
-# """
+#"""
 @client.event
 async def on_command_error(ctx, error):
     if isinstance(error, commands.MissingRequiredArgument):
@@ -66,7 +66,7 @@ async def on_command_error(ctx, error):
         msg = "Unfortunately, something messed up. If you entered the command correctly just wait a few seconds " \
               "and then try again."
         await send_error(cont=ctx, msg=msg)
-# """
+#"""
 
 
 # We can use this code to track when people message this bot (a.k.a asking it commands)

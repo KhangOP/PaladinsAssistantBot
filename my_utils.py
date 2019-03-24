@@ -129,7 +129,7 @@ async def get_champ_image(champ_name):
 
 
 # Creates an team image by using champion Icons
-async def create_team_image(champ_list):
+async def create_team_image(champ_list, ranks):
     champion_images = []
 
     while len(champ_list) != 5:
@@ -151,11 +151,20 @@ async def create_team_image(champ_list):
 
     # Original Image size # print(width, height)
     image_size = 512
+    scale = 1.5
     # champion_images.append(img.resize((image_size, image_size)))
 
     team_image = Image.new('RGB', (image_size * len(champion_images), image_size))
     for i, champ in enumerate(champion_images):
         team_image.paste(champ, (image_size*i, 0, image_size*(i+1), image_size))
+
+        # Only try to use ranked icons if its a ranked match
+        if ranks:
+            if i < len(ranks):  # make sure we don't go out of bounds
+                rank = Image.open("icons/ranks/" + ranks[i] + ".png")  # this works
+                width, height = rank.size
+                rank = rank.resize((int(width * scale), int(height * scale)))
+                team_image.paste(rank, (0 + (image_size * i), 0), rank)  # Upper Left
 
     # Testing
     # team_image.show()
@@ -173,9 +182,9 @@ async def create_team_image(champ_list):
 
 
 # Creates a match image based on the two teams champions
-async def create_match_image(team1, team2):
-    buffer1 = await create_team_image(team1)
-    buffer2 = await create_team_image(team2)
+async def create_match_image(team1, team2, ranks1, ranks2):
+    buffer1 = await create_team_image(team1, ranks1)
+    buffer2 = await create_team_image(team2, ranks2)
     middle = await draw_match_vs()
     offset = 128
 

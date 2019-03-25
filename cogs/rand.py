@@ -90,7 +90,7 @@ class RandomCog(commands.Cog, name="Random Commands"):
         elif command == "team":
             async with ctx.channel.typing():
                 team = await self.gen_team()
-                buffer = await helper.create_team_image(list(filter(None, team.splitlines())))
+                buffer = await helper.create_team_image(list(filter(None, team.splitlines())), [])
                 file = discord.File(filename="Team.png", fp=buffer)
                 await ctx.send("Your random team is: \n" + "```css\n" + team + "```", file=file)
         elif command == "map":

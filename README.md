@@ -1,5 +1,5 @@
 # Paladins Discord Helper Bot
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/EthanHicks1/PaladinsAssistantBot/tree/master)
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/EthanHicks1/PaladinsAssistantBot/tree/heroku)
 
 Bot that does a lot of useful things for people who play the game Paladins.
 

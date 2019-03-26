@@ -7,18 +7,18 @@ certifi==2019.3.9
 cffi==1.12.2
 chardet==3.0.4
 cryptography==2.6.1
-discord.py==1.0.0a1735+gc4a21cc
+-e git+https://github.com/Rapptz/discord.py@rewrite
 idna==2.8
 idna-ssl==1.1.0
-mkl-fft==1.0.10
-mkl-random==1.0.2
+mkl-fft
+mkl-random
 multidict==4.5.2
 numpy==1.16.2
 olefile==0.46
 Pillow==5.4.1
 pycparser==2.19
 pyOpenSSL==19.0.0
--e git+https://github.com/luissilva1044894/pyrez.git@d7e0df235b80c7b2b23ec527300aa2ca4f398939#egg=Pyrez
+-e git+https://github.com/luissilva1044894/pyrez.git@master#egg=Pyrez
 PySocks==1.6.8
 pytz==2018.9
 requests==2.21.0

@@ -13,8 +13,7 @@ class RandomCog(commands.Cog, name="Random Commands"):
 
     # List of Champs by Class
     DAMAGES = ["Cassie", "Kinessa", "Drogoz", "Bomb King", "Viktor", "Sha Lin", "Tyra", "Willo", "Lian", "Strix",
-               "Vivian",
-               "Dredge", "Imani"]
+               "Vivian", "Dredge", "Imani"]
     FLANKS = ["Skye", "Buck", "Evie", "Androxus", "Maeve", "Lex", "Zhin", "Talus", "Moji", "Koga"]
     FRONTLINES = ["Barik", "Fernando", "Ruckus", "Makoa", "Torvald", "Inara", "Ash", "Terminus", "Khan"]
     SUPPORTS = ["Grohk", "Grover", "Ying", "Mal Damba", "Seris", "Jenos", "Furia"]
@@ -50,7 +49,7 @@ class RandomCog(commands.Cog, name="Random Commands"):
         return team_string
 
     # Calls different random functions based on input
-    @commands.command(name='rand', aliases=['random', 'r'])
+    @commands.command(name='rand', aliases=['random', 'losuj'])
     @commands.cooldown(3, 30, commands.BucketType.user)
     async def rand(self, ctx, command):
         await helper.store_commands(ctx.author.id, "random")

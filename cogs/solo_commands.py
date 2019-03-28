@@ -20,9 +20,9 @@ class NotServerOwner(commands.CheckFailure):
 class SoloCommandCog(commands.Cog, name="Solo Commands"):
     """SoloCommandsCog"""
     # Different supported languages
-    languages = ['Polish', 'Resets the bot to use English']
-    abbreviations = ['pl', 'reset']
-    file_name = 'server_ids'
+    languages = ['Polish']
+    abbreviations = ['pl']
+    file_name = 'languages/server_ids'
     lan = []
 
     def __init__(self, bot):
@@ -68,6 +68,7 @@ class SoloCommandCog(commands.Cog, name="Solo Commands"):
                 for abbr, lang, in zip(self.abbreviations, self.languages):
                     lines += "`" + abbr + ":` " + lang + "\n"
                 await ctx.send("You entered an invalid language. The available languages are: \n" + lines +
+                               "`reset: Resets the bot to use English"
                                "\nNote that by default the language is English so there is no need to set it to that.")
             # print(ctx.channel.id, ctx.guild.id)
             # print("This server's id is:" + str(ctx.guild.id))

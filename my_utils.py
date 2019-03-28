@@ -237,10 +237,8 @@ async def draw_match_vs():
 
 # Class of commands that are solo (a.k.a) are not used/related to other functions
 class Lang:
-    file_name = 'server_ids'
+    file_name = 'languages/server_ids'
     lan = []
-
-    lang_dict = {}
 
     @classmethod
     async def check_language(cls, ctx):
@@ -254,10 +252,3 @@ class Lang:
 with open(Lang.file_name) as json_f:
     print("Loaded server languages for lang class")
     Lang.lan = json.load(json_f)
-
-
-file_name = "lang_dict"
-# Loads in language dictionary (need encoding option so it does not mess up other languages)
-with open(file_name, encoding='utf-8') as json_f:
-    print("Loaded language dictionary for conversions.")
-    Lang.lang_dict = json.load(json_f)

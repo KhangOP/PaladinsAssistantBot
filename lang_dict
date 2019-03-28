@@ -1,0 +1,34 @@
+{
+  "random_damage": {
+    "en": "Your random Damage champion is:",
+    "pl": "Twój losowy Napastnik czempion to:"
+  },
+  "random_flank": {
+    "en": "Your random Flank champion is:",
+    "pl": "Twój losowy Skrzydłowy czempion to:"
+  },
+  "random_healer": {
+    "en": "Your random Support/Healer champion is:",
+    "pl": "Twój losowy Wsparcie czempion to:"
+  },
+  "random_tank": {
+    "en": "Your random FrontLine/Tank champion is:",
+    "pl": "Twój losowy Obrońca czempion to:"
+  },
+  "random_champ": {
+    "en": "Your random champion is:",
+    "pl": "Twój losowa drużyna to:"
+  },
+  "random_team": {
+    "en": "Your random team is:",
+    "pl": "Twój losowa drużyna to:"
+  },
+  "random_map": {
+    "en": "Your random map is:",
+    "pl": "Twoja losowa mapa to:"
+  },
+  "random_invalid": {
+    "en": "Invalid command. For the random command please choose from one following options: \n damage, flank, healer, tank, champ, team, or map. \n For example: `>>random damage` will pick a random damage champion",
+    "pl": "Niepoprawna komenda. Dla komendy losuj możesz użyć jednej z opcji: \n napastnik, skrzydłowy, wsparcie, obrońca, czempion, drużyna lub mapa. \n Przykład: `>>losuj napastnik` pokaże losowego czempiona klasy napastnik"
+  }
+}

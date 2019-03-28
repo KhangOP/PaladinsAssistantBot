@@ -22,7 +22,7 @@ class RandomCog(commands.Cog, name="Random Commands"):
     MAPS = ["Frog Isle", "Jaguar Falls", "Serpent Beach", "Frozen Guard", "Ice Mines", "Ice Mines", "Fish Market",
             "Timber Mill", "Stone Keep", "Brightmarsh", "Splitstone Quarry", "Ascension Peak", "Warder's Gate"]
 
-    def pick_random_champion(self):
+    async def pick_random_champion(self):
         secure_random = random.SystemRandom()
         class_type = secure_random.choice([self.DAMAGES, self.FLANKS, self.SUPPORTS, self.FRONTLINES])
         champ = secure_random.choice(class_type)
@@ -32,10 +32,10 @@ class RandomCog(commands.Cog, name="Random Commands"):
         sr = random.SystemRandom()
         team = [sr.choice(self.DAMAGES), sr.choice(self.FLANKS), sr.choice(self.SUPPORTS), sr.choice(self.FRONTLINES)]
 
-        fill = self.pick_random_champion()
+        fill = await self.pick_random_champion()
         """Keep Generating a random champ until its not one we already have"""
         while fill in team:
-            fill = self.pick_random_champion()
+            fill = await self.pick_random_champion()
 
         team.append(fill)
 
@@ -53,6 +53,7 @@ class RandomCog(commands.Cog, name="Random Commands"):
     @commands.cooldown(3, 30, commands.BucketType.user)
     async def rand(self, ctx, command):
         await helper.store_commands(ctx.author.id, "random")
+        lang = await helper.Lang.check_language(ctx=ctx)
         command = str(command).lower()
         embed = discord.Embed(
             colour=discord.colour.Color.dark_teal()
@@ -60,44 +61,43 @@ class RandomCog(commands.Cog, name="Random Commands"):
 
         secure_random = random.SystemRandom()
 
-        if command == "damage":
+        if command == "damage" or command == "napastnik":
             champ = secure_random.choice(self.DAMAGES)
-            embed.add_field(name="Your random Damage champion is: ", value=champ)
+            embed.add_field(name=helper.Lang.lang_dict["random_damage"][lang], value=champ)
             embed.set_thumbnail(url=await helper.get_champ_image(champ))
             # await client.say(embed=embed)
             await ctx.send(embed=embed)
-        elif command == "flank":
+        elif command == "flank" or command == "skrzydłowy":
             champ = secure_random.choice(self.FLANKS)
-            embed.add_field(name="Your random Flank champion is: ", value=champ)
+            embed.add_field(name=helper.Lang.lang_dict["random_flank"][lang], value=champ)
             embed.set_thumbnail(url=await helper.get_champ_image(champ))
             await ctx.send(embed=embed)
-        elif command == "healer":
+        elif command == "healer" or command == "wsparcie":
             champ = secure_random.choice(self.SUPPORTS)
-            embed.add_field(name="Your random Support/Healer champion is: ", value=champ)
+            embed.add_field(name=helper.Lang.lang_dict["random_healer"][lang], value=champ)
             embed.set_thumbnail(url=await helper.get_champ_image(champ))
             await ctx.send(embed=embed)
-        elif command == "tank":
+        elif command == "tank" or command == "obrońca":
             champ = secure_random.choice(self.FRONTLINES)
-            embed.add_field(name="Your random FrontLine/Tank champion is: ", value=champ)
+            embed.add_field(name=helper.Lang.lang_dict["random_tank"][lang], value=champ)
             embed.set_thumbnail(url=await helper.get_champ_image(champ))
             await ctx.send(embed=embed)
-        elif command == "champ":
-            champ = self.pick_random_champion()
-            embed.add_field(name="Your random champion is: ", value=champ)
+        elif command == "champ" or command == "czempion":
+            champ = await self.pick_random_champion()
+            embed.add_field(name=helper.Lang.lang_dict["random_champ"][lang], value=champ)
             embed.set_thumbnail(url=await helper.get_champ_image(champ))
             await ctx.send(embed=embed)
-        elif command == "team":
+        elif command == "team" or command == "drużyna":
             async with ctx.channel.typing():
                 team = await self.gen_team()
                 buffer = await helper.create_team_image(list(filter(None, team.splitlines())), [])
                 file = discord.File(filename="Team.png", fp=buffer)
-                await ctx.send("Your random team is: \n" + "```css\n" + team + "```", file=file)
-        elif command == "map":
-            await  ctx.send("Your random map is: " + "```css\n" + secure_random.choice(self.MAPS) + "```")
+                await ctx.send(helper.Lang.lang_dict["random_team"][lang] + "\n```css\n" + team + "```", file=file)
+        elif command == "map" or command == "mapa":
+            await  ctx.send(helper.Lang.lang_dict["random_map"][lang] + "```css\n" + secure_random.choice(self.MAPS)
+                            + "```")
         else:
-            await ctx.send("Invalid command. For the random command please choose from one following options: "
-                           "damage, flank, healer, tank, champ, team, or map. "
-                           "\n For example: `>>random damage` will pick a random damage champion")
+            await ctx.send(helper.Lang.lang_dict["random_invalid"][lang])
 
 
 # Add this class to the cog list

@@ -25,7 +25,7 @@
   },
   "random_map": {
     "en": "Your random map is:",
-    "pl": "Twoja losowy mapa to:"
+    "pl": "Twoja losowa mapa to:"
   },
   "random_invalid": {
     "en": "Invalid command. For the random command please choose from one following options: \n damage, flank, healer, tank, champ, team, or map. \n For example: `>>random damage` will pick a random damage champion",

@@ -317,7 +317,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     @commands.command(name='history', pass_context=True)
     @commands.cooldown(2, 30, commands.BucketType.user)
     async def history(self, ctx, player_name, amount=10):
-        await helper.store_commands(ctx.author.id, "history")
+        # await helper.store_commands(ctx.author.id, "history")
         async with ctx.channel.typing():
             if amount > 50 or amount <= 1:
                 await ctx.send("Please enter an amount between 2-50")
@@ -371,7 +371,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     @commands.command(name='last')
     @commands.cooldown(2, 30, commands.BucketType.user)
     async def last(self, ctx, player_name, match_id=-1):
-        await helper.store_commands(ctx.author.id, "last")
+        # await helper.store_commands(ctx.author.id, "last")
         player_id = self.get_player_id(player_name)
 
         if player_id == -1:
@@ -427,10 +427,11 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     @commands.command(name='current', pass_context=True, aliases=['cur', 'c'])
     @commands.cooldown(2, 30, commands.BucketType.user)
     async def current(self, ctx, player_name, option="-s"):
-        value = -1
+        """value = -1
         if option == "-a":
-            value = 1
-        can_use = await helper.store_commands(ctx.author.id, "current", value)
+            value = 1"""
+        can_use = True
+        # can_use = await helper.store_commands(ctx.author.id, "current", value)
         async with ctx.channel.typing():
             # Data Format
             # {'Match': 795950194, 'match_queue_id': 452, 'personal_status_message': 0, 'ret_msg': 0, 'status': 3,
@@ -569,7 +570,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     @commands.command(name='stats', aliases=['stat'])
     @commands.cooldown(3, 30, commands.BucketType.user)
     async def stats(self, ctx, player_name, option="me", space=""):
-        await helper.store_commands(ctx.author.id, "stats")
+        # await helper.store_commands(ctx.author.id, "stats")
         if space != "":  # This is for Mal damba, Bomb King, and Sha lin.
             option += " " + space
 

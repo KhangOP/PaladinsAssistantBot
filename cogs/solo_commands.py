@@ -22,7 +22,7 @@ class SoloCommandCog(commands.Cog, name="Solo Commands"):
     # Different supported languages
     languages = ["Polish", "Português"]
     abbreviations = ["pl", "pt"]
-    file_name = 'languages/server_ids'
+    file_name = 'languages/server_ids'#rename to server_configs
     lan = []
 
     def __init__(self, bot):
@@ -33,6 +33,18 @@ class SoloCommandCog(commands.Cog, name="Solo Commands"):
         with open(self.file_name) as json_f:
             print("Loaded server languages")
             self.lan = json.load(json_f)
+
+    @commands.command(name='prefix')
+    @server_owner_only()
+    async def set_server_prefix(self, ctx, prefix):
+        async with ctx.channel.typing():
+            with open(self.file_name) as json_f:
+                server_ids = json.load(json_f)
+                server_ids[str(ctx.guild.id)]["prefix"] = prefix
+
+                with open(self.file_name, 'w') as json_d:
+                    json.dump(server_ids, json_d)
+                await ctx.send("This bot is now set to use the prefix: `" + prefix + "` in this server")
 
     @commands.command(name='language')
     # @commands.is_owner() # This is bot owner
@@ -45,7 +57,7 @@ class SoloCommandCog(commands.Cog, name="Solo Commands"):
                 with open(self.file_name) as json_f:
                     server_ids = json.load(json_f)
 
-                    server_ids[str(ctx.guild.id)] = language  # store the server id in the dictionary
+                    server_ids[str(ctx.guild.id)]["lang"] = language  # store the server id in the dictionary
 
                     # need to update the file now
                     with open(self.file_name, 'w') as json_d:
@@ -78,8 +90,8 @@ class SoloCommandCog(commands.Cog, name="Solo Commands"):
     async def check_server_language(self, ctx):
         guild_id = str(ctx.guild.id)
         if guild_id in self.lan:
-            await ctx.send("this servers language is: " + self.lan[guild_id])
-            return self.lan[guild_id]
+            await ctx.send("this servers language is: " + self.lan[guild_id]["lang"])
+            return self.lan[guild_id]["lang"]
         else:
             await ctx.send("this servers language is English")
             return "English"

@@ -16,10 +16,16 @@ class RandomCog(commands.Cog, name="Random Commands"):
     # List of Champs by Class
     DAMAGES = ["Cassie", "Kinessa", "Drogoz", "Bomb King", "Viktor", "Sha Lin", "Tyra", "Willo", "Lian", "Strix",
                "Vivian", "Dredge", "Imani"]
+    DAMAGE_CMD = ["damage", "napastnik", "dano"]
     FLANKS = ["Skye", "Buck", "Evie", "Androxus", "Maeve", "Lex", "Zhin", "Talus", "Moji", "Koga"]
+    FLANK_CMD = ["flank", "skrzydłowy", "flanco"]
     FRONTLINES = ["Barik", "Fernando", "Ruckus", "Makoa", "Torvald", "Inara", "Ash", "Terminus", "Khan"]
+    FRONTLINE_CMD = ["tank", "frontline", "obrońca", "tanque"]
     SUPPORTS = ["Grohk", "Grover", "Ying", "Mal Damba", "Seris", "Jenos", "Furia"]
-
+    SUPPORT_CMD = ["healer", "support", "wsparcie", "suporte"]
+    CHAMP_CMD = ["champ", "czempion", "campeão"]
+    TEAM_CMD = ["team", "drużyna", "time", "comp"]
+    MAP_CMD = ["map", "mapa"]
     # Map Names
     MAPS = ["Frog Isle", "Jaguar Falls", "Serpent Beach", "Frozen Guard", "Ice Mines", "Ice Mines", "Fish Market",
             "Timber Mill", "Stone Keep", "Brightmarsh", "Splitstone Quarry", "Ascension Peak", "Warder's Gate"]
@@ -60,7 +66,7 @@ class RandomCog(commands.Cog, name="Random Commands"):
         return team_string
 
     # Calls different random functions based on input
-    @commands.command(name='rand', aliases=['random', 'losuj'])
+    @commands.command(name='rand', aliases=["random", "losuj"])
     @commands.cooldown(3, 30, commands.BucketType.user)
     async def rand(self, ctx, command):
         # await helper.store_commands(ctx.author.id, "random")
@@ -72,39 +78,39 @@ class RandomCog(commands.Cog, name="Random Commands"):
 
         secure_random = random.SystemRandom()
 
-        if command == "damage" or command == "napastnik":
+        if command in self.DAMAGE_CMD:
             champ = secure_random.choice(self.DAMAGES)
             embed.add_field(name=self.lang_dict["random_damage"][lang], value=champ)
             embed.set_thumbnail(url=await helper.get_champ_image(champ))
             # await client.say(embed=embed)
             await ctx.send(embed=embed)
-        elif command == "flank" or command == "skrzydłowy":
+        elif command in self.FLANK_CMD:
             champ = secure_random.choice(self.FLANKS)
             embed.add_field(name=self.lang_dict["random_flank"][lang], value=champ)
             embed.set_thumbnail(url=await helper.get_champ_image(champ))
             await ctx.send(embed=embed)
-        elif command == "healer" or command == "wsparcie":
+        elif command in self.SUPPORT_CMD:
             champ = secure_random.choice(self.SUPPORTS)
             embed.add_field(name=self.lang_dict["random_healer"][lang], value=champ)
             embed.set_thumbnail(url=await helper.get_champ_image(champ))
             await ctx.send(embed=embed)
-        elif command == "tank" or command == "obrońca":
+        elif command in self.FRONTLINE_CMD:
             champ = secure_random.choice(self.FRONTLINES)
             embed.add_field(name=self.lang_dict["random_tank"][lang], value=champ)
             embed.set_thumbnail(url=await helper.get_champ_image(champ))
             await ctx.send(embed=embed)
-        elif command == "champ" or command == "czempion":
+        elif command in self.CHAMP_CMD:
             champ = await self.pick_random_champion()
             embed.add_field(name=self.lang_dict["random_champ"][lang], value=champ)
             embed.set_thumbnail(url=await helper.get_champ_image(champ))
             await ctx.send(embed=embed)
-        elif command == "team" or command == "drużyna":
+        elif command in self.TEAM_CMD:
             async with ctx.channel.typing():
                 team = await self.gen_team()
                 buffer = await helper.create_team_image(list(filter(None, team.splitlines())), [])
                 file = discord.File(filename="Team.png", fp=buffer)
                 await ctx.send(self.lang_dict["random_team"][lang] + "\n```css\n" + team + "```", file=file)
-        elif command == "map" or command == "mapa":
+        elif command in MAP_CMD:
             await  ctx.send(self.lang_dict["random_map"][lang] + "```css\n" + secure_random.choice(self.MAPS)
                             + "```")
         else:

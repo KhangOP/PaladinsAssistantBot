@@ -20,8 +20,8 @@ class NotServerOwner(commands.CheckFailure):
 class SoloCommandCog(commands.Cog, name="Solo Commands"):
     """SoloCommandsCog"""
     # Different supported languages
-    languages = ['Polish']
-    abbreviations = ['pl']
+    languages = ["Polish", "Português"]
+    abbreviations = ["pl", "pt"]
     file_name = 'languages/server_ids'
     lan = []
 

@@ -22,7 +22,7 @@ def getPrefix(bot, message):
             with open("languages/server_ids") as json_f:#rename to server_configs
                 serverConf = json.load(json_f)
                 try:
-                    defaultPrefixes = [serverConf[str(message.guild.id)]["prefix"]]
+                    defaultPrefixes = serverConf[str(message.guild.id)]["prefix"].split(",")
                 except KeyError:
                     pass
         except FileNotFoundError:

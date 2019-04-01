@@ -9,7 +9,7 @@ import my_utils as helper
 
 # Discord Variables
 BOT_PREFIX = ("!!", ">>")
-BOT_STATUS = "!!help or >>help"
+BOT_STATUS = ">>help"
 
 BOT_AUTHOR = "FeistyJalapeno#9045"
 BOT_VERSION = "Version 4.0.1 Beta"
@@ -102,7 +102,7 @@ async def reset_uses():
     sleep_time = await helper.get_seconds_until_reset()
     await asyncio.sleep(sleep_time)
     while not client.is_closed():
-        await helper.reset_command_uses()
+        # await helper.reset_command_uses()
         await asyncio.sleep(60*60*24)  # day
 
 

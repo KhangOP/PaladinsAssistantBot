@@ -505,12 +505,12 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 if int(player.taskForce) == 1:
                     team1.append(name)
                     team1_champs.append(player.godName)
-                    if data.currentMatchQueueId == 486 or data.currentMatchQueueId == 428:  # TODO I think it should work
+                    if data.currentMatchQueueId == 486 or data.currentMatchQueueId == 428:
                         team1_ranks.append(str(player.tier))
                 else:
                     team2.append(name)
                     team2_champs.append(player.godName)
-                    if data.currentMatchQueueId == 486 or data.currentMatchQueueId == 428:  # TODO
+                    if data.currentMatchQueueId == 486 or data.currentMatchQueueId == 428:
                         team2_ranks.append(str(player.tier))
 
             match_data = ""
@@ -534,7 +534,6 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 match_data += ss
 
                 # Add in champ stats
-                # ToDO Fix this later
                 if option == "-a" and can_use:
                     player_champ_data = await self.get_champ_stats_api(player, champ, 1)
                     match_data += player_champ_data
@@ -557,7 +556,6 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 match_data += ss
 
                 # Add in champ stats
-                # ToDO Fix this later
                 if option == "-a" and can_use:
                     player_champ_data = await self.get_champ_stats_api(player, champ, 1)
                     match_data += player_champ_data

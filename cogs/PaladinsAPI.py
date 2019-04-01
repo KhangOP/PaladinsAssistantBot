@@ -424,7 +424,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
     # Gets details about a player in a current match using the Paladins API
     # Get stats for a player's current match.
-    @commands.command(name='current', pass_context=True, aliases=['cur', 'c'])
+    @commands.command(name='current', pass_context=True, aliases=["cur", 'c', "partida"])
     @commands.cooldown(2, 30, commands.BucketType.user)
     async def current(self, ctx, player_name, option="-s"):
         """value = -1

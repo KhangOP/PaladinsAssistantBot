@@ -8,14 +8,26 @@ import random
 import my_utils as helper
 
 # Discord Variables
-BOT_PREFIX = ("!!", ">>")
-BOT_STATUS = ">>help"
+BOT_STATUS = "!!help or >>help"
 
 BOT_AUTHOR = "FeistyJalapeno#9045"
 BOT_VERSION = "Version 4.0.1 Beta"
 UPDATE_NOTES = "Changed 3 functions to be embeds to include images."
 GAME = ["Paladins", BOT_STATUS, BOT_VERSION, BOT_STATUS, "Errors"]
 
+def getPrefix(bot, message):
+    defaultPrefixes = ["!!", ">>"]
+    if message.guild:
+        try:
+            with open("languages/server_ids") as json_f:#rename to server_configs
+                serverConf = json.load(json_f)
+                try:
+                    defaultPrefixes = serverConf[str(message.guild.id)]["prefix"].split(",")
+                except KeyError:
+                    pass
+        except FileNotFoundError:
+            pass
+    return commands.when_mentioned_or(*defaultPrefixes)(bot, message)
 
 file_name = "token"
 # Gets token from a file
@@ -24,7 +36,7 @@ with open(file_name, 'r') as f:
 f.close()
 
 # Creating client for bot
-client = Bot(command_prefix=BOT_PREFIX)
+client = Bot(command_prefix=getPrefix)
 client.remove_command('help')  # Removing default help command.
 
 

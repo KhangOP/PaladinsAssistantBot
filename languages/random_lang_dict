@@ -1,34 +1,42 @@
 {
   "random_damage": {
     "en": "Your random Damage champion is:",
-    "pl": "Twój losowy czempion klasy Napastnik to:"
+    "pl": "Twój losowy czempion klasy Napastnik to:",
+    "pt": "O Dano escolhido é:"
   },
   "random_flank": {
     "en": "Your random Flank champion is:",
-    "pl": "Twój losowy czempion klasy Skrzydłowy to:"
+    "pl": "Twój losowy czempion klasy Skrzydłowy to:",
+    "pt": "O Flanco escolhido é:"
   },
   "random_healer": {
     "en": "Your random Support/Healer champion is:",
-    "pl": "Twój losowy czempion klasy Wsparcie to:"
+    "pl": "Twój losowy czempion klasy Wsparcie to:",
+    "pt": "O Suporte/Healer escolhido é:"
   },
   "random_tank": {
     "en": "Your random FrontLine/Tank champion is:",
-    "pl": "Twój losowy czempion klasy Obrońca to:"
+    "pl": "Twój losowy czempion klasy Obrońca to:",
+    "pt": "O Tanque/FrontLine escolhido é:"
   },
   "random_champ": {
     "en": "Your random champion is:",
-    "pl": "Twój losowy czempion to:"
+    "pl": "Twój losowy czempion to:",
+    "pt": "O campeão escolhido é:"
   },
   "random_team": {
     "en": "Your random team is:",
-    "pl": "Twoja losowa drużyna to:"
+    "pl": "Twoja losowa drużyna to:",
+    "pt": "Seu time é:"
   },
   "random_map": {
     "en": "Your random map is:",
-    "pl": "Twoja losowa mapa to:"
+    "pl": "Twoja losowa mapa to:",
+    "pt": "O mapa escolhido é:"
   },
   "random_invalid": {
     "en": "Invalid command. For the random command please choose from one following options: \n damage, flank, healer, tank, champ, team, or map. \n For example: `>>random damage` will pick a random damage champion",
-    "pl": "Niepoprawna komenda. Dla komendy losuj możesz użyć jednej z opcji: \n napastnik, skrzydłowy, wsparcie, obrońca, czempion, drużyna lub mapa. \n Przykład: `>>losuj napastnik` pokaże losowego czempiona klasy napastnik"
+    "pl": "Niepoprawna komenda. Dla komendy losuj możesz użyć jednej z opcji: \n napastnik, skrzydłowy, wsparcie, obrońca, czempion, drużyna lub mapa. \n Przykład: `>>losuj napastnik` pokaże losowego czempiona klasy napastnik",
+    "pt": "Comando inválido. Para usar o comando `random`, por favor, escolha uma das seguintes opções: \n dano, flanco, suporte, tank, champ, time ou mapa. \n Por exemplo: `>>random dano` vai escolher um campeão de dano aleatoriamente"
   }
 }

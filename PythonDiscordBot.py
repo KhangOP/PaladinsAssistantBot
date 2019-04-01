@@ -114,7 +114,7 @@ async def reset_uses():
     sleep_time = await helper.get_seconds_until_reset()
     await asyncio.sleep(sleep_time)
     while not client.is_closed():
-        await helper.reset_command_uses()
+        # await helper.reset_command_uses()
         await asyncio.sleep(60*60*24)  # day
 
 

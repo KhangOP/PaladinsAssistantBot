@@ -49,6 +49,17 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 json.dump(player_ids, json_f)
             return new_id
 
+    @classmethod
+    def check_player_name(cls, player_discord_id):
+        with open("player_discord_ids") as json_f:
+            player_discord_ids = json.load(json_f)
+
+        # checking if the server stored their name
+        if player_discord_id in player_discord_ids:
+            return player_discord_ids[player_discord_id]
+        else:
+            return "None"
+
     # Calculates kda
     @classmethod
     async def calc_kda(cls, kills, deaths, assists):
@@ -484,8 +495,9 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             # 'playerName': 'NabbitOW', 'ret_msg': None, 'taskForce': 1, 'tierLosses': 0, 'tierWins': 0}
             try:
                 players = paladinsAPI.getMatchPlayerDetails(data.currentMatchId)
-            except BaseException:
-                await ctx.send("An problem occurred. Please make sure you are not using this command on the event mode.")
+            except BaseException as e:
+                await ctx.send("An problem occurred. Please make sure you are not using this command on the event mode."
+                               + str(e))
                 return 0
             # print(players)
             team1 = []
@@ -567,11 +579,30 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     # Returns simple stats based on the option they choose (champ_name, me, or elo)
     @commands.command(name='stats', aliases=['stat'])
     @commands.cooldown(3, 30, commands.BucketType.user)
-    async def stats(self, ctx, player_name, option="me", space=""):
-        # await helper.store_commands(ctx.author.id, "stats")
-        if space != "":  # This is for Mal damba, Bomb King, and Sha lin.
-            option += " " + space
+    # async def stats(self, ctx, player_name, option="me", space=""):
+    async def stats(self, ctx, *args):
+        if len(args) > 3:
+            ctx.send("Too many arguments")
 
+        # Maybe convert the player name
+        if str(args[0]) == "me":
+            player_name = self.check_player_name(ctx.author.id)
+        else:
+            player_name = args[0]
+
+        # Just the name means they want base stats
+        if len(args) == 1:
+            result = await self.get_player_stats_api(player_name)
+            await ctx.send("```" + result + "```")
+        else:
+            if str(args[1]) == "elo":
+                result = await self.get_player_elo(player_name)
+                await ctx.send("```" + result + "```")
+            else:
+                champ_name = str(args[1]) + str(args[2])
+                result = await self.get_champ_stats_api(player_name, champ_name, simple=0)
+                await ctx.send(embed=result)
+        """
         option = option.lower().capitalize().title()  # Need since some champ names are two words
 
         player_name = str(player_name)
@@ -591,6 +622,23 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         # Stats for a certain champion
         result = await self.get_champ_stats_api(player_name, option, simple=0)
         await ctx.send(embed=result)
+        """
+
+    # Returns simple stats based on the option they choose (champ_name, me, or elo)
+    @commands.command(name='store')
+    @commands.cooldown(2, 30, commands.BucketType.user)
+    async def store_player_name(self, ctx, player_ign):
+        with open("player_discord_ids") as json_f:
+            player_discord_ids = json.load(json_f)
+
+        player_discord_ids.update({ctx.author.id: player_ign})  # update dict
+
+        # need to update the file now
+        print("Stored a IGN in conversion dictionary: " + player_ign)
+        with open("player_discord_ids", 'w') as json_f:
+            json.dump(player_discord_ids, json_f)
+        await ctx.send("Your Paladins In-Game-name is now stored as `" + player_ign +
+                       "`. You can now use the keyword `me` instead of typing out your name")
 
 
 # Add this class to the cog list

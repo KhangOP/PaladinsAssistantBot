@@ -4,6 +4,7 @@ from discord.ext.commands import Bot
 
 import asyncio
 import random
+import json
 
 import my_utils as helper
 
@@ -15,19 +16,22 @@ BOT_VERSION = "Version 4.0.1 Beta"
 UPDATE_NOTES = "Changed 3 functions to be embeds to include images."
 GAME = ["Paladins", BOT_STATUS, BOT_VERSION, BOT_STATUS, "Errors"]
 
-def getPrefix(bot, message):
-    defaultPrefixes = ["!!", ">>"]
+
+def get_prefix(bot, message):
+    default_prefixes = ["??"]
+    print("killing your hard drive")
     if message.guild:
         try:
-            with open("languages/server_ids") as json_f:#rename to server_configs
-                serverConf = json.load(json_f)
+            with open("languages/server_ids") as json_f:  # TODO rename to server_configs
+                server_conf = json.load(json_f)
                 try:
-                    defaultPrefixes = serverConf[str(message.guild.id)]["prefix"].split(",")
+                    default_prefixes = server_conf[str(message.guild.id)]["prefix"].split(",")
                 except KeyError:
                     pass
         except FileNotFoundError:
             pass
-    return commands.when_mentioned_or(*defaultPrefixes)(bot, message)
+    return commands.when_mentioned_or(*default_prefixes)(bot, message)
+
 
 file_name = "token"
 # Gets token from a file
@@ -36,7 +40,7 @@ with open(file_name, 'r') as f:
 f.close()
 
 # Creating client for bot
-client = Bot(command_prefix=getPrefix)
+client = Bot(command_prefix=get_prefix)
 client.remove_command('help')  # Removing default help command.
 
 
@@ -54,7 +58,7 @@ async def send_error(cont, msg):
 
 
 # Handles errors when a user messes up the spelling or forgets an argument to a command or an error occurs
-#"""
+"""
 @client.event
 async def on_command_error(ctx, error):
     if isinstance(error, commands.MissingRequiredArgument):
@@ -78,7 +82,7 @@ async def on_command_error(ctx, error):
         msg = "Unfortunately, something messed up. If you entered the command correctly just wait a few seconds " \
               "and then try again."
         await send_error(cont=ctx, msg=msg)
-#"""
+"""
 
 
 # We can use this code to track when people message this bot (a.k.a asking it commands)
@@ -90,8 +94,8 @@ async def on_message(message):
         return
 
     # Seeing if someone is using the bot_prefix and calling a command
-    if message.content.startswith(BOT_PREFIX):
-        print(message.author, message.content, channel, message.guild, await helper.get_est_time())
+    #if message.content.startswith(get_prefix):
+    #    print(message.author, message.content, channel, message.guild, await helper.get_est_time())
     # Seeing if someone is using the bot_prefix and calling a command
     if message.content.startswith(">> ") or message.content.startswith("!! "):
         msg = 'Oops looks like you have a space after the bot prefix {0.author.mention}'.format(message)

@@ -38,6 +38,8 @@ class RandomCog(commands.Cog, name="Random Commands"):
         with open(self.file_name, encoding='utf-8') as json_f:
             print("Loaded random command language dictionary.")
             self.lang_dict = json.load(json_f)
+            # print(self.lang_dict)
+            # print(self.lang_dict["random_damage"]["en"])
 
     async def pick_random_champion(self):
         secure_random = random.SystemRandom()
@@ -71,6 +73,7 @@ class RandomCog(commands.Cog, name="Random Commands"):
     async def rand(self, ctx, command):
         # await helper.store_commands(ctx.author.id, "random")
         lang = await helper.Lang.check_language(ctx=ctx)
+        print(lang)
         command = str(command).lower()
         embed = discord.Embed(
             colour=discord.colour.Color.dark_teal()
@@ -110,7 +113,7 @@ class RandomCog(commands.Cog, name="Random Commands"):
                 buffer = await helper.create_team_image(list(filter(None, team.splitlines())), [])
                 file = discord.File(filename="Team.png", fp=buffer)
                 await ctx.send(self.lang_dict["random_team"][lang] + "\n```css\n" + team + "```", file=file)
-        elif command in MAP_CMD:
+        elif command in self.MAP_CMD:
             await  ctx.send(self.lang_dict["random_map"][lang] + "```css\n" + secure_random.choice(self.MAPS)
                             + "```")
         else:

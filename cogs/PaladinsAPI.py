@@ -10,7 +10,8 @@ import json
 file_name = "token"
 # Gets ID and KEY from a file
 with open(file_name, 'r') as f:
-    TOKEN = f.readline().strip()  # Does nothing
+    TOKEN = f.readline().strip()    # Does nothing
+    PREFIX = f.readline()           # Does nothing
     ID = int(f.readline())
     KEY = f.readline()
 f.close()
@@ -586,7 +587,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
         # Maybe convert the player name
         if str(args[0]) == "me":
-            player_name = self.check_player_name(ctx.author.id)
+            player_name = self.check_player_name(str(ctx.author.id))
         else:
             player_name = args[0]
 
@@ -599,7 +600,10 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 result = await self.get_player_elo(player_name)
                 await ctx.send("```" + result + "```")
             else:
-                champ_name = str(args[1]) + str(args[2])
+                if len(args) == 2:
+                    champ_name = str(args[1]).title()
+                else:
+                    champ_name = (str(args[1]) + " " + str(args[2])).title()
                 result = await self.get_champ_stats_api(player_name, champ_name, simple=0)
                 await ctx.send(embed=result)
         """
@@ -631,7 +635,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         with open("player_discord_ids") as json_f:
             player_discord_ids = json.load(json_f)
 
-        player_discord_ids.update({ctx.author.id: player_ign})  # update dict
+        player_discord_ids.update({str(ctx.author.id): player_ign})  # update dict
 
         # need to update the file now
         print("Stored a IGN in conversion dictionary: " + player_ign)

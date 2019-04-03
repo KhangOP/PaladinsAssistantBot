@@ -9,35 +9,36 @@ import json
 import my_utils as helper
 
 # Discord Variables
-BOT_STATUS = "!!help or >>help"
+BOT_STATUS = ">>help"
 
 BOT_AUTHOR = "FeistyJalapeno#9045"
 BOT_VERSION = "Version 4.0.1 Beta"
 UPDATE_NOTES = "Changed 3 functions to be embeds to include images."
 GAME = ["Paladins", BOT_STATUS, BOT_VERSION, BOT_STATUS, "Errors"]
 
+file_name = "token"
+# Gets token and prefix from a file
+with open(file_name, 'r') as f:
+    TOKEN = f.readline().strip()
+    PREFIX = f.readline()
+f.close()
+
 
 def get_prefix(bot, message):
-    default_prefixes = ["??"]
+    default_prefix = PREFIX
     print("killing your hard drive")
     if message.guild:
         try:
-            with open("languages/server_ids") as json_f:  # TODO rename to server_configs
+            with open("languages/server_configs") as json_f:
                 server_conf = json.load(json_f)
                 try:
-                    default_prefixes = server_conf[str(message.guild.id)]["prefix"].split(",")
+                    default_prefix = server_conf[str(message.guild.id)]["prefix"].split(",")
                 except KeyError:
                     pass
         except FileNotFoundError:
             pass
-    return commands.when_mentioned_or(*default_prefixes)(bot, message)
+    return commands.when_mentioned_or(*default_prefix)(bot, message)
 
-
-file_name = "token"
-# Gets token from a file
-with open(file_name, 'r') as f:
-    TOKEN = f.readline().strip()
-f.close()
 
 # Creating client for bot
 client = Bot(command_prefix=get_prefix)

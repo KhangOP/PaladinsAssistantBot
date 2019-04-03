@@ -22,7 +22,7 @@ class SoloCommandCog(commands.Cog, name="Solo Commands"):
     # Different supported languages
     languages = ["Polish", "Português"]
     abbreviations = ["pl", "pt"]
-    file_name = 'languages/server_ids'#rename to server_configs
+    file_name = 'languages/server_configs'
     lan = []
 
     def __init__(self, bot):

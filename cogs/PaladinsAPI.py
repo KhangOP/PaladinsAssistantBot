@@ -56,8 +56,8 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             player_discord_ids = json.load(json_f)
 
         # checking if the server stored their name
-        if player_discord_id in player_discord_ids:
-            return player_discord_ids[player_discord_id]
+        if str(player_discord_id) in player_discord_ids:
+            return player_discord_ids[str(player_discord_id)]
         else:
             return "None"
 
@@ -113,40 +113,20 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     # Gets KDA and Win Rate for a player from Guru
     @classmethod
     async def get_global_kda(cls, player_name):
-        url = "http://paladins.guru/profile/pc/" + player_name
-
+        url = "http://nonsocial.herokuapp.com/api/kda?player=" + player_name
         soup = BeautifulSoup(requests.get(url, headers={'Connection': 'close'}).text, 'html.parser')
-        sup = str(soup.get_text())
-
-        sup = sup.split(" ")
-        data = list(filter(None, sup))
-
-        stats = []
-
-        # Gets account name and level
-        for i, row in enumerate(data):
-            if data[i] == "Giveaway":
-                stats.append(data[i + 2])
-                stats.append(data[i + 1])
-                break
-
-        # Gets Global wins and loses
-        for i, row in enumerate(data):
-            if data[i] == "Loss":
-                new_s = str(data[i + 4].replace("(", "") + " %")
-                stats.append(new_s)
-                break
-
-        # Gets Global KDA
-        for i, row in enumerate(data):
-            if data[i] == "KDA":
-                stats.append(data[i + 6])
-                break
+        soup = str(soup.get_text())
 
         # Error checking to make sure that the player was found on the site
-        if 'not' in stats:
+        if 'ERROR' in soup:
             error = [player_name, "???", "???", "???"]
             return error
+
+        level = soup.split("(Level ")[1].split(")")[0]          # level
+        kda = soup.split("- ")[1].split(" KDA")[0]              # KDA
+        win_rate = soup.split("Win rate: ")[1].split("%")[0]    # Win rate
+
+        stats = [player_name, level, win_rate, kda]
 
         return stats
 
@@ -329,7 +309,15 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     @commands.command(name='history', pass_context=True)
     @commands.cooldown(2, 30, commands.BucketType.user)
     async def history(self, ctx, player_name, amount=10):
-        # await helper.store_commands(ctx.author.id, "history")
+        if str(player_name) == "me":
+            player_name = self.check_player_name(str(ctx.author.id))
+            if player_name == "None":
+                await ctx.send("You have not stored your IGN yet. To do so please use the store command like so: "
+                               "`>>store Paladins_IGN`")
+                return 0
+        else:
+            pass
+        await helper.store_commands(ctx.author.id, "history")
         async with ctx.channel.typing():
             if amount > 50 or amount <= 1:
                 await ctx.send("Please enter an amount between 2-50")
@@ -383,7 +371,15 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     @commands.command(name='last')
     @commands.cooldown(2, 30, commands.BucketType.user)
     async def last(self, ctx, player_name, match_id=-1):
-        # await helper.store_commands(ctx.author.id, "last")
+        if str(player_name) == "me":
+            player_name = self.check_player_name(str(ctx.author.id))
+            if player_name == "None":
+                await ctx.send("You have not stored your IGN yet. To do so please use the store command like so: "
+                               "`>>store Paladins_IGN`")
+                return 0
+        else:
+            pass
+        await helper.store_commands(ctx.author.id, "last")
         player_id = self.get_player_id(player_name)
 
         if player_id == -1:
@@ -439,11 +435,19 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     @commands.command(name='current', pass_context=True, aliases=["cur", 'c', "partida"])
     @commands.cooldown(2, 30, commands.BucketType.user)
     async def current(self, ctx, player_name, option="-s"):
-        """value = -1
+        # Maybe convert the player name
+        if str(player_name) == "me":
+            player_name = self.check_player_name(str(ctx.author.id))
+            if player_name == "None":
+                await ctx.send("You have not stored your IGN yet. To do so please use the store command like so: "
+                               "`>>store Paladins_IGN`")
+                return 0
+        else:
+            pass
+        value = -1
         if option == "-a":
-            value = 1"""
-        can_use = True
-        # can_use = await helper.store_commands(ctx.author.id, "current", value)
+            value = 1
+        can_use = await helper.store_commands(ctx.author.id, "current", value)
         async with ctx.channel.typing():
             # Data Format
             # {'Match': 795950194, 'match_queue_id': 452, 'personal_status_message': 0, 'ret_msg': 0, 'status': 3,
@@ -476,19 +480,20 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             # match_queue_id = 469 = DTM
             # match_queue_id = 486 = Ranked (Invalid)
 
+            current_match_queue_id = data.currentMatchQueueId
+
             match_string = "Unknown match Type"
-            if data.currentMatchQueueId == 424:
+            if current_match_queue_id == 424:
                 match_string = "Siege"
-            elif data.currentMatchQueueId == 445:
+            elif current_match_queue_id == 445:
                 await ctx.send("No data for Test Maps.")
                 return 0
-            elif data.currentMatchQueueId == 452:
+            elif current_match_queue_id == 452:
                 match_string = "Onslaught"
-            elif data.currentMatchQueueId == 469:
+            elif current_match_queue_id == 469:
                 match_string = "Team Death Match"
-            elif data.currentMatchQueueId == 486:  # Should be fixed now
+            elif current_match_queue_id == 486:
                 match_string = "Ranked"
-                # return "Ranked is currently not working."
 
             # Data Format
             # {'Account_Level': 17, 'ChampionId': 2493, 'ChampionName': 'Koga', 'Mastery_Level': 10, 'Match': 795511902,
@@ -518,12 +523,12 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 if int(player.taskForce) == 1:
                     team1.append(name)
                     team1_champs.append(player.godName)
-                    if data.currentMatchQueueId == 486 or data.currentMatchQueueId == 428:
+                    if current_match_queue_id == 486 or current_match_queue_id == 428:
                         team1_ranks.append(str(player.tier))
                 else:
                     team2.append(name)
                     team2_champs.append(player.godName)
-                    if data.currentMatchQueueId == 486 or data.currentMatchQueueId == 428:
+                    if current_match_queue_id == 486 or current_match_queue_id == 428:
                         team2_ranks.append(str(player.tier))
 
             match_data = ""
@@ -532,7 +537,6 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             match_data += str('\n\n{:18}  {:7}  {:8}  {:6}\n\n').format("Player name", "Level", "Win Rate", "KDA")
 
             for player, champ in zip(team1, team1_champs):
-                # print(get_global_kda(player))
                 pl = await self.get_global_kda(player)
                 ss = str('*{:18} Lv. {:3}  {:8}  {:6}\n')
                 ss = ss.format(pl[0], str(pl[1]), pl[2], pl[3])
@@ -580,14 +584,18 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     # Returns simple stats based on the option they choose (champ_name, me, or elo)
     @commands.command(name='stats', aliases=['stat'])
     @commands.cooldown(3, 30, commands.BucketType.user)
-    # async def stats(self, ctx, player_name, option="me", space=""):
     async def stats(self, ctx, *args):
+        await helper.store_commands(ctx.author.id, "stats")
         if len(args) > 3:
             ctx.send("Too many arguments")
 
         # Maybe convert the player name
         if str(args[0]) == "me":
             player_name = self.check_player_name(str(ctx.author.id))
+            if player_name == "None":
+                await ctx.send("You have not stored your IGN yet. To do so please use the store command like so: "
+                               "`>>store Paladins_IGN`")
+                return 0
         else:
             player_name = args[0]
 
@@ -606,27 +614,6 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                     champ_name = (str(args[1]) + " " + str(args[2])).title()
                 result = await self.get_champ_stats_api(player_name, champ_name, simple=0)
                 await ctx.send(embed=result)
-        """
-        option = option.lower().capitalize().title()  # Need since some champ names are two words
-
-        player_name = str(player_name)
-
-        # Personal overall stats
-        if option == "Me":
-            result = await self.get_player_stats_api(player_name)
-            await ctx.send("```" + result + "```")
-            return 0
-
-        # Personal elo stats
-        if option == "Elo":
-            result = await self.get_player_elo(player_name)
-            await ctx.send("```" + result + "```")
-            return 0
-
-        # Stats for a certain champion
-        result = await self.get_champ_stats_api(player_name, option, simple=0)
-        await ctx.send(embed=result)
-        """
 
     # Returns simple stats based on the option they choose (champ_name, me, or elo)
     @commands.command(name='store')
@@ -635,7 +622,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         with open("player_discord_ids") as json_f:
             player_discord_ids = json.load(json_f)
 
-        player_discord_ids.update({str(ctx.author.id): player_ign})  # update dict
+        player_discord_ids.update({ctx.author.id: player_ign})  # update dict
 
         # need to update the file now
         print("Stored a IGN in conversion dictionary: " + player_ign)

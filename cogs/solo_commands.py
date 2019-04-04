@@ -7,7 +7,7 @@ def server_owner_only():
     async def predicate(ctx):
         if not ctx.guild.owner == ctx.author:
             raise NotServerOwner("Sorry you are not authorized to use this command. Only the server owner: " +
-                                 str(ctx.guild.owner) + " can you this command")
+                                 str(ctx.guild.owner) + " can use this command")
         return True
     return commands.check(predicate)
 

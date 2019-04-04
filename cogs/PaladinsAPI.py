@@ -605,8 +605,11 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             await ctx.send("```" + result + "```")
         else:
             if str(args[1]) == "elo":
-                result = await self.get_player_elo(player_name)
-                await ctx.send("```" + result + "```")
+                await ctx.send("```Guru's site is currently under(as of 4/4/2019) development and until they finish "
+                               "updating the site this bot can not get their elo data :(```")
+                return 0
+                # result = await self.get_player_elo(player_name)
+                # await ctx.send("```" + result + "```")
             else:
                 if len(args) == 2:
                     champ_name = str(args[1]).title()

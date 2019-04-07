@@ -587,7 +587,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     async def stats(self, ctx, *args):
         await helper.store_commands(ctx.author.id, "stats")
         if len(args) > 3:
-            ctx.send("Too many arguments")
+            await ctx.send("Too many arguments")
 
         # Maybe convert the player name
         if str(args[0]) == "me":

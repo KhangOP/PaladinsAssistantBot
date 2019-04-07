@@ -625,7 +625,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         with open("player_discord_ids") as json_f:
             player_discord_ids = json.load(json_f)
 
-        player_discord_ids.update({ctx.author.id: player_ign})  # update dict
+        player_discord_ids.update({str(ctx.author.id): player_ign})  # update dict
 
         # need to update the file now
         print("Stored a IGN in conversion dictionary: " + player_ign)

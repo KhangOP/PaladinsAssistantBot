@@ -12,7 +12,7 @@ import my_utils as helper
 BOT_STATUS = ">>help"
 
 BOT_AUTHOR = "FeistyJalapeno#9045"
-BOT_VERSION = "Version 4.0.1 Beta"
+BOT_VERSION = "Version 4.1.1 Beta"
 UPDATE_NOTES = "Changed 3 functions to be embeds to include images."
 GAME = ["Paladins", BOT_STATUS, BOT_VERSION, BOT_STATUS, "Errors"]
 
@@ -25,7 +25,7 @@ f.close()
 
 
 def get_prefix(bot, message):
-    default_prefix = [">>", "!!"]
+    default_prefix = [">>"]
     # print("killing your hard drive")
     if message.guild:
         try:
@@ -95,12 +95,12 @@ async def on_message(message):
         return
 
     # Seeing if someone is using the bot_prefix and calling a command
-    #if message.content.startswith(get_prefix):
-    #    print(message.author, message.content, channel, message.guild, await helper.get_est_time())
+    if message.content.startswith(">>"):
+        print(message.author, message.content, channel, message.guild, await helper.get_est_time())
     # Seeing if someone is using the bot_prefix and calling a command
     if message.content.startswith("!!"):
-        msg = 'The `!!` prefix will not be supported anymore as of 4/6/2019. ' \
-              'However you will be able to set the prefix using the `>>prefix` command. ' \
+        msg = 'The `!!` prefix is not supported anymore as of 4/6/2019. ' \
+              'However you can set the prefix using the `>>prefix` command. ' \
               '{0.author.mention}'.format(message)
         try:  # First lets try to send the message to the channel the command was called
             await message.channel.send(msg)

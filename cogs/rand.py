@@ -73,7 +73,6 @@ class RandomCog(commands.Cog, name="Random Commands"):
     async def rand(self, ctx, command):
         # await helper.store_commands(ctx.author.id, "random")
         lang = await helper.Lang.check_language(ctx=ctx)
-        print(lang)
         command = str(command).lower()
         embed = discord.Embed(
             colour=discord.colour.Color.dark_teal()

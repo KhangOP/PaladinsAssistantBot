@@ -238,7 +238,7 @@ async def draw_match_vs():
 # Class of commands that are solo (a.k.a) are not used/related to other functions
 class Lang:
     file_name = 'languages/server_configs'
-    lan = []
+    lan = {}
 
     @classmethod
     async def check_language(cls, ctx):

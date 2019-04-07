@@ -98,17 +98,6 @@ async def on_message(message):
     if message.content.startswith(">>"):
         print(message.author, message.content, channel, message.guild, await helper.get_est_time())
     # Seeing if someone is using the bot_prefix and calling a command
-    if message.content.startswith("!!"):
-        msg = 'The `!!` prefix is not supported anymore as of 4/6/2019. ' \
-              'However you can set the prefix using the `>>prefix` command. ' \
-              '{0.author.mention}'.format(message)
-        try:  # First lets try to send the message to the channel the command was called
-            await message.channel.send(msg)
-        except BaseException:
-            try:  # Next lets try to DM the message to the user
-                await message.channel.send(msg)
-            except BaseException:  # Bad sign if we end up here but is possible if the user blocks some DM's
-                print("The bot can't message the user in their DM's or in the channel they called the function.")
     if message.content.startswith(">> ") or message.content.startswith("!! "):
         msg = 'Oops looks like you have a space after the bot prefix {0.author.mention}'.format(message)
         try:  # First lets try to send the message to the channel the command was called

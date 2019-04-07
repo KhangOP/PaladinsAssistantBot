@@ -40,14 +40,17 @@ class SoloCommandCog(commands.Cog, name="Solo Commands"):
         async with ctx.channel.typing():
             with open(self.file_name) as json_f:
                 server_ids = json.load(json_f)
-                server_ids[str(ctx.guild.id)]["prefix"] = prefix
-
+                try:
+                    server_ids[str(ctx.guild.id)]["prefix"] = prefix
+                except KeyError:  # Server has no configs yet
+                    server_ids[str(ctx.guild.id)] = {}
+                    server_ids[str(ctx.guild.id)]["prefix"] = prefix
+                    # server_ids[str(ctx.guild.id)]["lang"] = "en"
                 with open(self.file_name, 'w') as json_d:
                     json.dump(server_ids, json_d)
                 await ctx.send("This bot is now set to use the prefix: `" + prefix + "` in this server")
 
     @commands.command(name='language')
-    # @commands.is_owner() # This is bot owner
     @server_owner_only()
     async def set_server_language(self, ctx, language: str):
         async with ctx.channel.typing():
@@ -56,9 +59,12 @@ class SoloCommandCog(commands.Cog, name="Solo Commands"):
             if language in self.abbreviations:
                 with open(self.file_name) as json_f:
                     server_ids = json.load(json_f)
-
-                    server_ids[str(ctx.guild.id)]["lang"] = language  # store the server id in the dictionary
-
+                    try:
+                        server_ids[str(ctx.guild.id)]["lang"] = language  # store the server id in the dictionary
+                    except KeyError:  # Server has no configs yet
+                        server_ids[str(ctx.guild.id)] = {}
+                        # server_ids[str(ctx.guild.id)]["prefix"] = ">>"
+                        server_ids[str(ctx.guild.id)]["lang"] = language
                     # need to update the file now
                     with open(self.file_name, 'w') as json_d:
                         json.dump(server_ids, json_d)

@@ -224,6 +224,10 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         # Gets player id and error checks
         player_id = cls.get_player_id(player_name)
         if player_id == -1:
+            if simple == 1:
+                ss = str('*{:18} Lv. {:3}  {:7}   {:6}\n')
+                ss = ss.format(champ, "???", "???", "???")
+                return ss
             match_data = "Can't find the player: " + player_name + \
                          ". Please make sure the name is spelled correctly (Capitalization does not matter)."
             embed = discord.Embed(
@@ -400,13 +404,14 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             if match_id == -1 or match_id == match.matchId:
                 match_data = str('{}\'s {} match:\n\n').format(str(player_name), str(match.mapGame).replace("LIVE", ""))
                 ss = str('`Match Status: {} ({} mins)\nChampion: {}\nKDA: {} ({}-{}-{})\nDamage: {}\nDamage Taken: {}'
-                         '\nHealing: {} \nObjective Time: {}`\n')
+                         '\nHealing: {}\nSelf Healing: {}\nObjective Time: {}`\n')
                 kills = match.kills
                 deaths = match.deaths
                 assists = match.assists
                 kda = await self.calc_kda(kills, deaths, assists)
                 match_data += ss.format(match.winStatus, match.matchMinutes, match.godName, kda, kills, deaths, assists,
-                                        match.damage, match.damageTaken, match.healing, match.objectiveAssists)
+                                        match.damage, match.damageTaken, match.healing, match.healingPlayerSelf,
+                                        match.objectiveAssists)
 
                 embed = discord.Embed(
                     description=match_data,
@@ -447,7 +452,8 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         value = -1
         if option == "-a":
             value = 1
-        can_use = await helper.store_commands(ctx.author.id, "current", value)
+        # can_use = await helper.store_commands(ctx.author.id, "current", value)
+        can_use = True
         async with ctx.channel.typing():
             # Data Format
             # {'Match': 795950194, 'match_queue_id': 452, 'personal_status_message': 0, 'ret_msg': 0, 'status': 3,
@@ -532,9 +538,12 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                         team2_ranks.append(str(player.tier))
 
             match_data = ""
+            player_champ_data = ""
             match_data += player_name + " is in a " + match_string + " match."  # Match Type
             # print(match_data)
             match_data += str('\n\n{:18}  {:7}  {:8}  {:6}\n\n').format("Player name", "Level", "Win Rate", "KDA")
+            player_champ_data = str('\n\n{:18}  {:7}  {:8}  {:6}\n\n').format("Champion name", "Level",
+                                                                              "Win Rate", "KDA")
 
             for player, champ in zip(team1, team1_champs):
                 pl = await self.get_global_kda(player)
@@ -552,10 +561,11 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
                 # Add in champ stats
                 if option == "-a" and can_use:
-                    player_champ_data = await self.get_champ_stats_api(player, champ, 1)
-                    match_data += player_champ_data
+                    player_champ_data += await self.get_champ_stats_api(player, champ, 1)
+                    # match_data += player_champ_data
 
             match_data += "\n"
+            player_champ_data += "\n"
 
             for player, champ in zip(team2, team2_champs):
                 # print(get_global_kda(player))
@@ -574,12 +584,14 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
                 # Add in champ stats
                 if option == "-a" and can_use:
-                    player_champ_data = await self.get_champ_stats_api(player, champ, 1)
-                    match_data += player_champ_data
+                    player_champ_data += await self.get_champ_stats_api(player, champ, 1)
+                    # match_data += player_champ_data
 
             buffer = await helper.create_match_image(team1_champs, team2_champs, team1_ranks, team2_ranks)
             file = discord.File(filename="Team.png", fp=buffer)
             await ctx.send("```diff\n" + match_data + "```", file=file)
+            if "\n" in player_champ_data and value != -1:
+                await ctx.send("```diff\n" + player_champ_data + "```")
 
     # Returns simple stats based on the option they choose (champ_name, me, or elo)
     @commands.command(name='stats', aliases=['stat'])

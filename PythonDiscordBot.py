@@ -81,7 +81,7 @@ async def on_command_error(ctx, error):
     else:
         print("An uncaught error occurred: ", error)  # More error checking
         msg = "Unfortunately, something messed up. If you entered the command correctly just wait a few seconds " \
-              "and then try again."
+              "and then try again. " + error
         await send_error(cont=ctx, msg=msg)
 #"""
 

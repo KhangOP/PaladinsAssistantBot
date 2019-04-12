@@ -318,19 +318,19 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             if player_name == "None":
                 await ctx.send("You have not stored your IGN yet. To do so please use the store command like so: "
                                "`>>store Paladins_IGN`")
-                return 0
+                return None
         else:
             pass
         await helper.store_commands(ctx.author.id, "history")
         async with ctx.channel.typing():
             if amount > 50 or amount <= 1:
                 await ctx.send("Please enter an amount between 2-50")
-                return 0
+                return None
             player_id = self.get_player_id(player_name)
             if player_id == -1:
                 await ctx.send("Can't find the player: " + player_name +
                                ". Please make sure the name is spelled correctly (Capitalization does not matter).")
-                return 0
+                return None
             paladins_data = paladinsAPI.getMatchHistory(player_id)
             # paladins_data = paladinsAPI.getMatchDetailsBatch(player_id) # Need to look into this
             count = 0
@@ -380,7 +380,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             if player_name == "None":
                 await ctx.send("You have not stored your IGN yet. To do so please use the store command like so: "
                                "`>>store Paladins_IGN`")
-                return 0
+                return None
         else:
             pass
         await helper.store_commands(ctx.author.id, "last")
@@ -394,6 +394,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 colour=discord.colour.Color.dark_teal()
             )
             await ctx.send(embed=embed)
+            return None
 
         paladins_data = paladinsAPI.getMatchHistory(player_id)
         for match in paladins_data:
@@ -421,7 +422,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 embed.set_thumbnail(url=await helper.get_champ_image(match.godName))
 
                 await ctx.send(embed=embed)
-                return 0
+                return None
 
         # If the match id could not be found
         embed = discord.Embed(
@@ -446,7 +447,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             if player_name == "None":
                 await ctx.send("You have not stored your IGN yet. To do so please use the store command like so: "
                                "`>>store Paladins_IGN`")
-                return 0
+                return None
         else:
             pass
         value = -1
@@ -464,21 +465,21 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             if player_id == -1:
                 await ctx.send("Can't find the player: " + player_name +
                                ". Please make sure the name is spelled correctly (Capitalization does not matter).")
-                return 0
+                return None
             data = paladinsAPI.getPlayerStatus(player_id)
 
             if data == 0:
                 await ctx.send(str("Player " + player_name + " is not found."))
-                return 0
+                return None
             if data.playerStatusId == 0:
                 await ctx.send("Player is offline.")
-                return 0
+                return None
             elif data.playerStatusId == 1:
                 await ctx.send("Player is in lobby.")
-                return 0
+                return None
             elif data.playerStatusId == 2:
                 await ctx.send("Player in champion selection.")
-                return 0
+                return None
 
             # match_queue_id = 424 = Siege
             # match_queue_id = 445 = Test Maps (NoneType) --> no json data
@@ -493,7 +494,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 match_string = "Siege"
             elif current_match_queue_id == 445:
                 await ctx.send("No data for Test Maps.")
-                return 0
+                return None
             elif current_match_queue_id == 452:
                 match_string = "Onslaught"
             elif current_match_queue_id == 469:
@@ -510,7 +511,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             except BaseException as e:
                 await ctx.send("An problem occurred. Please make sure you are not using this command on the event mode."
                                + str(e))
-                return 0
+                return None
             # print(players)
             team1 = []
             team1_champs = []
@@ -607,7 +608,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             if player_name == "None":
                 await ctx.send("You have not stored your IGN yet. To do so please use the store command like so: "
                                "`>>store Paladins_IGN`")
-                return 0
+                return None
         else:
             player_name = args[0]
 
@@ -619,7 +620,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             if str(args[1]).lower() == "elo":
                 await ctx.send("```Guru's site is currently under(as of 4/4/2019) development and until they finish "
                                "updating the site this bot can not get their elo data :(```")
-                return 0
+                return None
                 # result = await self.get_player_elo(player_name)
                 # await ctx.send("```" + result + "```")
             else:

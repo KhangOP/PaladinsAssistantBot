@@ -64,7 +64,7 @@ async def send_error(cont, msg):
 async def on_command_error(ctx, error):
     if isinstance(error, commands.MissingRequiredArgument):
         await send_error(cont=ctx, msg="A required argument to the command you called is missing"+"\N{CROSS MARK}")
-        return 0
+        return None
     if isinstance(error, commands.BadArgument):  # This should do nothing since I check in functions for input error
         await send_error(cont=ctx, msg="Make sure the command is in the correct format.")
     elif isinstance(error, commands.CommandNotFound):

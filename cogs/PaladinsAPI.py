@@ -602,7 +602,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             await ctx.send("Too many arguments")
 
         # Maybe convert the player name
-        if str(args[0]) == "me":
+        if str(args[0]).lower() == "me":
             player_name = self.check_player_name(str(ctx.author.id))
             if player_name == "None":
                 await ctx.send("You have not stored your IGN yet. To do so please use the store command like so: "
@@ -616,7 +616,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             result = await self.get_player_stats_api(player_name)
             await ctx.send("```" + result + "```")
         else:
-            if str(args[1]) == "elo":
+            if str(args[1]).lower() == "elo":
                 await ctx.send("```Guru's site is currently under(as of 4/4/2019) development and until they finish "
                                "updating the site this bot can not get their elo data :(```")
                 return 0

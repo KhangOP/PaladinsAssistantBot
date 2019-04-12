@@ -136,7 +136,7 @@ async def create_team_image(champ_list, ranks):
         champ_list.append("?")
 
     for champ in champ_list:
-        if champ != "?" and "Atlas" != champ:  # Temp fix
+        if champ != "?":  # and "Atlas" != champ:  # Temp fix
             champ_url = await get_champ_image(champ)
             response = requests.get(champ_url)
             champion_images.append(Image.open(BytesIO(response.content)))

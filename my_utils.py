@@ -235,6 +235,36 @@ async def draw_match_vs():
     return final_buffer
 
 
+# Creates a match image based on the two teams champions
+async def create_history_image(team1, team2, t1_data, t2_data):
+    image_size = 512
+    offset = 5
+    history_image = Image.new('RGB', (image_size*10, image_size*10))
+    for i, (champ, champ2) in enumerate(zip(team1, team2)):
+        champ_url = await get_champ_image(champ)
+        response = requests.get(champ_url)
+        champ_image = Image.open(BytesIO(response.content))
+        history_image.paste(champ_image, (0, image_size*i, image_size, image_size*(i+1)))
+
+        # Second team
+        champ_url = await get_champ_image(champ2)
+        response = requests.get(champ_url)
+        champ_image = Image.open(BytesIO(response.content))
+        history_image.paste(champ_image, (0, image_size * (i + offset), image_size, image_size * (i + 1 + offset)))
+    # history_image.show()
+
+    # Creates a buffer to store the image in
+    final_buffer = BytesIO()
+
+    # Store the pillow image we just created into the buffer with the PNG format
+    history_image.save(final_buffer, "png")
+
+    # seek back to the start of the buffer stream
+    final_buffer.seek(0)
+
+    return final_buffer
+
+
 # Class of commands that are solo (a.k.a) are not used/related to other functions
 class Lang:
     file_name = 'languages/server_configs'

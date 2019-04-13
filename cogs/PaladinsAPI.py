@@ -371,6 +371,75 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         if amount > 30:
             await ctx.send("```diff\n" + match_data2 + "```")
 
+    # Returns an image of a match with player details
+    @commands.command(name='match')
+    @commands.cooldown(2, 30, commands.BucketType.user)
+    async def match(self, ctx, player_name, match_id=-1):
+        if str(player_name) == "me":
+            player_name = self.check_player_name(str(ctx.author.id))
+            if player_name == "None":
+                await ctx.send("You have not stored your IGN yet. To do so please use the store command like so: "
+                               "`>>store Paladins_IGN`")
+                return 0
+        else:
+            pass
+        await helper.store_commands(ctx.author.id, "last")
+        player_id = self.get_player_id(player_name)
+
+        if player_id == -1:
+            match_data = "Can't find the player: " + player_name + \
+                         ". Please make sure the name is spelled correctly (Capitalization does not matter)."
+            embed = discord.Embed(
+                description=match_data,
+                colour=discord.colour.Color.dark_teal()
+            )
+            await ctx.send(embed=embed)
+
+        paladins_data = paladinsAPI.getMatchHistory(player_id)
+        for match in paladins_data:
+            # Check to see if this player does have match history
+            if match.playerName is None:
+                break
+
+            team1_data = []
+            team2_data = []
+            team1_champs = []
+            team2_champs = []
+
+            if match_id == -1 or match_id == match.matchId:
+                match_data = paladinsAPI.getMatchDetails(match.matchId)
+                print(match.winStatus, match.matchMinutes, match.matchRegion,
+                      str(match.mapGame).replace("LIVE", ""))
+                for pd in match_data:
+                    # print(player_data)
+                    if pd.taskForce == 1:
+                        team1_data.append([pd.killsPlayer, pd.deaths, pd.assists, pd.damagePlayer, pd.damageTaken,
+                                           pd.healing, pd.healingPlayerSelf, pd.objectiveAssists])
+                        team1_champs.append(pd.referenceName)
+                        # print("Team 1: " + str(pd.playerName) + str(pd.partyId))
+                    else:
+                        team2_data.append([pd.killsPlayer, pd.deaths, pd.assists, pd.damagePlayer, pd.damageTaken,
+                                           pd.healing, pd.healingPlayerSelf, pd.objectiveAssists])
+                        team2_champs.append(pd.referenceName)
+                        # print("Team 2: " + str(pd.playerName) + str(pd.partyId))
+
+                buffer = await helper.create_history_image(team1_champs, team2_champs, team1_data, team2_data)
+                file = discord.File(filename="Team.png", fp=buffer)
+                await ctx.send("``` sup```", file=file)
+                return None
+
+        # If the match id could not be found
+        embed = discord.Embed(
+            description="Could not find a match with the match id: " + str(match_id),
+            colour=discord.colour.Color.dark_teal()
+        )
+
+        # If player has not played recently
+        if match_id == -1:
+            embed.description = "Player does not have recent match data."
+
+        await ctx.send(embed=embed)
+
     # Returns simple match history details
     @commands.command(name='last')
     @commands.cooldown(2, 30, commands.BucketType.user)

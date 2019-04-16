@@ -89,7 +89,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             return "Onslaught"
         elif "Ranked" in match_name:
             return "Ranked"
-        elif "End Times" in match_name:  # Event name
+        elif "End Times" in match_name or "Crazy King" in match_name:  # Event name
             return "End Times"
         elif "(Siege)" in match_name:  # Test Maps (WIP Thrones)
             return "Test Maps"
@@ -312,27 +312,45 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     '''Commands below ############################################################'''
     @commands.command(name='history', pass_context=True)
     @commands.cooldown(2, 30, commands.BucketType.user)
-    async def history(self, ctx, player_name, amount=10):
+    async def history(self, ctx, *args):
+        if len(args) == 0:
+            await ctx.send("A required argument to the command you called is missing"+"\N{CROSS MARK}")
+            return None
+        if len(args) > 4:
+            await ctx.send("Too many arguments")
+        player_name = str(args[0])
+        amount = 10
+        champ_name = ""
+        if len(args) == 1:
+            pass
+        elif len(args) == 2:
+            amount = int(args[1])
+        else:  # they have included a champion name
+            if len(args) == 3:
+                champ_name = str(args[2]).title()
+            else:
+                champ_name = (str(args[2]) + " " + str(args[3])).title()
+
         if str(player_name) == "me":
             player_name = self.check_player_name(str(ctx.author.id))
             if player_name == "None":
                 await ctx.send("You have not stored your IGN yet. To do so please use the store command like so: "
                                "`>>store Paladins_IGN`")
-                return None
+                return 0
         else:
             pass
         await helper.store_commands(ctx.author.id, "history")
         async with ctx.channel.typing():
             if amount > 50 or amount <= 1:
                 await ctx.send("Please enter an amount between 2-50")
-                return None
+                return 0
             player_id = self.get_player_id(player_name)
             if player_id == -1:
                 await ctx.send("Can't find the player: " + player_name +
                                ". Please make sure the name is spelled correctly (Capitalization does not matter).")
-                return None
+                return 0
             paladins_data = paladinsAPI.getMatchHistory(player_id)
-            # paladins_data = paladinsAPI.getMatchDetailsBatch(player_id) # Need to look into this
+
             count = 0
             match_data = ""
             match_data2 = ""
@@ -343,24 +361,31 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                         return "Player does not have recent match data."
                     else:
                         break
-                count += 1
-                ss = str('+{:10}{:4}{:3}:00 {:9} {:9} {:5} ({}/{}/{})\n')
-                kills = match.kills
-                deaths = match.deaths
-                assists = match.assists
-                kda = await self.calc_kda(kills, deaths, assists)
-                ss = ss.format(match.godName, match.winStatus, match.matchMinutes,
-                               await self.convert_match_type(match.mapGame), match.matchId, kda, kills, deaths, assists)
-                # Used for coloring
-                if match.winStatus == "Loss":
-                    ss = ss.replace("+", "-")
+                # empty string means to get everything or only get matches with a certain champ
+                if not champ_name or champ_name == match.godName:
+                    count += 1
+                    ss = str('+{:10}{:4}{:3}:00 {:9} {:9} {:5} ({}/{}/{})\n')
+                    kills = match.kills
+                    deaths = match.deaths
+                    assists = match.assists
+                    kda = await self.calc_kda(kills, deaths, assists)
+                    ss = ss.format(match.godName, match.winStatus, match.matchMinutes,
+                                   await self.convert_match_type(match.mapGame), match.matchId, kda, kills, deaths, assists)
+                    # Used for coloring
+                    if match.winStatus == "Loss":
+                        ss = ss.replace("+", "-")
 
-                if count > 30:
-                    match_data2 += ss
-                else:
-                    match_data += ss
-                if count == amount:
-                    break
+                    if count > 30:
+                        match_data2 += ss
+                    else:
+                        match_data += ss
+                    if count == amount:
+                        break
+
+            if not match_data and champ_name:
+                await ctx.send("Could not find any matches with the champion: `" + champ_name + "` in the last `"
+                               + str(amount) + "` matches.")
+                return None
 
             title = str('{}\'s last {} matches:\n\n').format(str(player_name), count)
             title += str('{:11}{:4}  {:4} {:9} {:9} {:5} {}\n').format("Champion", "Win?", "Time", "Mode", "Match ID",
@@ -405,6 +430,8 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             team2_data = []
             team1_champs = []
             team2_champs = []
+            team1_parties = []
+            team2_parties = []
 
             if match_id == -1 or match_id == match.matchId:
                 match_data = paladinsAPI.getMatchDetails(match.matchId)
@@ -416,12 +443,20 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                         team1_data.append([pd.killsPlayer, pd.deaths, pd.assists, pd.damagePlayer, pd.damageTaken,
                                            pd.healing, pd.healingPlayerSelf, pd.objectiveAssists])
                         team1_champs.append(pd.referenceName)
+                        team1_parties.append(pd.partyId)
                         # print("Team 1: " + str(pd.playerName) + str(pd.partyId))
                     else:
                         team2_data.append([pd.killsPlayer, pd.deaths, pd.assists, pd.damagePlayer, pd.damageTaken,
                                            pd.healing, pd.healingPlayerSelf, pd.objectiveAssists])
                         team2_champs.append(pd.referenceName)
+                        team1_parties.append(pd.partyId)
                         # print("Team 2: " + str(pd.playerName) + str(pd.partyId))
+
+                for player in team1_parties:
+                    print(player)
+
+                for player in team2_parties:
+                    print(player)
 
                 buffer = await helper.create_history_image(team1_champs, team2_champs, team1_data, team2_data)
                 file = discord.File(filename="Team.png", fp=buffer)
@@ -667,6 +702,9 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     @commands.command(name='stats', aliases=['stat'])
     @commands.cooldown(3, 30, commands.BucketType.user)
     async def stats(self, ctx, *args):
+        if len(args) == 0:
+            await ctx.send("A required argument to the command you called is missing" + "\N{CROSS MARK}")
+            return None
         await helper.store_commands(ctx.author.id, "stats")
         if len(args) > 3:
             await ctx.send("Too many arguments")

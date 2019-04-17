@@ -321,15 +321,21 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         player_name = str(args[0])
         amount = 10
         champ_name = ""
+        offset = 0
+        if len(args) > 1:  # handles me they only type >>history player_name
+            try:
+                amount = int(args[1])
+            except ValueError:
+                offset = 1  # amount was not provided so we assume 10 matches
         if len(args) == 1:
             pass
-        elif len(args) == 2:
+        elif len(args) == 2 and offset != 1:
             amount = int(args[1])
         else:  # they have included a champion name
-            if len(args) == 3:
-                champ_name = str(args[2]).title()
+            if len(args)+offset == 3:
+                champ_name = str(args[2-offset]).title()
             else:
-                champ_name = (str(args[2]) + " " + str(args[3])).title()
+                champ_name = (str(args[2-offset]) + " " + str(args[3-offset])).title()
 
         if str(player_name) == "me":
             player_name = self.check_player_name(str(ctx.author.id))
@@ -363,7 +369,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                         break
                 # empty string means to get everything or only get matches with a certain champ
                 if not champ_name or champ_name == match.godName:
-                    count += 1
+                    # count += 1
                     ss = str('+{:10}{:4}{:3}:00 {:9} {:9} {:5} ({}/{}/{})\n')
                     kills = match.kills
                     deaths = match.deaths
@@ -379,8 +385,9 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                         match_data2 += ss
                     else:
                         match_data += ss
-                    if count == amount:
-                        break
+                if count == amount:
+                    break
+                count += 1
 
             if not match_data and champ_name:
                 await ctx.send("Could not find any matches with the champion: `" + champ_name + "` in the last `"

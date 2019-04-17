@@ -459,16 +459,26 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                         team1_parties.append(pd.partyId)
                         # print("Team 2: " + str(pd.playerName) + str(pd.partyId))
 
+                # Todo implement counting parties
+                """
+                party_id = 0
+                party_status = []
                 for player in team1_parties:
+                    if team1_parties.count(player) > 2:
+
                     print(player)
 
                 for player in team2_parties:
                     print(player)
+                """
 
                 buffer = await helper.create_history_image(team1_champs, team2_champs, team1_data, team2_data)
                 file = discord.File(filename="Team.png", fp=buffer)
                 await ctx.send("``` sup```", file=file)
                 return None
+
+                # ss = str('Champion: {}\nKDA: {} ({}-{}-{})\nDamage: {}\nDamage Taken: {}'
+                #         '\nHealing: {} \nObjective Time: {}`\n')
 
         # If the match id could not be found
         embed = discord.Embed(

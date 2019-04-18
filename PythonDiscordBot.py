@@ -20,12 +20,12 @@ file_name = "token"
 # Gets token and prefix from a file
 with open(file_name, 'r') as f:
     TOKEN = f.readline().strip()
-    PREFIX = f.readline()
+    PREFIX = f.readline().strip()
 f.close()
 
 
 def get_prefix(bot, message):
-    default_prefix = [">>"]
+    default_prefix = [PREFIX]
     # print("killing your hard drive")
     if message.guild:
         try:

@@ -26,6 +26,26 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     def __init__(self, bot):
         self.bot = bot
 
+    DAMAGES = ["Cassie", "Kinessa", "Drogoz", "Bomb King", "Viktor", "Sha Lin", "Tyra", "Willo", "Lian", "Strix",
+               "Vivian", "Dredge", "Imani"]
+    FLANKS = ["Skye", "Buck", "Evie", "Androxus", "Maeve", "Lex", "Zhin", "Talus", "Moji", "Koga"]
+    TANKS = ["Barik", "Fernando", "Ruckus", "Makoa", "Torvald", "Inara", "Ash", "Terminus", "Khan", "Atlas"]
+    SUPPORTS = ["Grohk", "Grover", "Ying", "Mal Damba", "Seris", "Jenos", "Furia", "Pip"]
+
+    @classmethod
+    def get_champ_class(cls, champ_name: str):
+        champ_name = champ_name.title()
+        if champ_name in cls.DAMAGES:
+            return 0
+        elif champ_name in cls.FLANKS:
+            return 2
+        elif champ_name in cls.TANKS:
+            return 4
+        elif champ_name in cls.SUPPORTS:
+            return 6
+        else:
+            return -1
+
     # Get the player id for a player based on their name. First it checks a dictionary and if they are not in there then
     # it does an API call to get the player's id. Then it writes that id to the dictionary. Helps save API calls.
     @classmethod
@@ -358,8 +378,12 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             paladins_data = paladinsAPI.getMatchHistory(player_id)
 
             count = 0
+            total_matches = 0
             match_data = ""
             match_data2 = ""
+            # Damage, Flank, Tank, Support => (win, lose)
+            total_wins = [0, 0, 0, 0, 0, 0, 0, 0]
+            global_kda = 0.0
             for match in paladins_data:
                 # Check to see if this player does have match history
                 if match.playerName is None:
@@ -375,8 +399,23 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                     deaths = match.deaths
                     assists = match.assists
                     kda = await self.calc_kda(kills, deaths, assists)
-                    ss = ss.format(match.godName, match.winStatus, match.matchMinutes,
-                                   await self.convert_match_type(match.mapGame), match.matchId, kda, kills, deaths, assists)
+                    match_name = await self.convert_match_type(match.mapGame)
+                    ss = ss.format(match.godName, match.winStatus, match.matchMinutes, match_name,
+                                   match.matchId, kda, kills, deaths, assists)
+
+                    # we don't want to count event or bot matches when calculating stats
+                    if match_name != "Bot Match" and match_name != "End Times":
+                        global_kda += float(kda)
+                        total_matches += 1
+                        class_index = self.get_champ_class(match.godName)
+                        if class_index != -1:
+                            if match.winStatus == "Loss":
+                                total_wins[class_index+1] += 1  # Losses
+                            else:
+                                total_wins[class_index] += 1    # Wins
+                        else:
+                            print("Unclassified champion: " + str(match.godName))
+
                     # Used for coloring
                     if match.winStatus == "Loss":
                         ss = ss.replace("+", "-")
@@ -393,6 +432,24 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 await ctx.send("Could not find any matches with the champion: `" + champ_name + "` in the last `"
                                + str(amount) + "` matches.")
                 return None
+            # ToDo pick up here tomorrow (calc total win_rate)
+            global_kda = round(global_kda/total_matches, 2)
+            print(global_kda)
+            ss = "Damages: {}% ({}-{})\n" \
+                 "Flanks:  {}% ({}-{})\n" \
+                 "Tanks:   {}% ({}-{})\n" \
+                 "Healers: {}% ({}-{})\n\n"
+            d_t = total_wins[0] + total_wins[1]     # Damage total matches
+            f_t = total_wins[2] + total_wins[3]     # Flank total matches
+            t_t = total_wins[4] + total_wins[5]     # Tank total matches
+            s_t = total_wins[6] + total_wins[7]     # Healer total matches
+            d_wr = await self.calc_win_rate(total_wins[0], d_t)
+            f_wr = await self.calc_win_rate(total_wins[2], f_t)
+            t_wr = await self.calc_win_rate(total_wins[4], t_t)
+            s_wr = await self.calc_win_rate(total_wins[6], s_t)
+            ss = ss.format(d_wr, total_wins[0], total_wins[1], f_wr, total_wins[2], total_wins[3],
+                           t_wr, total_wins[4], total_wins[5], s_wr, total_wins[6], total_wins[7])
+            print(ss)
 
             title = str('{}\'s last {} matches:\n\n').format(str(player_name), count)
             title += str('{:11}{:4}  {:4} {:9} {:9} {:5} {}\n').format("Champion", "Win?", "Time", "Mode", "Match ID",

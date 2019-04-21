@@ -424,7 +424,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                     if match.winStatus == "Loss":
                         ss = ss.replace("+", "-")
 
-                    if count > 30:
+                    if count > 30: #ToDo Total matches
                         match_data2 += ss
                     else:
                         match_data += ss
@@ -436,13 +436,14 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 await ctx.send("Could not find any matches with the champion: `" + champ_name + "` in the last `"
                                + str(amount) + "` matches.")
                 return None
-            # ToDo pick up here tomorrow (calc total win_rate)
+
+            # Base string to hold kda and win rate for all classes
             ss = "Class    KDA:   Win rate:\n\n" \
-                 "Total:   {:5}  {:6}% ({}-{})\n" \
-                 "Damages: {:5}  {:6}% ({}-{})\n" \
-                 "Flanks:  {:5}  {:6}% ({}-{})\n" \
-                 "Tanks:   {:5}  {:6}% ({}-{})\n" \
-                 "Healers: {:5}  {:6}% ({}-{})\n\n"
+                 "+Total:   {:5}  {:6}% ({}-{})\n" \
+                 "+Damages: {:5}  {:6}% ({}-{})\n" \
+                 "+Flanks:  {:5}  {:6}% ({}-{})\n" \
+                 "+Tanks:   {:5}  {:6}% ({}-{})\n" \
+                 "+Healers: {:5}  {:6}% ({}-{})\n\n"
 
             d_t = total_wins[0] + total_wins[1]     # Damage total matches
             f_t = total_wins[2] + total_wins[3]     # Flank total matches
@@ -481,9 +482,8 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                                                                        "Detailed")
             title += match_data
         await ctx.send("```diff\n" + title + "```")
-        if amount > 30:
-            await ctx.send("```diff\n" + match_data2 + "```")
-        await ctx.send("```" + ss + "```")
+        match_data2 += "\n\n" + ss
+        await ctx.send("```diff\n" + match_data2 + "```")
 
     # Returns an image of a match with player details
     @commands.command(name='match')

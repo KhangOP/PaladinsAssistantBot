@@ -38,11 +38,11 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         if champ_name in cls.DAMAGES:
             return 0
         elif champ_name in cls.FLANKS:
-            return 2
+            return 1
         elif champ_name in cls.TANKS:
-            return 4
+            return 2
         elif champ_name in cls.SUPPORTS:
-            return 6
+            return 3
         else:
             return -1
 
@@ -383,6 +383,8 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             match_data2 = ""
             # Damage, Flank, Tank, Support => (win, lose)
             total_wins = [0, 0, 0, 0, 0, 0, 0, 0]
+            # Damage, Flank, Tank, Support => (kda, total_matches per class)
+            total_kda = [0, 0, 0, 0, 0, 0, 0, 0]
             global_kda = 0.0
             for match in paladins_data:
                 # Check to see if this player does have match history
@@ -409,10 +411,12 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                         total_matches += 1
                         class_index = self.get_champ_class(match.godName)
                         if class_index != -1:
+                            total_kda[class_index*2] += float(kda)
+                            total_kda[class_index*2+1] += 1
                             if match.winStatus == "Loss":
-                                total_wins[class_index+1] += 1  # Losses
+                                total_wins[class_index*2+1] += 1  # Losses
                             else:
-                                total_wins[class_index] += 1    # Wins
+                                total_wins[class_index*2] += 1    # Wins
                         else:
                             print("Unclassified champion: " + str(match.godName))
 
@@ -433,12 +437,13 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                                + str(amount) + "` matches.")
                 return None
             # ToDo pick up here tomorrow (calc total win_rate)
-            global_kda = round(global_kda/total_matches, 2)
-            print(global_kda)
-            ss = "Damages: {}% ({}-{})\n" \
-                 "Flanks:  {}% ({}-{})\n" \
-                 "Tanks:   {}% ({}-{})\n" \
-                 "Healers: {}% ({}-{})\n\n"
+            ss = "Class    KDA:   Win rate:\n\n" \
+                 "Total:   {:5}  {:6}% ({}-{})\n" \
+                 "Damages: {:5}  {:6}% ({}-{})\n" \
+                 "Flanks:  {:5}  {:6}% ({}-{})\n" \
+                 "Tanks:   {:5}  {:6}% ({}-{})\n" \
+                 "Healers: {:5}  {:6}% ({}-{})\n\n"
+
             d_t = total_wins[0] + total_wins[1]     # Damage total matches
             f_t = total_wins[2] + total_wins[3]     # Flank total matches
             t_t = total_wins[4] + total_wins[5]     # Tank total matches
@@ -447,9 +452,28 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             f_wr = await self.calc_win_rate(total_wins[2], f_t)
             t_wr = await self.calc_win_rate(total_wins[4], t_t)
             s_wr = await self.calc_win_rate(total_wins[6], s_t)
-            ss = ss.format(d_wr, total_wins[0], total_wins[1], f_wr, total_wins[2], total_wins[3],
-                           t_wr, total_wins[4], total_wins[5], s_wr, total_wins[6], total_wins[7])
-            print(ss)
+
+            # KDA calc
+            d_kda, f_kda, t_kda, s_kda, = 0.0, 0.0, 0.0, 0.0
+            if total_kda[0] != 0:
+                d_kda = round(total_kda[0]/total_kda[1], 2)
+            if total_kda[2] != 0:
+                f_kda = round(total_kda[2]/total_kda[3], 2)
+            if total_kda[4] != 0:
+                t_kda = round(total_kda[4]/total_kda[5], 2)
+            if total_kda[6] != 0:
+                s_kda = round(total_kda[6]/total_kda[7], 2)
+
+            # Total wins/loses
+            global_kda = round(global_kda / total_matches, 2)
+            tot_wins = total_wins[0] + total_wins[2] + total_wins[4] + total_wins[6]
+            tot_loses = total_wins[1] + total_wins[3] + total_wins[5] + total_wins[7]
+            total_wr = await self.calc_win_rate(tot_wins, d_t + f_t + t_t + s_t)
+
+            # Filling the the string with all the data
+            ss = ss.format(global_kda, total_wr, tot_wins, tot_loses, d_kda, d_wr, total_wins[0], total_wins[1], f_kda,
+                           f_wr, total_wins[2], total_wins[3], t_kda, t_wr, total_wins[4], total_wins[5], s_kda, s_wr,
+                           total_wins[6], total_wins[7])
 
             title = str('{}\'s last {} matches:\n\n').format(str(player_name), count)
             title += str('{:11}{:4}  {:4} {:9} {:9} {:5} {}\n').format("Champion", "Win?", "Time", "Mode", "Match ID",
@@ -459,6 +483,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         await ctx.send("```diff\n" + title + "```")
         if amount > 30:
             await ctx.send("```diff\n" + match_data2 + "```")
+        await ctx.send("```" + ss + "```")
 
     # Returns an image of a match with player details
     @commands.command(name='match')

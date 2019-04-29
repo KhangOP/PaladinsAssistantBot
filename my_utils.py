@@ -191,7 +191,7 @@ async def create_match_image(team1, team2, ranks1, ranks2):
     image_size = 512
     match_image = Image.new('RGB', (image_size * len(team1), image_size*2 + offset))
 
-    # box – The crop rectangle, as a (left, upper, right, lower)-tuple.
+    # box – The crop rectangle, as a (left, upper, right, lower)- tuple.
 
     # Row 1
     match_image.paste(Image.open(buffer1), (0, 0, (image_size*len(team1)), image_size))

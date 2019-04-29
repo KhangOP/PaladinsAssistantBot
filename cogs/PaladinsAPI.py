@@ -51,7 +51,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     def color_win_rates(cls, text, win_rate):
         if float(win_rate) > 60.0:
             return "+" + text
-        elif float(win_rate) < 50.0:
+        elif float(win_rate) < 50.0 and float(win_rate) != 0.0:
             return "-" + text
         else:
             return "*" + text
@@ -388,7 +388,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             paladins_data = paladinsAPI.getMatchHistory(player_id)
 
             count = 0
-            total_matches = 0
+            total_matches = 1
             match_data = ""
             match_data2 = ""
             # Damage, Flank, Tank, Support => (win, lose)
@@ -405,7 +405,6 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                         break
                 # empty string means to get everything or only get matches with a certain champ
                 if not champ_name or champ_name == match.godName:
-                    # count += 1
                     ss = str('+{:10}{:4}{:3}:00 {:9} {:9} {:5} ({}/{}/{})\n')
                     kills = match.kills
                     deaths = match.deaths

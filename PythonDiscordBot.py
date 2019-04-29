@@ -59,7 +59,7 @@ async def send_error(cont, msg):
 
 
 # Handles errors when a user messes up the spelling or forgets an argument to a command or an error occurs
-#"""
+"""
 @client.event
 async def on_command_error(ctx, error):
     if isinstance(error, commands.MissingRequiredArgument):
@@ -83,7 +83,7 @@ async def on_command_error(ctx, error):
               "and then try again. \n\n \N{CROSS MARK} Please dm me the error or post this error in the error channel " \
               "of the bot support server if the problem keeps happening:\n\n`" + str(error) + "`"
         await send_error(cont=ctx, msg=msg)
-#"""
+"""
 
 
 # We can use this code to track when people message this bot (a.k.a asking it commands)
@@ -108,19 +108,38 @@ async def on_message(message):
             except BaseException:  # Bad sign if we end up here but is possible if the user blocks some DM's
                 print("The bot can't message the user in their DM's or in the channel they called the function.")
 
+    global daily_command_count
+    daily_command_count = daily_command_count + 1
     # on_message has priority over function commands
     await client.process_commands(message)
 
 
-# Changes bot presence every min
+# Resets command uses for -a on the current command at 6am everyday
 @client.event
 async def reset_uses():
     await client.wait_until_ready()
     sleep_time = await helper.get_seconds_until_reset()
     await asyncio.sleep(sleep_time)
     while not client.is_closed():
-        # await helper.reset_command_uses()
+        await helper.reset_command_uses()
         await asyncio.sleep(60*60*24)  # day
+
+
+# Logs to a file how many commands are called in a day (24 hour period) and how many servers the bot is in
+@client.event
+async def log_information():
+    await client.wait_until_ready()
+    #sleep_time = await helper.get_seconds_until_reset()
+    #await asyncio.sleep(sleep_time)
+    await asyncio.sleep(20)
+    while not client.is_closed():
+        with open("log_file.csv", '+a') as log_file:
+            global daily_command_count
+            log_file.write(str(len(client.guilds)) + ", " + str(daily_command_count)+"\n")
+        log_file.close()
+        print("Logged commands and server count.")
+        #await asyncio.sleep(60*60*24)  # day
+        await asyncio.sleep(20)
 
 
 # Launching the bot function
@@ -129,10 +148,12 @@ async def on_ready():
     print('Logged in as')
     print(client.user.name)
     print('------')
+    global daily_command_count
+    daily_command_count = 0
     client.loop.create_task(reset_uses())
     client.loop.create_task(change_bot_presence())
+    client.loop.create_task(log_information())
     await count_servers()
-    # await change_bot_presence()
     print("Client is fully online and ready to go...")
 
 

@@ -388,7 +388,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             paladins_data = paladinsAPI.getMatchHistory(player_id)
 
             count = 0
-            total_matches = 1
+            total_matches = 0
             match_data = ""
             match_data2 = ""
             # Damage, Flank, Tank, Support => (win, lose)
@@ -415,7 +415,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                                    match.matchId, kda, kills, deaths, assists)
 
                     # we don't want to count event or bot matches when calculating stats
-                    if match_name != "Bot Match" and match_name != "End Times":
+                    if match_name != "Bot Match" and match_name != "End Times" and match_name != "Test Maps":
                         global_kda += float(kda)
                         total_matches += 1
                         class_index = self.get_champ_class(match.godName)
@@ -437,9 +437,11 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                         match_data2 += ss
                     else:
                         match_data += ss
+
+                # Making sure we display the correct number of matches
+                count += 1
                 if count == amount:
                     break
-                count += 1
 
             if not match_data and champ_name:
                 await ctx.send("Could not find any matches with the champion: `" + champ_name + "` in the last `"
@@ -465,6 +467,8 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             s_wr = await self.calc_win_rate(total_wins[6], s_t)
 
             # Total wins/loses
+            if total_matches == 0:  # prevent division by 0
+                total_matches = 1
             global_kda = round(global_kda / total_matches, 2)
             tot_wins = total_wins[0] + total_wins[2] + total_wins[4] + total_wins[6]
             tot_loses = total_wins[1] + total_wins[3] + total_wins[5] + total_wins[7]

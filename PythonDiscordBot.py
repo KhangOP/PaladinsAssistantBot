@@ -59,7 +59,7 @@ async def send_error(cont, msg):
 
 
 # Handles errors when a user messes up the spelling or forgets an argument to a command or an error occurs
-"""
+#"""
 @client.event
 async def on_command_error(ctx, error):
     if isinstance(error, commands.MissingRequiredArgument):
@@ -83,7 +83,7 @@ async def on_command_error(ctx, error):
               "and then try again. \n\n \N{CROSS MARK} Please dm me the error or post this error in the error channel " \
               "of the bot support server if the problem keeps happening:\n\n`" + str(error) + "`"
         await send_error(cont=ctx, msg=msg)
-"""
+#"""
 
 
 # We can use this code to track when people message this bot (a.k.a asking it commands)
@@ -97,6 +97,8 @@ async def on_message(message):
     # Seeing if someone is using the bot_prefix and calling a command
     if message.content.startswith(">>"):
         print(message.author, message.content, channel, message.guild, await helper.get_est_time())
+        global daily_command_count
+        daily_command_count = daily_command_count + 1
     # Seeing if someone is using the bot_prefix and calling a command
     if message.content.startswith(">> ") or message.content.startswith("!! "):
         msg = 'Oops looks like you have a space after the bot prefix {0.author.mention}'.format(message)
@@ -108,8 +110,6 @@ async def on_message(message):
             except BaseException:  # Bad sign if we end up here but is possible if the user blocks some DM's
                 print("The bot can't message the user in their DM's or in the channel they called the function.")
 
-    global daily_command_count
-    daily_command_count = daily_command_count + 1
     # on_message has priority over function commands
     await client.process_commands(message)
 
@@ -129,17 +129,17 @@ async def reset_uses():
 @client.event
 async def log_information():
     await client.wait_until_ready()
-    #sleep_time = await helper.get_seconds_until_reset()
-    #await asyncio.sleep(sleep_time)
+    sleep_time = await helper.get_seconds_until_reset()
+    await asyncio.sleep(sleep_time)
     await asyncio.sleep(20)
     while not client.is_closed():
         with open("log_file.csv", '+a') as log_file:
             global daily_command_count
-            log_file.write(str(len(client.guilds)) + ", " + str(daily_command_count)+"\n")
+            date = await helper.get_est_time()
+            log_file.write("{}, {}, {}\n".format(str(len(client.guilds)), str(daily_command_count), date.split(" ")[1]))
         log_file.close()
         print("Logged commands and server count.")
-        #await asyncio.sleep(60*60*24)  # day
-        await asyncio.sleep(20)
+        await asyncio.sleep(60*60*24)  # day
 
 
 # Launching the bot function

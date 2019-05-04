@@ -816,14 +816,6 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             await ctx.send("```diff\n" + match_data + "```", file=file)
             if "\n" in player_champ_data and value != -1:
                 await ctx.send("```diff\n" + player_champ_data + "```")
-            await ctx.send("Unfortunately the `>>current` command is no longer correctly fetching a players's overall level, kda, "
-                           "and win rate. I have not changed anything in the bot that would affect this but I may know "
-                           "what caused this and hopefully it will get resolved soon."
-                           "\n\n"
-                           "In the mean time you can use the `-a` option in the `>>current` command to at least see how good "
-                           "every player is on their current champion. However you are still limited to using `-a` four times per day."
-                           "\n\n"
-                           "Example: `>>current <player_name> -a`")
 
 
     # Returns simple stats based on the option they choose (champ_name, me, or elo)

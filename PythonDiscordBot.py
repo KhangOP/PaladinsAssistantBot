@@ -138,6 +138,7 @@ async def log_information():
             date = await helper.get_est_time()
             log_file.write("{}, {}, {}\n".format(str(len(client.guilds)), str(daily_command_count), date.split(" ")[1]))
         log_file.close()
+        daily_command_count = 0
         print("Logged commands and server count.")
         await asyncio.sleep(60*60*24)  # day
 

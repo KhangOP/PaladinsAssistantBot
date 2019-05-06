@@ -185,40 +185,30 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                    ". Please make sure the name is spelled correctly (Capitalization does not matter)."
         info = paladinsAPI.getPlayer(player_id)
 
-        ss = ""
+        dashes = "----------------------------------------"
 
-        # Basic Stats
-        ss += "Casual stats: \n"
-        ss += "Name: " + str(info.playerName) + "\n"
-        ss += "Account Level: " + str(info.accountLevel) + "\n"
+        # Overall Info
+        ss = "Casual stats: \n{}\nName: {}\nAccount Level: {}\nWin Rate: {}% out of {} matches.\nTimes Deserted: {}\n\n"
         total = int(info.wins) + int(info.losses)
         wr = await cls.calc_win_rate(int(info.wins), total)
-        ss += "Win Rate: " + wr + "% out of " + str(total) + " matches.\n"
-        ss += "Times Deserted: " + str(info.leaves) + "\n\n"
+        ss = ss.format(dashes, str(info.playerName), str(info.accountLevel), wr, str(total), str(info.leaves))
 
         # Ranked Info
+        ss1 = "Ranked stats for Season {}:\n{}\nRank: {}\nTP: {} (position: {})\nWin Rate: {}% ({}-{})\n" \
+              "Times Deserted: {}\n\n"
         ranked = info.rankedKeyboard
-        ss += "Ranked stats for Season " + str(ranked.currentSeason) + ":\n"
-        # Rank (Masters, GM, Diamond, etc)
-        ss += "Rank: " + str(ranked.currentRank) + "\nTP: " + str(ranked.currentTrumpPoints) + " Position: " + \
-              str(ranked.leaderboardIndex) + "\n"
-
         win = int(ranked.wins)
         lose = int(ranked.losses)
-
         wr = await cls.calc_win_rate(win, win + lose)
-        ss += "Win Rate: " + wr + "% (" + '{}-{}'.format(win, lose) + ")\n"
-        ss += "Times Deserted: " + str(ranked.leaves) + "\n\n"
+        ss += ss1.format(str(ranked.currentSeason), dashes, str(ranked.currentRank), str(ranked.currentTrumpPoints),
+                         str(ranked.leaderboardIndex), wr, win, lose, str(ranked.leaves))
 
         # Extra info
-        ss += "Extra details: \n"
-        ss += "Account created on: " + str(info.createdDatetime).split()[0] + "\n"
-        ss += "Last login on: " + str(info.lastLoginDatetime).split()[0] + "\n"
-        ss += "Platform: " + str(info.platform) + "\n"
+        ss2 = "Extra details:\n{}\nAccount created on: {}\nLast login on: {}\nPlatform: {}\nMasteryLevel: {}\n" \
+              "Steam Achievements completed: {}/58"
         data = info.json
-        ss += "MasteryLevel: " + str(data["MasteryLevel"]) + "\n"
-        ss += "Steam Achievements completed: " + str(info.totalAchievements) + "/58\n"
-
+        ss += ss2.format(dashes, str(info.createdDatetime).split()[0], str(info.lastLoginDatetime).split()[0],
+                         str(info.platform), str(data["MasteryLevel"]), str(info.totalAchievements))
         return ss
 
     @classmethod
@@ -718,8 +708,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 await ctx.send("You have not stored your IGN yet. To do so please use the store command like so: "
                                "`>>store Paladins_IGN`")
                 return None
-        else:
-            pass
+
         value = -1
         if option == "-a":
             value = 1
@@ -902,12 +891,17 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     @commands.command(name='stats', aliases=['stat'])
     @commands.cooldown(3, 30, commands.BucketType.user)
     async def stats(self, ctx, player_name, option=None):
-        if option is None:
+        # Maybe convert the player name
+        if str(player_name) == "me":
             player_name = self.check_player_name(str(ctx.author.id))
             if player_name == "None":
                 await ctx.send("You have not stored your IGN yet. To do so please use the store command like so: "
                                "`>>store Paladins_IGN`")
                 return None
+
+        if option is None:
+            result = await self.get_player_stats_api(player_name)
+            await ctx.send("```md\n" + result + "```")
         elif option == "elo":
             await ctx.send("```Guru's site is currently under(as of 4/4/2019) development and until they finish "
                            "updating the site this bot can not get their elo data :(```")

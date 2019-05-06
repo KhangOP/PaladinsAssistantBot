@@ -341,6 +341,57 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         return embed
 
     '''Commands below ############################################################'''
+    @commands.command(name='deck', pass_context=True)
+    # @commands.cooldown(2, 30, commands.BucketType.user)
+    async def deck(self, ctx, player_name, champ_name, deck_name=None):
+        if str(player_name) == "me":
+            player_name = self.check_player_name(str(ctx.author.id))
+            if player_name == "None":
+                await ctx.send("You have not stored your IGN yet. To do so please use the store command like so: "
+                               "`>>store Paladins_IGN`")
+                return 0
+        else:
+            pass
+        await helper.store_commands(ctx.author.id, "last")
+        player_id = self.get_player_id(player_name)
+
+        if player_id == -1:
+            match_data = "Can't find the player: " + player_name + \
+                         ". Please make sure the name is spelled correctly (Capitalization does not matter)."
+            embed = discord.Embed(
+                description=match_data,
+                colour=discord.colour.Color.dark_teal()
+            )
+            await ctx.send(embed=embed)
+
+        player_decks = paladinsAPI.getPlayerLoadouts(player_id)
+        deck_list = []
+
+        deck = None
+        found = False
+        for decks in player_decks:
+            if decks.godName == champ_name:
+                if str(decks.deckName).lower() == str(deck_name).lower():
+                    deck = decks
+                    found = True
+                else:
+                    deck_list.append(decks.deckName)
+
+        # Correcting player and champion name
+        for decks in player_decks:
+            player_name = decks.playerName
+
+        if deck_name is None or found is False:
+            message = "Decks for " + player_name + "'s " + champ_name + ":\n\n"
+            for i, deck in enumerate(deck_list, start=1):
+                message += str(i) + '. ' + deck + "\n"
+
+            await ctx.send("```md\n" + message + "```")
+        else:  # ToDo Implement Image creation
+            print(deck.deckName)
+            for card in deck.cards:
+                print(card)
+
     @commands.command(name='history', pass_context=True)
     @commands.cooldown(2, 30, commands.BucketType.user)
     async def history(self, ctx, *args):

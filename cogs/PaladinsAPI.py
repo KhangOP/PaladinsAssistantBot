@@ -6,6 +6,7 @@ import my_utils as helper
 
 from pyrez.api import PaladinsAPI
 import json
+import time
 
 file_name = "token"
 # Gets ID and KEY from a file
@@ -433,7 +434,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                     if match.winStatus == "Loss":
                         ss = ss.replace("+", "-")
 
-                    if count > 30:
+                    if count >= 30:
                         match_data2 += ss
                     else:
                         match_data += ss
@@ -737,19 +738,17 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 return None
             # print(players)
             team1 = []
-            team1_champs = []
-            team2 = []
-            team2_champs = []
             team1_ranks = []
+            team1_champs = []
+            team1_overall = [0, 0, 0, 0]  # num, level, win rate, kda
+
+            team2 = []
             team2_ranks = []
+            team2_champs = []
+            team2_overall = [0, 0, 0, 0]  # num, level, win rate, kda
+
             for player in players:
-                # j = create_json(player)
-                # name = (j["playerName"])
                 name = str(player.playerName)  # Some names are not strings (example: symbols, etc.)
-
-                # testing to see if character name is avaiable
-                # print(player.playerName, player.godName) # Yes it is
-
                 if int(player.taskForce) == 1:
                     team1.append(name)
                     team1_champs.append(player.godName)
@@ -762,9 +761,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                         team2_ranks.append(str(player.tier))
 
             match_data = ""
-            player_champ_data = ""
             match_data += player_name + " is in a " + match_string + " match."  # Match Type
-            # print(match_data)
             match_data += str('\n\n{:18}  {:7}  {:8}  {:6}\n\n').format("Player name", "Level", "Win Rate", "KDA")
             player_champ_data = str('\n\n{:18}  {:7}  {:8}  {:6}\n\n').format("Champion name", "Level",
                                                                               "Win Rate", "KDA")
@@ -782,6 +779,13 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                     ss = ss.replace("*", "-")
                 """^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"""
                 match_data += ss
+
+                # For teams total win rate and kda
+                if pl[1] != "???" and float(pl[1]) > 50:
+                    team1_overall[0] += 1               # num
+                    team1_overall[1] += int(pl[1])       # level
+                    team1_overall[2] += float(pl[2])    # win rate
+                    team1_overall[3] += float(pl[3])    # kda
 
                 # Add in champ stats
                 if option == "-a" and can_use:
@@ -806,17 +810,47 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 """^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"""
                 match_data += ss
 
+                # For teams total win rate and kda
+                if pl[1] != "???" and float(pl[1]) > 50:
+                    team2_overall[0] += 1  # num
+                    team2_overall[1] += int(pl[1])    # level
+                    team2_overall[2] += float(pl[2])  # win rate
+                    team2_overall[3] += float(pl[3])  # kda
+
                 # Add in champ stats
                 if option == "-a" and can_use:
                     player_champ_data += await self.get_champ_stats_api(player, champ, 1)
                     # match_data += player_champ_data
+
+            # Adding team win rate's and kda's
+
+            match_data += "\n\nAverage stats\n"
+            ss1 = str('*{:18} Lv. {:3}  {:8}  {:6}\n')
+            ss2 = str('*{:18} Lv. {:3}  {:8}  {:6}')
+            team1_wr = round(team1_overall[2]/team1_overall[0], 2)
+            team2_wr = round(team2_overall[2]/team2_overall[0], 2)
+            if abs(team1_wr - team2_wr) >= 5.0:
+                if team1_wr > team2_wr:
+                    ss1 = ss1.replace("*", "+")
+                    ss2 = ss2.replace("*", "-")
+                else:
+                    ss1 = ss1.replace("*", "-")
+                    ss2 = ss2.replace("*", "+")
+
+            if team1_overall[0] != 0:
+                ss1 = ss1.format("Team1", str(int(team1_overall[1]/team1_overall[0])), str(team1_wr),
+                                 str(round(team1_overall[3]/team1_overall[0], 2)))
+                match_data += ss1
+            if team2_overall[0] != 0:
+                ss2 = ss2.format("Team2", str(int(team2_overall[1] / team2_overall[0])), str(team2_wr),
+                                 str(round(team2_overall[3]/team2_overall[0], 2)))
+                match_data += ss2
 
             buffer = await helper.create_match_image(team1_champs, team2_champs, team1_ranks, team2_ranks)
             file = discord.File(filename="Team.png", fp=buffer)
             await ctx.send("```diff\n" + match_data + "```", file=file)
             if "\n" in player_champ_data and value != -1:
                 await ctx.send("```diff\n" + player_champ_data + "```")
-
 
     # Returns simple stats based on the option they choose (champ_name, me, or elo)
     @commands.command(name='stats', aliases=['stat'])

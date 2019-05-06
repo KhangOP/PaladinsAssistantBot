@@ -4,7 +4,11 @@ from io import BytesIO
 from datetime import datetime, timedelta
 from pytz import timezone
 import json
+import time
 import os
+
+from concurrent.futures import ThreadPoolExecutor
+import asyncio
 
 '''This file servers to provide helper functions that our used in more than one other program.'''
 
@@ -183,9 +187,24 @@ async def create_team_image(champ_list, ranks):
 
 # Creates a match image based on the two teams champions
 async def create_match_image(team1, team2, ranks1, ranks2):
+    # start = time.time()
     buffer1 = await create_team_image(team1, ranks1)
     buffer2 = await create_team_image(team2, ranks2)
     middle = await draw_match_vs()
+    # end = time.time()
+    # print("run1", end - start)
+
+    """
+    start = time.time()
+    buffer1, buffer2, middle = await asyncio.gather(
+        create_team_image(team1, ranks1),
+        create_team_image(team2, ranks2),
+        draw_match_vs()
+    )
+    end = time.time()
+    print("run2", end - start)
+    """
+
     offset = 128
 
     image_size = 512

@@ -128,6 +128,20 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             return "Siege"
 
     @classmethod
+    # Converts champion names to include spacing in the name if needed
+    async def convert_champion_name(cls, champ_name: str):
+        champ_name = champ_name.title()
+        # These are the special cases that need to be checked
+        if "Bomb" in champ_name:
+            return "Bomb King"
+        if "Mal" in champ_name:
+            return "Mal Damba"
+        if "Sha" in champ_name:
+            return "Sha Lin"
+        # else return the name passed in since its already correct
+        return champ_name
+
+    @classmethod
     # Helper function to the get_player_elo(player_name) function
     async def return_mode(cls, name):
         mode = ""
@@ -349,10 +363,10 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             if player_name == "None":
                 await ctx.send("You have not stored your IGN yet. To do so please use the store command like so: "
                                "`>>store Paladins_IGN`")
-                return 0
+                return None
         else:
             pass
-        await helper.store_commands(ctx.author.id, "last")
+        # await helper.store_commands(ctx.author.id, "deck") #ToDo add code to add key
         player_id = self.get_player_id(player_name)
 
         if player_id == -1:
@@ -363,6 +377,9 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 colour=discord.colour.Color.dark_teal()
             )
             await ctx.send(embed=embed)
+            return None
+
+        champ_name = await self.convert_champion_name(champ_name)
 
         player_decks = paladinsAPI.getPlayerLoadouts(player_id)
         deck_list = []
@@ -394,49 +411,26 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
     @commands.command(name='history', pass_context=True)
     @commands.cooldown(2, 30, commands.BucketType.user)
-    async def history(self, ctx, *args):
-        if len(args) == 0:
-            await ctx.send("A required argument to the command you called is missing"+"\N{CROSS MARK}")
-            return None
-        if len(args) > 4:
-            await ctx.send("Too many arguments")
-        player_name = str(args[0])
-        amount = 10
-        champ_name = ""
-        offset = 0
-        if len(args) > 1:  # handles me they only type >>history player_name
-            try:
-                amount = int(args[1])
-            except ValueError:
-                offset = 1  # amount was not provided so we assume 10 matches
-        if len(args) == 1:
-            pass
-        elif len(args) == 2 and offset != 1:
-            amount = int(args[1])
-        else:  # they have included a champion name
-            if len(args)+offset == 3:
-                champ_name = str(args[2-offset]).title()
-            else:
-                champ_name = (str(args[2-offset]) + " " + str(args[3-offset])).title()
-
+    async def history(self, ctx, player_name, amount=10, champ_name=None):
         if str(player_name) == "me":
             player_name = self.check_player_name(str(ctx.author.id))
             if player_name == "None":
                 await ctx.send("You have not stored your IGN yet. To do so please use the store command like so: "
                                "`>>store Paladins_IGN`")
-                return 0
-        else:
-            pass
+                return None
+
         await helper.store_commands(ctx.author.id, "history")
         async with ctx.channel.typing():
             if amount > 50 or amount <= 1:
                 await ctx.send("Please enter an amount between 2-50")
-                return 0
+                return None
             player_id = self.get_player_id(player_name)
             if player_id == -1:
                 await ctx.send("Can't find the player: " + player_name +
                                ". Please make sure the name is spelled correctly (Capitalization does not matter).")
-                return 0
+                return None
+            if champ_name:  # Check in case they don't provide champ name
+                champ_name = await self.convert_champion_name(champ_name)
             paladins_data = paladinsAPI.getMatchHistory(player_id)
 
             count = 0
@@ -566,7 +560,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             if player_name == "None":
                 await ctx.send("You have not stored your IGN yet. To do so please use the store command like so: "
                                "`>>store Paladins_IGN`")
-                return 0
+                return None
         else:
             pass
         await helper.store_commands(ctx.author.id, "last")
@@ -580,6 +574,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 colour=discord.colour.Color.dark_teal()
             )
             await ctx.send(embed=embed)
+            return None
 
         paladins_data = paladinsAPI.getMatchHistory(player_id)
         for match in paladins_data:
@@ -906,44 +901,25 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     # Returns simple stats based on the option they choose (champ_name, me, or elo)
     @commands.command(name='stats', aliases=['stat'])
     @commands.cooldown(3, 30, commands.BucketType.user)
-    async def stats(self, ctx, *args):
-        if len(args) == 0:
-            await ctx.send("A required argument to the command you called is missing" + "\N{CROSS MARK}")
-            return None
-        await helper.store_commands(ctx.author.id, "stats")
-        if len(args) > 3:
-            await ctx.send("Too many arguments")
-
-        # Maybe convert the player name
-        if str(args[0]).lower() == "me":
+    async def stats(self, ctx, player_name, option=None):
+        if option is None:
             player_name = self.check_player_name(str(ctx.author.id))
             if player_name == "None":
                 await ctx.send("You have not stored your IGN yet. To do so please use the store command like so: "
                                "`>>store Paladins_IGN`")
                 return None
+        elif option == "elo":
+            await ctx.send("```Guru's site is currently under(as of 4/4/2019) development and until they finish "
+                           "updating the site this bot can not get their elo data :(```")
+            return None
+            # result = await self.get_player_elo(player_name)
+            # await ctx.send("```" + result + "```")
         else:
-            player_name = args[0]
+            champ_name = await self.convert_champion_name(option)
+            result = await self.get_champ_stats_api(player_name, champ_name, simple=0)
+            await ctx.send(embed=result)
 
-        # Just the name means they want base stats
-        if len(args) == 1:
-            result = await self.get_player_stats_api(player_name)
-            await ctx.send("```" + result + "```")
-        else:
-            if str(args[1]).lower() == "elo":
-                await ctx.send("```Guru's site is currently under(as of 4/4/2019) development and until they finish "
-                               "updating the site this bot can not get their elo data :(```")
-                return None
-                # result = await self.get_player_elo(player_name)
-                # await ctx.send("```" + result + "```")
-            else:
-                if len(args) == 2:
-                    champ_name = str(args[1]).title()
-                else:
-                    champ_name = (str(args[1]) + " " + str(args[2])).title()
-                result = await self.get_champ_stats_api(player_name, champ_name, simple=0)
-                await ctx.send(embed=result)
-
-    # Returns simple stats based on the option they choose (champ_name, me, or elo)
+    # Stores Player's IGN for the bot to use
     @commands.command(name='store')
     @commands.cooldown(2, 30, commands.BucketType.user)
     async def store_player_name(self, ctx, player_ign):

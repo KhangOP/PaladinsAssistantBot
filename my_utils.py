@@ -132,6 +132,13 @@ async def get_champ_image(champ_name):
     return url
 
 
+# Gets a url to the image of a champion's name passed in
+async def get_deck_cards_url(card_name: str):
+    card_name = card_name.lower().replace(" ", "-")
+    url = "https://web2.hirez.com/paladins/champion-cards/" + card_name + ".jpg"
+    return url
+
+
 # Creates an team image by using champion Icons
 async def create_team_image(champ_list, ranks):
     champion_images = []
@@ -235,6 +242,7 @@ async def create_match_image(team1, team2, ranks1, ranks2):
     return final_buffer
 
 
+# Draws a question in place of missing information for images
 async def draw_match_vs():
     base = Image.new('RGB', (2560, 128), "black")
 
@@ -254,7 +262,65 @@ async def draw_match_vs():
     return final_buffer
 
 
-# Creates a match image based on the two teams champions
+# Creates a image desks
+async def create_deck_image(player_name, champ_name, deck):
+    image_size_x = 256
+    image_size_y = 196
+
+    # Champ icon image
+    champ_url = await get_champ_image(champ_name)
+    response = requests.get(champ_url)
+    champ_icon_image = Image.open(BytesIO(response.content))
+    champ_icon_image = champ_icon_image.resize((image_size_x, image_size_x))
+
+    img2 = champ_icon_image.resize((1, 1))
+    color = img2.getpixel((0, 0))
+
+    # Main image
+    deck_image = Image.new('RGB', (image_size_x * 4, image_size_x + image_size_y*5), color=color)
+
+    deck_image.paste(champ_icon_image, (0, 0, image_size_x, image_size_x))
+
+    # Loop to add all the cards in
+    for i, card in enumerate(deck.cards):
+        card_m = str(card).split("(")
+        number = str(card_m[1]).split(")")[0]
+
+        card_icon_url = await get_deck_cards_url(card_m[0])
+        response = requests.get(card_icon_url)
+        card_icon_image = Image.open(BytesIO(response.content))
+
+        # box – The crop rectangle, as a (left, upper, right, lower)- tuple.
+        deck_image.paste(card_icon_image, (0, image_size_x + image_size_y*i, image_size_x,
+                                           image_size_x + image_size_y*(i + 1)))
+
+        draw = ImageDraw.Draw(deck_image)
+        draw.text((image_size_x, image_size_x + image_size_y*i), str(card), font=ImageFont.truetype("arial", 48))
+
+    # This works, found online
+    # img2 = champ_icon_image.resize((1, 1))
+    # color = img2.getpixel((0, 0))
+    color = (255, 255, 255)
+
+    # Adding in other text on image
+    draw = ImageDraw.Draw(deck_image)
+    draw.text((image_size_x, 0), str(player_name), color, font=ImageFont.truetype("arial", 64))
+    draw.text((image_size_x, 64), str(champ_name), color, font=ImageFont.truetype("arial", 64))
+    draw.text((image_size_x, 128), str(deck.deckName), color, font=ImageFont.truetype("arial", 64))
+
+    # Creates a buffer to store the image in
+    final_buffer = BytesIO()
+
+    # Store the pillow image we just created into the buffer with the PNG format
+    deck_image.save(final_buffer, "png")
+
+    # seek back to the start of the buffer stream
+    final_buffer.seek(0)
+
+    return final_buffer
+
+
+# Creates a match image based on the two teams champions #ToDo Finish implementation in the future
 async def create_history_image(team1, team2, t1_data, t2_data):
     image_size = 512
     offset = 5

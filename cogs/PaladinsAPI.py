@@ -33,6 +33,8 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     TANKS = ["Barik", "Fernando", "Ruckus", "Makoa", "Torvald", "Inara", "Ash", "Terminus", "Khan", "Atlas"]
     SUPPORTS = ["Grohk", "Grover", "Ying", "Mal Damba", "Seris", "Jenos", "Furia", "Pip"]
 
+    dashes = "----------------------------------------"
+
     # Returns a number for indexing in a list
     @classmethod
     def get_champ_class(cls, champ_name: str):
@@ -185,13 +187,11 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                    ". Please make sure the name is spelled correctly (Capitalization does not matter)."
         info = paladinsAPI.getPlayer(player_id)
 
-        dashes = "----------------------------------------"
-
         # Overall Info
         ss = "Casual stats: \n{}\nName: {}\nAccount Level: {}\nWin Rate: {}% out of {} matches.\nTimes Deserted: {}\n\n"
         total = int(info.wins) + int(info.losses)
         wr = await cls.calc_win_rate(int(info.wins), total)
-        ss = ss.format(dashes, str(info.playerName), str(info.accountLevel), wr, str(total), str(info.leaves))
+        ss = ss.format(cls.dashes, str(info.playerName), str(info.accountLevel), wr, str(total), str(info.leaves))
 
         # Ranked Info
         ss1 = "Ranked stats for Season {}:\n{}\nRank: {}\nTP: {} (position: {})\nWin Rate: {}% ({}-{})\n" \
@@ -200,14 +200,14 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         win = int(ranked.wins)
         lose = int(ranked.losses)
         wr = await cls.calc_win_rate(win, win + lose)
-        ss += ss1.format(str(ranked.currentSeason), dashes, str(ranked.currentRank), str(ranked.currentTrumpPoints),
+        ss += ss1.format(str(ranked.currentSeason), cls.dashes, str(ranked.currentRank), str(ranked.currentTrumpPoints),
                          str(ranked.leaderboardIndex), wr, win, lose, str(ranked.leaves))
 
         # Extra info
         ss2 = "Extra details:\n{}\nAccount created on: {}\nLast login on: {}\nPlatform: {}\nMasteryLevel: {}\n" \
               "Steam Achievements completed: {}/58"
         data = info.json
-        ss += ss2.format(dashes, str(info.createdDatetime).split()[0], str(info.lastLoginDatetime).split()[0],
+        ss += ss2.format(cls.dashes, str(info.createdDatetime).split()[0], str(info.lastLoginDatetime).split()[0],
                          str(info.platform), str(data["MasteryLevel"]), str(info.totalAchievements))
         return ss
 
@@ -357,47 +357,49 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         else:
             pass
         # await helper.store_commands(ctx.author.id, "deck") #ToDo add code to add key
-        player_id = self.get_player_id(player_name)
+        async with ctx.channel.typing():
+            player_id = self.get_player_id(player_name)
 
-        if player_id == -1:
-            match_data = "Can't find the player: " + player_name + \
-                         ". Please make sure the name is spelled correctly (Capitalization does not matter)."
-            embed = discord.Embed(
-                description=match_data,
-                colour=discord.colour.Color.dark_teal()
-            )
-            await ctx.send(embed=embed)
-            return None
+            if player_id == -1:
+                match_data = "Can't find the player: " + player_name + \
+                             ". Please make sure the name is spelled correctly (Capitalization does not matter)."
+                embed = discord.Embed(
+                    description=match_data,
+                    colour=discord.colour.Color.dark_teal()
+                )
+                await ctx.send(embed=embed)
+                return None
 
-        champ_name = await self.convert_champion_name(champ_name)
+            champ_name = await self.convert_champion_name(champ_name)
 
-        player_decks = paladinsAPI.getPlayerLoadouts(player_id)
-        deck_list = []
+            player_decks = paladinsAPI.getPlayerLoadouts(player_id)
+            deck_list = []
 
-        deck = None
-        found = False
-        for decks in player_decks:
-            if decks.godName == champ_name:
-                if str(decks.deckName).lower() == str(deck_name).lower():
-                    deck = decks
-                    found = True
-                else:
-                    deck_list.append(decks.deckName)
+            deck = None
+            found = False
+            for decks in player_decks:
+                if decks.godName == champ_name:
+                    if str(decks.deckName).lower() == str(deck_name).lower():
+                        deck = decks
+                        found = True
+                    else:
+                        deck_list.append(decks.deckName)
 
-        # Correcting player and champion name
-        for decks in player_decks:
-            player_name = decks.playerName
+            # Correcting player and champion name
+            for decks in player_decks:
+                player_name = decks.playerName
+                break
 
-        if deck_name is None or found is False:
-            message = "Decks for " + player_name + "'s " + champ_name + ":\n\n"
-            for i, deck in enumerate(deck_list, start=1):
-                message += str(i) + '. ' + deck + "\n"
+            if deck_name is None or found is False:
+                message = "Decks for " + player_name + "'s " + champ_name + ":\n\n"
+                for i, deck in enumerate(deck_list, start=1):
+                    message += str(i) + '. ' + deck + "\n"
 
-            await ctx.send("```md\n" + message + "```")
-        else:  # ToDo Implement Image creation
-            print(deck.deckName)
-            for card in deck.cards:
-                print(card)
+                await ctx.send("```md\n" + message + "```")
+            else:  # ToDo Implement Image creation
+                buffer = await helper.create_deck_image(player_name, champ_name, deck)
+                file = discord.File(filename="Deck.png", fp=buffer)
+                await ctx.send("```Image```", file=file)
 
     @commands.command(name='history', pass_context=True)
     @commands.cooldown(2, 30, commands.BucketType.user)

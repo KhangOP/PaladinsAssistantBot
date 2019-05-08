@@ -206,9 +206,8 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         # Extra info
         ss2 = "Extra details:\n{}\nAccount created on: {}\nLast login on: {}\nPlatform: {}\nMasteryLevel: {}\n" \
               "Steam Achievements completed: {}/58"
-        data = info.json
         ss += ss2.format(cls.dashes, str(info.createdDatetime).split()[0], str(info.lastLoginDatetime).split()[0],
-                         str(info.platform), str(data["MasteryLevel"]), str(info.totalAchievements))
+                         str(info.platform), str(info.playedGods), str(info.totalAchievements))
         return ss
 
     @classmethod
@@ -397,6 +396,10 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
                 await ctx.send("```md\n" + message + "```")
             else:  # ToDo Implement Image creation
+                # buffer = await helper.create_card_image(champ_name, "Sup my dude")
+                # file = discord.File(filename="Deck.png", fp=buffer)
+                # await ctx.send("```Image```", file=file)
+
                 buffer = await helper.create_deck_image(player_name, champ_name, deck)
                 file = discord.File(filename="Deck.png", fp=buffer)
                 await ctx.send("```Image```", file=file)
@@ -582,7 +585,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             team2_parties = []
 
             if match_id == -1 or match_id == match.matchId:
-                match_data = paladinsAPI.getMatchDetails(match.matchId)
+                match_data = paladinsAPI.getMatch(match.matchId)
                 print(match.winStatus, match.matchMinutes, match.matchRegion,
                       str(match.mapGame).replace("LIVE", ""))
                 for pd in match_data:
@@ -732,13 +735,13 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             if data == 0:
                 await ctx.send(str("Player " + player_name + " is not found."))
                 return None
-            if data.playerStatusId == 0:
+            if data.status == 0:
                 await ctx.send("Player is offline.")
                 return None
-            elif data.playerStatusId == 1:
+            elif data.status == 1:
                 await ctx.send("Player is in lobby.")
                 return None
-            elif data.playerStatusId == 2:
+            elif data.status == 2:
                 await ctx.send("Player in champion selection.")
                 return None
 
@@ -748,7 +751,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             # match_queue_id = 469 = DTM
             # match_queue_id = 486 = Ranked (Invalid)
 
-            current_match_queue_id = data.currentMatchQueueId
+            current_match_queue_id = data.queueId
 
             match_string = "Unknown match Type"
             if current_match_queue_id == 424:
@@ -768,7 +771,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             # 'Queue': '424', 'SkinId': 0, 'Tier': 0, 'playerCreated': '11/10/2017 10:00:03 PM', 'playerId': '12368291',
             # 'playerName': 'NabbitOW', 'ret_msg': None, 'taskForce': 1, 'tierLosses': 0, 'tierWins': 0}
             try:
-                players = paladinsAPI.getMatchPlayerDetails(data.currentMatchId)
+                players = paladinsAPI.getMatch(current_match_queue_id, True)
             except BaseException as e:
                 await ctx.send("An problem occurred. Please make sure you are not using this command on the event mode."
                                + str(e))

@@ -17,6 +17,7 @@ directory = 'user_info'
 usage = "usage"
 limits = "limits"
 current_uses_per_day = 4
+card_frames_dir = "icons/card_frames"
 
 command_list = ['last', 'stats', 'random', 'current', 'history']
 command_limits = ['current']
@@ -262,6 +263,71 @@ async def draw_match_vs():
     return final_buffer
 
 
+async def create_card_image(card_image, champ_info):
+    image_size_x = 256
+    image_size_y = 196
+    x_offset = 28
+    y_offset = 48
+    champ_name = champ_info[0]
+    champ_card_name = champ_info[1]
+    print(champ_card_name)
+    champ_card_level = champ_info[2]
+
+    # Load in the Frame image from the web
+    response = requests.get("https://web2.hirez.com/paladins/cards/frame-{}.png".format(champ_card_level))
+    card_frame = Image.open(BytesIO(response.content))
+    frame_x, frame_y = card_frame.size
+
+    # Create the image without any text (just frame and card image)
+    image_base = Image.new('RGBA', (frame_x, frame_y), (0, 0, 0, 0))
+    image_base.paste(card_image, (x_offset, y_offset, image_size_x + x_offset, image_size_y + y_offset))
+    image_base.paste(card_frame, (0, 0), card_frame)
+
+    # Add in the Card Number
+    draw = ImageDraw.Draw(image_base)
+    draw.text((30, frame_y-56), champ_card_level, font=ImageFont.truetype("arial", 44))
+
+    # ToDo Card Descriptions etc...
+    english_code = 1
+    json_data = requests.get("https://cms.paladins.com/wp-json/wp/v2/champions?slug={}&lang_id={}"
+                             .format(champ_name.lower(), english_code))
+    json_data = json_data.json()[0].get("cards")
+
+    cool_down = 0
+    desc = None
+    for card in json_data:
+        # print(card.get("card_name_english"), champ_card_name)
+        if card.get("card_name_english") == champ_card_name:
+            desc = card.get("card_description")
+            cool_down = card.get("recharge_seconds")
+
+    # Add in cool down if needed
+    print(cool_down)
+    if cool_down != 0:
+        # add in number
+        draw = ImageDraw.Draw(image_base)
+        draw.text((int(frame_x/2)+2, frame_y - 66), str(cool_down), font=ImageFont.truetype("arial", 30), fill=(64, 64, 64))
+
+        # add in cool down icon
+        response = requests.get("https://c-3sux78kvnkay76x24mgskvkjogx2eiax78ykijtx2eius.g00.gamepedia.com/g00/3_c-3vgrgjoty.mgskvkjog.ius_/c-3SUXKVNKAY76x24nzzvyx3ax2fx2fmgskvkjog.iax78ykijt.iusx2fvgrgjoty_mgskvkjogx2flx2fl1x2fIuurjuct_Oiut.vtmx3fbkx78youtx3d53lijk999h1kll086lg16j7kjh186821x26o76i.sgx78qx3dosgmk_$/$/$/$/$")
+        cool_down_icon = Image.open(BytesIO(response.content)).convert("RGBA")
+        image_base.paste(cool_down_icon, (int(frame_x/2)-20, frame_y - 60), mask=cool_down_icon)
+
+
+
+    # Final image saving steps
+    # Creates a buffer to store the image in
+    final_buffer = BytesIO()
+
+    # Store the pillow image we just created into the buffer with the PNG format
+    image_base.save(final_buffer, "png")
+
+    # seek back to the start of the buffer stream
+    final_buffer.seek(0)
+
+    return final_buffer
+
+
 # Creates a image desks
 async def create_deck_image(player_name, champ_name, deck):
     image_size_x = 256
@@ -285,10 +351,13 @@ async def create_deck_image(player_name, champ_name, deck):
     for i, card in enumerate(deck.cards):
         card_m = str(card).split("(")
         number = str(card_m[1]).split(")")[0]
+        info = [champ_name, card_m[0].strip(), number]
 
-        card_icon_url = await get_deck_cards_url(card_m[0])
+        card_icon_url = await get_deck_cards_url(card_m[0].strip())
         response = requests.get(card_icon_url)
         card_icon_image = Image.open(BytesIO(response.content))
+
+        return await create_card_image(card_icon_image, info)
 
         # box – The crop rectangle, as a (left, upper, right, lower)- tuple.
         deck_image.paste(card_icon_image, (0, image_size_x + image_size_y*i, image_size_x,

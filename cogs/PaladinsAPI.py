@@ -451,7 +451,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                     deaths = match.deaths
                     assists = match.assists
                     kda = await self.calc_kda(kills, deaths, assists)
-                    match_name = await self.convert_match_type(match.mapGame)
+                    match_name = await self.convert_match_type(match.mapName)
                     ss = ss.format(match.godName, match.winStatus, match.matchMinutes, match_name,
                                    match.matchId, kda, kills, deaths, assists)
 
@@ -587,7 +587,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             if match_id == -1 or match_id == match.matchId:
                 match_data = paladinsAPI.getMatch(match.matchId)
                 print(match.winStatus, match.matchMinutes, match.matchRegion,
-                      str(match.mapGame).replace("LIVE", ""))
+                      str(match.mapName).replace("LIVE", ""))
                 for pd in match_data:
                     # print(player_data)
                     if pd.taskForce == 1:
@@ -668,7 +668,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 break
 
             if match_id == -1 or match_id == match.matchId:
-                match_data = str('{}\'s {} match:\n\n').format(str(player_name), str(match.mapGame).replace("LIVE", ""))
+                match_data = str('{}\'s {} match:\n\n').format(str(player_name), str(match.mapName).replace("LIVE", ""))
                 ss = str('`Match Status: {} ({} mins)\nChampion: {}\nKDA: {} ({}-{}-{})\nDamage: {}\nDamage Taken: {}'
                          '\nHealing: {}\nSelf Healing: {}\nObjective Time: {}`\n')
                 kills = match.kills
@@ -706,6 +706,8 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     @commands.command(name='current', pass_context=True, aliases=["cur", 'c', "partida"])
     @commands.cooldown(2, 30, commands.BucketType.user)
     async def current(self, ctx, player_name, option="-s"):
+        # await ctx.send("AN unknown issues is currently being investigated as to why the current command is not working.")
+        # return None
         # Maybe convert the player name
         if str(player_name) == "me":
             player_name = self.check_player_name(str(ctx.author.id))
@@ -771,7 +773,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             # 'Queue': '424', 'SkinId': 0, 'Tier': 0, 'playerCreated': '11/10/2017 10:00:03 PM', 'playerId': '12368291',
             # 'playerName': 'NabbitOW', 'ret_msg': None, 'taskForce': 1, 'tierLosses': 0, 'tierWins': 0}
             try:
-                players = paladinsAPI.getMatch(current_match_queue_id, True)
+                players = paladinsAPI.getMatch(data.matchId, True)
             except BaseException as e:
                 await ctx.send("An problem occurred. Please make sure you are not using this command on the event mode."
                                + str(e))

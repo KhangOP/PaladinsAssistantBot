@@ -4,8 +4,10 @@ from io import BytesIO
 from datetime import datetime, timedelta
 from pytz import timezone
 import json
+import textwrap
 import time
 import os
+import re
 
 from concurrent.futures import ThreadPoolExecutor
 import asyncio
@@ -270,7 +272,6 @@ async def create_card_image(card_image, champ_info):
     y_offset = 48
     champ_name = champ_info[0]
     champ_card_name = champ_info[1]
-    print(champ_card_name)
     champ_card_level = champ_info[2]
 
     # Load in the Frame image from the web
@@ -287,22 +288,47 @@ async def create_card_image(card_image, champ_info):
     draw = ImageDraw.Draw(image_base)
     draw.text((30, frame_y-56), champ_card_level, font=ImageFont.truetype("arial", 44))
 
-    # ToDo Card Descriptions etc...
+    # Get card data
     english_code = 1
     json_data = requests.get("https://cms.paladins.com/wp-json/wp/v2/champions?slug={}&lang_id={}"
                              .format(champ_name.lower(), english_code))
     json_data = json_data.json()[0].get("cards")
 
     cool_down = 0
-    desc = None
+    desc = "???"
     for card in json_data:
         # print(card.get("card_name_english"), champ_card_name)
         if card.get("card_name_english") == champ_card_name:
             desc = card.get("card_description")
+
+            # Scale of the card
+            scale = re.search('=(.+?)\|', desc)
+            # Text area of the card we are going to replace
+            replacement = re.search('{(.*?)}', desc)
+
+            desc = desc.replace(replacement.group(1), (int(scale.group(1)) * champ_card_level))
+            #scale = re.search('=(.*)\|', desc)
+            #print(scale.group(1))
+            desc = re.sub("[\[].*?[\]]", '', desc)
             cool_down = card.get("recharge_seconds")
 
+    # Add card name
+    draw = ImageDraw.Draw(image_base)
+    font = ImageFont.truetype("arialbd", 21)
+    text_x, text_y = draw.textsize(champ_card_name, font=font)
+    draw.text(((frame_x-text_x)/2, (frame_y-text_y)/2+20), champ_card_name, font=font)
+
+    # Add card text
+    draw = ImageDraw.Draw(image_base)
+    font = ImageFont.truetype("arial", 18)
+    lines = textwrap.wrap(desc, width=26)
+    padding = 40
+    for line in lines:
+        text_x, text_y = draw.textsize(line, font=font)
+        draw.text(((frame_x-text_x)/2, (frame_y - text_y) / 2 + padding+20), line, font=font, fill=(64, 64, 64))
+        padding += 25
+
     # Add in cool down if needed
-    print(cool_down)
     if cool_down != 0:
         # add in number
         draw = ImageDraw.Draw(image_base)

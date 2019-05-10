@@ -115,13 +115,16 @@ class MyException(Exception):
 
 
 # Converts champion names so they can be used to fetch champion images in a url
-async def convert_champion_name(champ_name):
+async def convert_champion_name(champ_name, special=False):
     champ_name = champ_name.lower()
     # These are the special cases that need to be checked
     if "bomb" in champ_name:
         return "bomb-king"
     if "mal" in champ_name:
-        return "maldamba"
+        if special:
+            return "mal'damba"
+        else:
+            return "maldamba"
     if "sha" in champ_name:
         return "sha-lin"
     # else return the name passed in since its already correct
@@ -281,17 +284,23 @@ async def create_card_image(card_image, champ_info):
 
     # Create the image without any text (just frame and card image)
     image_base = Image.new('RGBA', (frame_x, frame_y), (0, 0, 0, 0))
+
+    # Resizing images that don't match the common image size
+    check_x, check_y = card_image.size
+    if check_x != image_size_x or check_y != image_size_y:
+        card_image = card_image.resize((image_size_x, image_size_y), Image.ANTIALIAS)
+
     image_base.paste(card_image, (x_offset, y_offset, image_size_x + x_offset, image_size_y + y_offset))
     image_base.paste(card_frame, (0, 0), card_frame)
 
     # Add in the Card Number
     draw = ImageDraw.Draw(image_base)
-    draw.text((30, frame_y-56), champ_card_level, font=ImageFont.truetype("arial", 44))
+    draw.text((30, frame_y-56), champ_card_level, font=ImageFont.truetype("arialbd", 44))
 
     # Get card data
     english_code = 1
     json_data = requests.get("https://cms.paladins.com/wp-json/wp/v2/champions?slug={}&lang_id={}"
-                             .format(champ_name.lower(), english_code))
+                             .format(await convert_champion_name(champ_name, True), english_code))
     json_data = json_data.json()[0].get("cards")
 
     cool_down = 0
@@ -306,9 +315,10 @@ async def create_card_image(card_image, champ_info):
             # Text area of the card we are going to replace
             replacement = re.search('{(.*?)}', desc)
 
-            desc = desc.replace(replacement.group(1), (int(scale.group(1)) * champ_card_level))
-            #scale = re.search('=(.*)\|', desc)
-            #print(scale.group(1))
+            # Replacing the scaling text with the correct number
+            desc = desc.replace('{'+str(replacement.group(1))+'}', str(float(scale.group(1)) * int(champ_card_level)))
+
+            # Removes the extra text at the start in-between [****]
             desc = re.sub("[\[].*?[\]]", '', desc)
             cool_down = card.get("recharge_seconds")
 
@@ -356,22 +366,30 @@ async def create_card_image(card_image, champ_info):
 
 # Creates a image desks
 async def create_deck_image(player_name, champ_name, deck):
-    image_size_x = 256
-    image_size_y = 196
+    image_size_xy = 256
+
+    card_image_x = 314
+    card_image_y = 479
 
     # Champ icon image
-    champ_url = await get_champ_image(champ_name)
-    response = requests.get(champ_url)
-    champ_icon_image = Image.open(BytesIO(response.content))
-    champ_icon_image = champ_icon_image.resize((image_size_x, image_size_x))
+    # champ_url = await get_champ_image(champ_name)
+    # response = requests.get(champ_url)
+    # champ_icon_image = Image.open(BytesIO(response.content))
+    # champ_icon_image = champ_icon_image.resize((image_size_xy, image_size_xy))
 
-    img2 = champ_icon_image.resize((1, 1))
-    color = img2.getpixel((0, 0))
+    # img2 = champ_icon_image.resize((1, 1))
+    # color = img2.getpixel((0, 0))
 
     # Main image
-    deck_image = Image.new('RGB', (image_size_x * 4, image_size_x + image_size_y*5), color=color)
+    color = (0, 0, 0, 0)
+    deck_image = Image.new('RGBA', (1570, 800), color=color)
 
-    deck_image.paste(champ_icon_image, (0, 0, image_size_x, image_size_x))
+    # deck_image.paste(champ_icon_image, (0, 0, image_size_xy, image_size_xy))
+    response = requests.get("https://web2.hirez.com/paladins/champion-headers/{}.png"
+                            .format(await convert_champion_name(champ_name)))
+    champ_background = Image.open(BytesIO(response.content))
+    champ_background = champ_background.resize((1570, 800), Image.ANTIALIAS)
+    deck_image.paste(champ_background, (0, 0))
 
     # Loop to add all the cards in
     for i, card in enumerate(deck.cards):
@@ -381,16 +399,21 @@ async def create_deck_image(player_name, champ_name, deck):
 
         card_icon_url = await get_deck_cards_url(card_m[0].strip())
         response = requests.get(card_icon_url)
-        card_icon_image = Image.open(BytesIO(response.content))
+        try:
+            card_icon_image = Image.open(BytesIO(response.content))
+        except OSError:
+            card_icon_image = Image.open("icons/temp_card_art.png")
 
-        return await create_card_image(card_icon_image, info)
+        card_icon = await create_card_image(card_icon_image, info)
 
         # box – The crop rectangle, as a (left, upper, right, lower)- tuple.
-        deck_image.paste(card_icon_image, (0, image_size_x + image_size_y*i, image_size_x,
-                                           image_size_x + image_size_y*(i + 1)))
+        # deck_image.paste(Image.open(card_icon), (card_image_x * i, image_size_xy, card_image_x * (i + 1),
+        #                                         image_size_xy + card_image_y), champ_background)
+        card_icon = Image.open(card_icon)
+        deck_image.paste(card_icon, (card_image_x * i, 800-card_image_y), card_icon)
 
-        draw = ImageDraw.Draw(deck_image)
-        draw.text((image_size_x, image_size_x + image_size_y*i), str(card), font=ImageFont.truetype("arial", 48))
+        # draw = ImageDraw.Draw(deck_image)
+        # draw.text((image_size_x, image_size_x + image_size_y*i), str(card), font=ImageFont.truetype("arial", 48))
 
     # This works, found online
     # img2 = champ_icon_image.resize((1, 1))
@@ -399,9 +422,76 @@ async def create_deck_image(player_name, champ_name, deck):
 
     # Adding in other text on image
     draw = ImageDraw.Draw(deck_image)
-    draw.text((image_size_x, 0), str(player_name), color, font=ImageFont.truetype("arial", 64))
-    draw.text((image_size_x, 64), str(champ_name), color, font=ImageFont.truetype("arial", 64))
-    draw.text((image_size_x, 128), str(deck.deckName), color, font=ImageFont.truetype("arial", 64))
+    draw.text((0, 0), str(player_name), color, font=ImageFont.truetype("arial", 64))
+    draw.text((0, 64), str(champ_name), color, font=ImageFont.truetype("arial", 64))
+    draw.text((0, 128), str(deck.deckName), color, font=ImageFont.truetype("arial", 64))
+
+    # Creates a buffer to store the image in
+    final_buffer = BytesIO()
+
+    # Store the pillow image we just created into the buffer with the PNG format
+    deck_image.save(final_buffer, "png")
+
+    # seek back to the start of the buffer stream
+    final_buffer.seek(0)
+
+    return final_buffer
+
+
+# Creates a image desks
+async def create_deck_image_old(player_name, champ_name, deck):
+    image_size_xy = 256
+
+    card_image_x = 314
+    card_image_y = 479
+
+    # Champ icon image
+    champ_url = await get_champ_image(champ_name)
+    response = requests.get(champ_url)
+    champ_icon_image = Image.open(BytesIO(response.content))
+    champ_icon_image = champ_icon_image.resize((image_size_xy, image_size_xy))
+
+    # img2 = champ_icon_image.resize((1, 1))
+    # color = img2.getpixel((0, 0))
+
+    # Main image
+    color = (0, 0, 0, 0)
+    deck_image = Image.new('RGBA', (card_image_x * 5, card_image_y*2), color=color)
+
+    deck_image.paste(champ_icon_image, (0, 0, image_size_xy, image_size_xy))
+
+    # Loop to add all the cards in
+    for i, card in enumerate(deck.cards):
+        card_m = str(card).split("(")
+        number = str(card_m[1]).split(")")[0]
+        info = [champ_name, card_m[0].strip(), number]
+
+        card_icon_url = await get_deck_cards_url(card_m[0].strip())
+        response = requests.get(card_icon_url)
+        try:
+            card_icon_image = Image.open(BytesIO(response.content))
+        except OSError:
+            card_icon_image = Image.open("icons/temp_card_art.png")
+
+        card_icon = await create_card_image(card_icon_image, info)
+
+        # box – The crop rectangle, as a (left, upper, right, lower)- tuple.
+        deck_image.paste(Image.open(card_icon), (card_image_x * i, image_size_xy, card_image_x * (i + 1),
+                                                 image_size_xy + card_image_y))
+
+        # draw = ImageDraw.Draw(deck_image)
+        # draw.text((image_size_x, image_size_x + image_size_y*i), str(card), font=ImageFont.truetype("arial", 48))
+
+    # This works, found online
+    # img2 = champ_icon_image.resize((1, 1))
+    # color = img2.getpixel((0, 0))
+    color = (255, 255, 255)
+
+    # Adding in other text on image
+    draw = ImageDraw.Draw(deck_image)
+    draw.text((image_size_xy, 0), str(player_name), color, font=ImageFont.truetype("arial", 64))
+    draw.text((image_size_xy, 64), str(champ_name), color, font=ImageFont.truetype("arial", 64))
+    draw.text((image_size_xy, 128), str(deck.deckName), color, font=ImageFont.truetype("arial", 64))
 
     # Creates a buffer to store the image in
     final_buffer = BytesIO()

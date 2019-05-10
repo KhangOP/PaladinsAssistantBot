@@ -200,8 +200,8 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         win = int(ranked.wins)
         lose = int(ranked.losses)
         wr = await cls.calc_win_rate(win, win + lose)
-        ss += ss1.format(str(ranked.currentSeason), cls.dashes, str(ranked.currentRank), str(ranked.currentTrumpPoints),
-                         str(ranked.leaderboardIndex), wr, win, lose, str(ranked.leaves))
+        ss += ss1.format(str(ranked.currentSeason), cls.dashes, str(ranked.currentRank.getName()),
+                         str(ranked.currentTrumpPoints), str(ranked.leaderboardIndex), wr, win, lose, str(ranked.leaves))
 
         # Extra info
         ss2 = "Extra details:\n{}\nAccount created on: {}\nLast login on: {}\nPlatform: {}\nMasteryLevel: {}\n" \
@@ -376,9 +376,21 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
             deck = None
             found = False
+            index = 0
             for decks in player_decks:
                 if decks.godName == champ_name:
+                    index += 1
+                    """
+                    try:
+                        if deck_name is not None and index == int(deck_name.strip('.')):
+                            deck = decks
+                            found = True
+                    except TypeError:
+                    """
                     if str(decks.deckName).lower() == str(deck_name).lower():
+                        deck = decks
+                        found = True
+                    elif deck_name is not None and str(index) == deck_name.strip('.'):
                         deck = decks
                         found = True
                     else:

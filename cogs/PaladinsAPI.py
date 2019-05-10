@@ -272,7 +272,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         stats = paladinsAPI.getChampionRanks(player_id)
 
         if "Mal" in champ:
-            champ = "Mal Damba"
+            champ = "Mal'Damba"
 
         ss = ""
         t_wins = 0

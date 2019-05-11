@@ -345,8 +345,8 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
     '''Commands below ############################################################'''
     @commands.command(name='deck', pass_context=True)
-    # @commands.cooldown(2, 30, commands.BucketType.user)
-    async def deck(self, ctx, player_name, champ_name, deck_name=None):
+    @commands.cooldown(2, 30, commands.BucketType.user)
+    async def deck(self, ctx, player_name, champ_name, deck_index=None):
         if str(player_name) == "me":
             player_name = self.check_player_name(str(ctx.author.id))
             if player_name == "None":
@@ -355,7 +355,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 return None
         else:
             pass
-        # await helper.store_commands(ctx.author.id, "deck") #ToDo add code to add key
+        await helper.store_commands(ctx.author.id, "deck")
         async with ctx.channel.typing():
             player_id = self.get_player_id(player_name)
 
@@ -380,41 +380,32 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             for decks in player_decks:
                 if decks.godName == champ_name:
                     index += 1
-                    """
                     try:
-                        if deck_name is not None and index == int(deck_name.strip('.')):
+                        if deck_index is not None and index == int(deck_index):
                             deck = decks
                             found = True
-                    except TypeError:
-                    """
-                    if str(decks.deckName).lower() == str(deck_name).lower():
-                        deck = decks
-                        found = True
-                    elif deck_name is not None and str(index) == deck_name.strip('.'):
-                        deck = decks
-                        found = True
-                    else:
-                        deck_list.append(decks.deckName)
+                        else:
+                            deck_list.append(decks.deckName)
+                    except ValueError:
+                        await ctx.send("Please enter the <deck_index> as a number of deck you want.\n\n" +
+                                       "Example: `>>deck {} {} {}`".format(player_name, champ_name, "1"))
+                        return None
 
             # Correcting player and champion name
             for decks in player_decks:
                 player_name = decks.playerName
                 break
 
-            if deck_name is None or found is False:
-                message = "Decks for " + player_name + "'s " + champ_name + ":\n\n"
+            if deck_index is None or found is False:
+                message = "Decks for " + player_name + "'s " + champ_name + ":\n" + self.dashes + "\n"
                 for i, deck in enumerate(deck_list, start=1):
                     message += str(i) + '. ' + deck + "\n"
 
                 await ctx.send("```md\n" + message + "```")
-            else:  # ToDo Implement Image creation
-                # buffer = await helper.create_card_image(champ_name, "Sup my dude")
-                # file = discord.File(filename="Deck.png", fp=buffer)
-                # await ctx.send("```Image```", file=file)
-
+            else:
                 buffer = await helper.create_deck_image(player_name, champ_name, deck)
                 file = discord.File(filename="Deck.png", fp=buffer)
-                await ctx.send("```Image```", file=file)
+                await ctx.send("```Enjoy the beautiful image below.```", file=file)
 
     @commands.command(name='history', pass_context=True)
     @commands.cooldown(2, 30, commands.BucketType.user)
@@ -718,8 +709,6 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     @commands.command(name='current', pass_context=True, aliases=["cur", 'c', "partida"])
     @commands.cooldown(2, 30, commands.BucketType.user)
     async def current(self, ctx, player_name, option="-s"):
-        # await ctx.send("AN unknown issues is currently being investigated as to why the current command is not working.")
-        # return None
         # Maybe convert the player name
         if str(player_name) == "me":
             player_name = self.check_player_name(str(ctx.author.id))
@@ -881,15 +870,21 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             match_data += "\n\nAverage stats\n"
             ss1 = str('*{:18} Lv. {:3}  {:8}  {:6}\n')
             ss2 = str('*{:18} Lv. {:3}  {:8}  {:6}')
-            team1_wr = round(team1_overall[2]/team1_overall[0], 2)
-            team2_wr = round(team2_overall[2]/team2_overall[0], 2)
-            if abs(team1_wr - team2_wr) >= 5.0:
-                if team1_wr > team2_wr:
-                    ss1 = ss1.replace("*", "+")
-                    ss2 = ss2.replace("*", "-")
-                else:
-                    ss1 = ss1.replace("*", "-")
-                    ss2 = ss2.replace("*", "+")
+            team1_wr, team2_wr = 0, 0
+            if team1_overall[0] != 0:
+                team1_wr = round(team1_overall[2]/team1_overall[0], 2)
+            if team2_overall[0] != 0:
+                team2_wr = round(team2_overall[2]/team2_overall[0], 2)
+
+            # no need to cal this is one team is 0
+            if team1_wr != 0 and team2_wr != 0:
+                if abs(team1_wr - team2_wr) >= 5.0:
+                    if team1_wr > team2_wr:
+                        ss1 = ss1.replace("*", "+")
+                        ss2 = ss2.replace("*", "-")
+                    else:
+                        ss1 = ss1.replace("*", "-")
+                        ss2 = ss2.replace("*", "+")
 
             if team1_overall[0] != 0:
                 ss1 = ss1.format("Team1", str(int(team1_overall[1]/team1_overall[0])), str(team1_wr),

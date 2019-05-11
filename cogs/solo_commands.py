@@ -1,6 +1,10 @@
+import discord
 from discord.ext import commands
 import json
 import my_utils as helper
+import matplotlib.pyplot as plt
+from PIL import Image
+from io import BytesIO
 
 
 def server_owner_only():
@@ -101,6 +105,37 @@ class SoloCommandCog(commands.Cog, name="Solo Commands"):
         else:
             await ctx.send("this servers language is English")
             return "English"
+
+    # Print how many times a person has used each command
+    @commands.command(name='usage')
+    async def usage(self, ctx):  # todo pick up here tomorrow
+        user_commands = await helper.get_store_commands(ctx.author.id)
+        message = ""
+        for command, usage in user_commands.items():
+            message += "{:9} {}\n".format(str(command), str(usage))
+        await ctx.send('```'+message+'```')
+
+        # Data to plot
+        labels = 'Python', 'C++', 'Ruby', 'Java'
+        sizes = [215, 130, 245, 210]
+        colors = ['gold', 'yellowgreen', 'lightcoral', 'lightskyblue']
+        explode = (0.1, 0, 0, 0)  # explode 1st slice
+
+        # Plot
+        plt.pie(sizes, explode=explode, labels=labels, colors=colors,
+                autopct='%1.1f%%', shadow=True, startangle=140)
+
+        plt.axis('equal')
+
+        buf = BytesIO()
+        plt.savefig(buf, format='png')
+        buf.seek(0)
+        # im = Image.open(buf)
+        # im.show()
+        # buf.close()
+
+        file = discord.File(filename="Deck.png", fp=buf)
+        await ctx.send("```Enjoy the beautiful image below.```", file=file)
 
 
 # Add this class to the cog list

@@ -40,8 +40,10 @@ async def store_commands(discord_id, command_name, used=-1):  # if used == -1 th
     if found:
         with open(directory + "/" + discord_id) as json_f:
             user_info = json.load(json_f)
-
-        user_info[usage][command_name] += 1
+        try:
+            user_info[usage][command_name] += 1
+        except KeyError:  # Add keys that are missing
+            user_info[usage][command_name] = 1
 
         if command_name == 'current' and used != -1:
             uses = user_info[limits]['current']
@@ -74,6 +76,27 @@ async def store_commands(discord_id, command_name, used=-1):  # if used == -1 th
             json.dump(user_info, json_f)
 
     return True
+
+
+# Gets ths command uses of a person based on their discord_id
+async def get_store_commands(discord_id):
+    discord_id = str(discord_id)
+    found = False
+    for filename in os.listdir(directory):
+        if filename == discord_id:
+            found = True
+            break
+        else:
+            continue
+
+    # if we found the player in the player dir
+    if found:
+        with open(directory + "/" + discord_id) as personal_json:
+            user_info = json.load(personal_json)
+            return user_info[usage]
+    # we did not find the user in the player dir so we need to make fun of them
+    else:
+        return "Lol, you trying to call this command without ever using the bot."
 
 
 # Est Time zone for logging function calls
@@ -312,11 +335,13 @@ async def create_card_image(card_image, champ_info):
 
             # Scale of the card
             scale = re.search('=(.+?)\|', desc)
+            scale = float(scale.group(1)) * int(champ_card_level)
             # Text area of the card we are going to replace
             replacement = re.search('{(.*?)}', desc)
 
             # Replacing the scaling text with the correct number
-            desc = desc.replace('{'+str(replacement.group(1))+'}', str(float(scale.group(1)) * int(champ_card_level)))
+            # desc = desc.replace('{'+str(replacement.group(1))+'}', str(float(scale.group(1)) * int(champ_card_level)))
+            desc = desc.replace('{' + str(replacement.group(1)) + '}', str(int(scale) if scale % 2 == 0 else scale))
 
             # Removes the extra text at the start in-between [****]
             desc = re.sub("[\[].*?[\]]", '', desc)
@@ -349,8 +374,6 @@ async def create_card_image(card_image, champ_info):
         cool_down_icon = Image.open(BytesIO(response.content)).convert("RGBA")
         image_base.paste(cool_down_icon, (int(frame_x/2)-20, frame_y - 60), mask=cool_down_icon)
 
-
-
     # Final image saving steps
     # Creates a buffer to store the image in
     final_buffer = BytesIO()
@@ -370,15 +393,6 @@ async def create_deck_image(player_name, champ_name, deck):
 
     card_image_x = 314
     card_image_y = 479
-
-    # Champ icon image
-    # champ_url = await get_champ_image(champ_name)
-    # response = requests.get(champ_url)
-    # champ_icon_image = Image.open(BytesIO(response.content))
-    # champ_icon_image = champ_icon_image.resize((image_size_xy, image_size_xy))
-
-    # img2 = champ_icon_image.resize((1, 1))
-    # color = img2.getpixel((0, 0))
 
     # Main image
     color = (0, 0, 0, 0)
@@ -406,18 +420,9 @@ async def create_deck_image(player_name, champ_name, deck):
 
         card_icon = await create_card_image(card_icon_image, info)
 
-        # box – The crop rectangle, as a (left, upper, right, lower)- tuple.
-        # deck_image.paste(Image.open(card_icon), (card_image_x * i, image_size_xy, card_image_x * (i + 1),
-        #                                         image_size_xy + card_image_y), champ_background)
         card_icon = Image.open(card_icon)
         deck_image.paste(card_icon, (card_image_x * i, 800-card_image_y), card_icon)
 
-        # draw = ImageDraw.Draw(deck_image)
-        # draw.text((image_size_x, image_size_x + image_size_y*i), str(card), font=ImageFont.truetype("arial", 48))
-
-    # This works, found online
-    # img2 = champ_icon_image.resize((1, 1))
-    # color = img2.getpixel((0, 0))
     color = (255, 255, 255)
 
     # Adding in other text on image
@@ -451,9 +456,6 @@ async def create_deck_image_old(player_name, champ_name, deck):
     champ_icon_image = Image.open(BytesIO(response.content))
     champ_icon_image = champ_icon_image.resize((image_size_xy, image_size_xy))
 
-    # img2 = champ_icon_image.resize((1, 1))
-    # color = img2.getpixel((0, 0))
-
     # Main image
     color = (0, 0, 0, 0)
     deck_image = Image.new('RGBA', (card_image_x * 5, card_image_y*2), color=color)
@@ -479,12 +481,6 @@ async def create_deck_image_old(player_name, champ_name, deck):
         deck_image.paste(Image.open(card_icon), (card_image_x * i, image_size_xy, card_image_x * (i + 1),
                                                  image_size_xy + card_image_y))
 
-        # draw = ImageDraw.Draw(deck_image)
-        # draw.text((image_size_x, image_size_x + image_size_y*i), str(card), font=ImageFont.truetype("arial", 48))
-
-    # This works, found online
-    # img2 = champ_icon_image.resize((1, 1))
-    # color = img2.getpixel((0, 0))
     color = (255, 255, 255)
 
     # Adding in other text on image

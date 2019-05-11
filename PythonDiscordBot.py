@@ -7,6 +7,8 @@ import random
 import json
 
 import my_utils as helper
+from cogs import PaladinsAPI
+
 
 # Discord Variables
 BOT_STATUS = ">>help"
@@ -78,6 +80,8 @@ async def on_command_error(ctx, error):
     elif isinstance(error, commands.CheckFailure):
         await send_error(cont=ctx, msg=error)
     else:
+        global daily_error_count
+        daily_error_count = daily_error_count + 1
         print("An uncaught error occurred: ", error)  # More error checking
         msg = "Unfortunately, something messed up. If you entered the command correctly just wait a few seconds " \
               "and then try again. \n\n \N{CROSS MARK}"
@@ -96,12 +100,12 @@ async def on_message(message):
         return
 
     # Seeing if someone is using the bot_prefix and calling a command
-    if message.content.startswith(">>"):
+    if message.content.startswith(PREFIX):
         print(message.author, message.content, channel, message.guild, await helper.get_est_time())
         global daily_command_count
         daily_command_count = daily_command_count + 1
     # Seeing if someone is using the bot_prefix and calling a command
-    if message.content.startswith(">> ") or message.content.startswith("!! "):
+    if message.content.startswith(PREFIX + " "):
         msg = 'Oops looks like you have a space after the bot prefix {0.author.mention}'.format(message)
         try:  # First lets try to send the message to the channel the command was called
             await message.channel.send(msg)
@@ -126,21 +130,43 @@ async def reset_uses():
         await asyncio.sleep(60*60*24)  # day
 
 
-# Logs to a file how many commands are called in a day (24 hour period) and how many servers the bot is in
+# Logs to a file server count, errors, commands used, api calls used (every hour to get a daily stats)
 @client.event
 async def log_information():
     await client.wait_until_ready()
     sleep_time = await helper.get_seconds_until_reset()
     await asyncio.sleep(sleep_time)
     while not client.is_closed():
-        with open("log_file.csv", '+a') as log_file:
+        with open("log_file.csv", 'r') as r_log_file:
             global daily_command_count
+            global daily_error_count
             date = await helper.get_est_time()
-            log_file.write("{}, {}, {}\n".format(str(len(client.guilds)), str(daily_command_count), date.split(" ")[1]))
-        log_file.close()
+            date = date.split(" ")[1]
+
+            lines = r_log_file.read().splitlines()
+            servers, old_errors, num_cmd, old_api_calls, old_date = lines[-1].split(',')
+            api_calls = PaladinsAPI.paladinsAPI.getDataUsed()
+            api_calls = api_calls.totalRequestsToday
+
+            # if this is less than that means that the api calls have been reset
+            if api_calls < int(old_api_calls):
+                api_calls = old_api_calls
+
+            # Updates tracked information for the current day or the next day
+            if old_date.strip() == date:
+                lines[-1] = "{}, {}, {}, {}, {}".format(len(client.guilds), int(daily_error_count) + int(old_errors),
+                                                        int(daily_command_count) + int(num_cmd), str(api_calls),
+                                                        date)
+                with open("log_file.csv", 'w') as w_log_file:
+                    w_log_file.write("\n".join(lines))
+            else:
+                with open("log_file.csv", '+a') as a_log_file:
+                    a_log_file.write("{}, {}, {}, {}, {}\n".format(str(len(client.guilds)), str(int(daily_error_count)),
+                                                                   str(daily_command_count), api_calls, date))
         daily_command_count = 0
+        daily_error_count = 0
         print("Logged commands and server count.")
-        await asyncio.sleep(60*60*24)  # day
+        await asyncio.sleep(60*60)  # Log information every hour
 
 
 # Launching the bot function
@@ -151,6 +177,8 @@ async def on_ready():
     print('------')
     global daily_command_count
     daily_command_count = 0
+    global daily_error_count
+    daily_error_count = 0
     client.loop.create_task(reset_uses())
     client.loop.create_task(change_bot_presence())
     client.loop.create_task(log_information())

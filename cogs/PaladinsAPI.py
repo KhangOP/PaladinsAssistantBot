@@ -5,6 +5,7 @@ import requests
 import my_utils as helper
 
 from pyrez.api import PaladinsAPI
+from pyrez.exceptions import PlayerNotFound
 import json
 import time
 
@@ -34,6 +35,8 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     SUPPORTS = ["Grohk", "Grover", "Ying", "Mal Damba", "Seris", "Jenos", "Furia", "Pip"]
 
     dashes = "----------------------------------------"
+    player_id_error = "Can't find the player: {} or their account is private. Please make sure the name is spelled " \
+                      "correctly (Capitalization does not matter)."
 
     # Returns a number for indexing in a list
     @classmethod
@@ -71,9 +74,10 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         if player_name in player_ids:
             return player_ids[player_name]
         else:
-            player = paladinsAPI.getPlayer(player_name)
-            if not player:  # invalid name
-                return -1
+            try:
+                player = paladinsAPI.getPlayer(player_name)
+            except PlayerNotFound:
+                return -1  # invalid name
             new_id = player.playerId
             player_ids[player_name] = new_id  # store the new id in the dictionary
 
@@ -183,8 +187,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         # Player level, played hours, etc
         player_id = cls.get_player_id(player_name)
         if player_id == -1:
-            return "Can't find the player: " + player_name + \
-                   ". Please make sure the name is spelled correctly (Capitalization does not matter)."
+            return cls.player_id_error.format(player_name)
         info = paladinsAPI.getPlayer(player_id)
 
         # Overall Info
@@ -262,8 +265,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 ss = str('*{:18} Lv. {:3}  {:7}   {:6}\n')
                 ss = ss.format(champ, "???", "???", "???")
                 return ss
-            match_data = "Can't find the player: " + player_name + \
-                         ". Please make sure the name is spelled correctly (Capitalization does not matter)."
+            match_data = cls.player_id_error.format(player_name)
             embed = discord.Embed(
                 description=match_data,
                 colour=discord.colour.Color.dark_teal()
@@ -360,8 +362,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             player_id = self.get_player_id(player_name)
 
             if player_id == -1:
-                match_data = "Can't find the player: " + player_name + \
-                             ". Please make sure the name is spelled correctly (Capitalization does not matter)."
+                match_data = self.player_id_error.format(player_name)
                 embed = discord.Embed(
                     description=match_data,
                     colour=discord.colour.Color.dark_teal()
@@ -372,6 +373,11 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             champ_name = await self.convert_champion_name(champ_name)
 
             player_decks = paladinsAPI.getPlayerLoadouts(player_id)
+            if (len(player_decks)) <= 1 and player_decks[0].deckId == 0:
+                await ctx.send("`Can't get decks for {} because their account is private.`\n"
+                               "<:ying_mad:576792455148601345><:lian_palm:576792454968246282>".format(player_name))
+                return None
+
             deck_list = []
 
             deck = None
@@ -391,7 +397,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                                        "Example: `>>deck {} {} {}`".format(player_name, champ_name, "1"))
                         return None
 
-            # Correcting player and champion name
+            # Correcting player name
             for decks in player_decks:
                 player_name = decks.playerName
                 break
@@ -424,8 +430,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 return None
             player_id = self.get_player_id(player_name)
             if player_id == -1:
-                await ctx.send("Can't find the player: " + player_name +
-                               ". Please make sure the name is spelled correctly (Capitalization does not matter).")
+                await ctx.send(self.player_id_error.format(player_name))
                 return None
             if champ_name:  # Check in case they don't provide champ name
                 champ_name = await self.convert_champion_name(champ_name)
@@ -565,8 +570,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         player_id = self.get_player_id(player_name)
 
         if player_id == -1:
-            match_data = "Can't find the player: " + player_name + \
-                         ". Please make sure the name is spelled correctly (Capitalization does not matter)."
+            match_data = self.player_id_error.format(player_name)
             embed = discord.Embed(
                 description=match_data,
                 colour=discord.colour.Color.dark_teal()
@@ -655,8 +659,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         player_id = self.get_player_id(player_name)
 
         if player_id == -1:
-            match_data = "Can't find the player: " + player_name + \
-                         ". Please make sure the name is spelled correctly (Capitalization does not matter)."
+            match_data = self.player_id_error.format(player_name)
             embed = discord.Embed(
                 description=match_data,
                 colour=discord.colour.Color.dark_teal()
@@ -730,8 +733,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             # Gets player id and error checks
             player_id = self.get_player_id(player_name)
             if player_id == -1:
-                await ctx.send("Can't find the player: " + player_name +
-                               ". Please make sure the name is spelled correctly (Capitalization does not matter).")
+                await ctx.send(self.player_id_error.format(player_name))
                 return None
             data = paladinsAPI.getPlayerStatus(player_id)
 

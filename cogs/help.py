@@ -16,7 +16,7 @@ def create_embed(name, info, pars, des):
     description_string = ""
     for par, de in zip(pars, des):
         format_string += " <" + par + ">"
-        description_string += "<" + par + "> " + de + "\n"
+        description_string += "<" + par + "> " + de + "\n\n"
 
     embed.add_field(name='Format:', value='```md\n>>' + name + format_string + '```', inline=False)
     embed.add_field(name='Parameters:', value='```md\n' + description_string + '```', inline=False)
@@ -71,6 +71,12 @@ class HelpCog(commands.Cog, name="Help Commands"):
             embed.add_field(name='current', value='Returns stats for a player\'s current match.', inline=False)
             embed.add_field(name='history', value='Returns simple stats for a player\'s last amount of matches.',
                             inline=False)
+            embed.add_field(name='usage', value='Returns how many times you have used commands for this bot in the form'
+                                                'of a pie-chart.', inline=False)
+            embed.add_field(name='prefix', value='Lets the server owner change the prefix of the bot.',
+                            inline=False)
+            embed.add_field(name='language', value='Lets the server owner change the language the bot uses.',
+                            inline=False)
 
             # Try to first dm the user the help commands, then try to post it the channel where it was called
             try:
@@ -94,8 +100,11 @@ class HelpCog(commands.Cog, name="Help Commands"):
     async def history(self, ctx):
         command_name = "history"
         command_description = "Returns simple stats for a player\'s last amount of matches."
-        parameters = ["player_name", "amount"]
-        descriptions = ["Player's Paladins IGN", "Amount of matches you want to see (2-30 matches)"]
+        parameters = ["player_name", "amount", "champ_name"]
+        descriptions = ["Player's Paladins IGN", "Amount of matches you want to see (2-50 matches)\n"
+                                                 "[Optional parameter]: if not provide, defaults to 10",
+                        "Champion's name that you want to look for in History\n"
+                        "[Optional parameter]: if not provide, defaults to 10"]
         await ctx.send(embed=create_embed(command_name, command_description, parameters, descriptions))
 
     @help.command()
@@ -113,10 +122,33 @@ class HelpCog(commands.Cog, name="Help Commands"):
         parameters = ["player_name", "option"]
         long_string = "can be one of the following: \n\n" \
                       "1. <me>: will return the player's overall stats. \n" \
-                      "2. <elo>: will return the player's Guru elo.\n" \
-                      "3. <champion_name>: will return the player's stats on the name of the champion entered."
+                      "2. <champion_name>: will return the player's stats on the name of the champion entered."
+        # "3. <elo>: will return the player's Guru elo.\n" \
         descriptions = ["Player's Paladins IGN", long_string]
+        await ctx.send(embed=create_embed(command_name, command_description, parameters, descriptions))
 
+    @help.command()
+    async def usage(self, ctx):
+        command_name = "usage"
+        command_description = "Returns how many times you have used commands for this bot in the form of a pie-chart."
+        parameters = ["None"]
+        descriptions = ["Parameterless command"]
+        await ctx.send(embed=create_embed(command_name, command_description, parameters, descriptions))
+
+    @help.command()
+    async def prefix(self, ctx):
+        command_name = "prefix"
+        command_description = "Lets the server owner change the prefix of the bot."
+        parameters = ["prefix"]
+        descriptions = ["The prefix can be set to whatever you want."]
+        await ctx.send(embed=create_embed(command_name, command_description, parameters, descriptions))
+
+    @help.command()
+    async def language(self, ctx):
+        command_name = "language"
+        command_description = "Lets the server owner change the language the bot uses."
+        parameters = ["language"]
+        descriptions = ["This command is still being worked on..."]
         await ctx.send(embed=create_embed(command_name, command_description, parameters, descriptions))
 
 

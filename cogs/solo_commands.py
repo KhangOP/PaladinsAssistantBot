@@ -3,6 +3,7 @@ from discord.ext import commands
 import json
 import my_utils as helper
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 from PIL import Image
 from io import BytesIO
 
@@ -111,19 +112,24 @@ class SoloCommandCog(commands.Cog, name="Solo Commands"):
     async def usage(self, ctx):  # todo pick up here tomorrow
         user_commands = await helper.get_store_commands(ctx.author.id)
         message = ""
-        for command, usage in user_commands.items():
-            message += "{:9} {}\n".format(str(command), str(usage))
-        await ctx.send('```'+message+'```')
 
         # Data to plot
-        labels = 'Python', 'C++', 'Ruby', 'Java'
-        sizes = [215, 130, 245, 210]
-        colors = ['gold', 'yellowgreen', 'lightcoral', 'lightskyblue']
-        explode = (0.1, 0, 0, 0)  # explode 1st slice
+        labels = []
+        sizes = []
+        # colors = ['gold', 'yellowgreen', 'lightcoral', 'lightskyblue']
+
+        for command, usage in user_commands.items():
+            message += "{:9} {}\n".format(str(command), str(usage))
+            labels.append(command)
+            sizes.append(usage)
+
+        await ctx.send('```' + message + '```')
+        return None
+        # explode = (0.1, 0, 0, 0)  # explode 1st slice
 
         # Plot
-        plt.pie(sizes, explode=explode, labels=labels, colors=colors,
-                autopct='%1.1f%%', shadow=True, startangle=140)
+        mpl.rcParams['font.size'] = 15.0
+        plt.pie(sizes, labels=labels, autopct='%1.1f%%', pctdistance=.7, labeldistance=1.2)
 
         plt.axis('equal')
 

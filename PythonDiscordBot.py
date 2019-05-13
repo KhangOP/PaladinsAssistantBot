@@ -14,8 +14,7 @@ from cogs import PaladinsAPI
 BOT_STATUS = ">>help"
 
 BOT_AUTHOR = "FeistyJalapeno#9045"
-BOT_VERSION = "Version 4.1.1 Beta"
-UPDATE_NOTES = "Changed 3 functions to be embeds to include images."
+BOT_VERSION = "Version 4.2.2 Beta"
 GAME = ["Paladins", BOT_STATUS, BOT_VERSION, BOT_STATUS, "Errors"]
 
 file_name = "token"

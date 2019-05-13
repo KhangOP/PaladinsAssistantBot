@@ -1,11 +1,6 @@
-import discord
 from discord.ext import commands
 import json
 import my_utils as helper
-import matplotlib.pyplot as plt
-import matplotlib as mpl
-from PIL import Image
-from io import BytesIO
 
 
 def server_owner_only():
@@ -29,6 +24,7 @@ class SoloCommandCog(commands.Cog, name="Solo Commands"):
     abbreviations = ["pl", "pt"]
     file_name = 'languages/server_configs'
     lan = []
+    dashes = "----------------------------------------"
 
     def __init__(self, bot):
         self.bot = bot
@@ -109,39 +105,23 @@ class SoloCommandCog(commands.Cog, name="Solo Commands"):
 
     # Print how many times a person has used each command
     @commands.command(name='usage')
-    async def usage(self, ctx):  # todo pick up here tomorrow
+    async def usage(self, ctx):
         user_commands = await helper.get_store_commands(ctx.author.id)
-        message = ""
+        len(user_commands)
+        message = "Commands used by {}\n{}\n".format(ctx.author, self.dashes)
 
         # Data to plot
         labels = []
-        sizes = []
-        # colors = ['gold', 'yellowgreen', 'lightcoral', 'lightskyblue']
+        data = []
+        i = 1
 
         for command, usage in user_commands.items():
-            message += "{:9} {}\n".format(str(command), str(usage))
+            message += "{}. {:9} {}\n".format(str(i), str(command), str(usage))
             labels.append(command)
-            sizes.append(usage)
+            data.append(usage)
+            i += 1
 
-        await ctx.send('```' + message + '```')
-        return None
-        # explode = (0.1, 0, 0, 0)  # explode 1st slice
-
-        # Plot
-        mpl.rcParams['font.size'] = 15.0
-        plt.pie(sizes, labels=labels, autopct='%1.1f%%', pctdistance=.7, labeldistance=1.2)
-
-        plt.axis('equal')
-
-        buf = BytesIO()
-        plt.savefig(buf, format='png')
-        buf.seek(0)
-        # im = Image.open(buf)
-        # im.show()
-        # buf.close()
-
-        file = discord.File(filename="Deck.png", fp=buf)
-        await ctx.send("```Enjoy the beautiful image below.```", file=file)
+        await ctx.send('```md\n' + message + '```')
 
 
 # Add this class to the cog list

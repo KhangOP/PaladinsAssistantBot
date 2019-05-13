@@ -71,6 +71,9 @@ class HelpCog(commands.Cog, name="Help Commands"):
             embed.add_field(name='current', value='Returns stats for a player\'s current match.', inline=False)
             embed.add_field(name='history', value='Returns simple stats for a player\'s last amount of matches.',
                             inline=False)
+            embed.add_field(name='deck', value='Prints out all the decks a player has for a champion. If an a number is'
+                                               'given after the character name then an image will be created of that '
+                                               'deck.', inline=False)
             embed.add_field(name='usage', value='Returns how many times you have used commands for this bot in the form'
                                                 'of a pie-chart.', inline=False)
             embed.add_field(name='prefix', value='Lets the server owner change the prefix of the bot.',
@@ -125,6 +128,20 @@ class HelpCog(commands.Cog, name="Help Commands"):
                       "2. <champion_name>: will return the player's stats on the name of the champion entered."
         # "3. <elo>: will return the player's Guru elo.\n" \
         descriptions = ["Player's Paladins IGN", long_string]
+        await ctx.send(embed=create_embed(command_name, command_description, parameters, descriptions))
+
+    @help.command()
+    async def deck(self, ctx):
+        command_name = "deck"
+        command_description = "Prints out all the decks a player has for a champion. If an a number is given after the"\
+                              " character name then an image will be created of that deck."
+        parameters = ["player_name", "champ_name", "deck_number"]
+        descriptions = ["Player's Paladins IGN ", "Paladin's Champions Name", "Number of the deck you want to create "
+                                                                              "an image out of.\n[Optional parameter]: "
+                                                                              "if not provide, prints a list all the "
+                                                                              "decks that the player has for that "
+                                                                              "champion"
+                        ]
         await ctx.send(embed=create_embed(command_name, command_description, parameters, descriptions))
 
     @help.command()

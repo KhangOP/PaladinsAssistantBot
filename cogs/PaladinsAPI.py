@@ -272,6 +272,17 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             )
             return embed
         stats = paladinsAPI.getChampionRanks(player_id)
+        if stats is None:  # Private account
+            if simple == 1:
+                ss = str('*{:18} Lv. {:3}  {:7}   {:6}\n')
+                ss = ss.format(champ, "???", "???", "???")
+                return ss
+            match_data = "Can't get stats for {} because their account is private.".format(player_name)
+            embed = discord.Embed(
+                description=match_data,
+                colour=discord.colour.Color.dark_teal()
+            )
+            return embed
 
         if "Mal" in champ:
             champ = "Mal'Damba"
@@ -448,10 +459,9 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             for match in paladins_data:
                 # Check to see if this player does have match history
                 if match.playerName is None:
-                    if count == 0:
-                        return "Player does not have recent match data."
-                    else:
-                        break
+                    await ctx.send("Player does not have recent match data or their account is private.")
+                    return None
+
                 # empty string means to get everything or only get matches with a certain champ
                 if not champ_name or champ_name == match.godName:
                     ss = str('+{:10}{:4}{:3}:00 {:9} {:9} {:5} ({}/{}/{})\n')
@@ -582,7 +592,8 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         for match in paladins_data:
             # Check to see if this player does have match history
             if match.playerName is None:
-                break
+                await ctx.send("Player does not have recent match data or their account is private.")
+                return None
 
             team1_data = []
             team2_data = []
@@ -703,7 +714,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
         # If player has not played recently
         if match_id == -1:
-            embed.description = "Player does not have recent match data."
+            embed.description = "Player does not have recent match data or their account is private."
 
         await ctx.send(embed=embed)
 

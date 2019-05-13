@@ -61,7 +61,7 @@ async def send_error(cont, msg):
 
 
 # Handles errors when a user messes up the spelling or forgets an argument to a command or an error occurs
-"""
+# """
 @client.event
 async def on_command_error(ctx, error):
     if isinstance(error, commands.MissingRequiredArgument):
@@ -88,7 +88,7 @@ async def on_command_error(ctx, error):
         # " Please dm me the error or post this error in the error channel" \
         # "of the bot support server if the problem keeps happening:\n\n`" + str(error) + "`"
         await send_error(cont=ctx, msg=msg)
-"""
+# """
 
 
 # We can use this code to track when people message this bot (a.k.a asking it commands)
@@ -148,21 +148,16 @@ async def log_information():
             api_calls = PaladinsAPI.paladinsAPI.getDataUsed()
             api_calls = api_calls.totalRequestsToday
 
-            # if this is less than that means that the api calls have been reset
-            if api_calls < int(old_api_calls):
-                api_calls = old_api_calls
-
             # Updates tracked information for the current day or the next day
             if old_date.strip() == date:
-                lines[-1] = "{}, {}, {}, {}, {}".format(len(client.guilds), int(daily_error_count) + int(old_errors),
-                                                        int(daily_command_count) + int(num_cmd), str(api_calls),
-                                                        date)
+                lines[-1] = "{}, {}, {}, {}, {}\n".format(len(client.guilds), int(daily_error_count) + int(old_errors),
+                                                          daily_command_count + int(num_cmd), api_calls, date)
                 with open("log_file.csv", 'w') as w_log_file:
                     w_log_file.write("\n".join(lines))
             else:
                 with open("log_file.csv", '+a') as a_log_file:
-                    a_log_file.write("{}, {}, {}, {}, {}\n".format(str(len(client.guilds)), str(int(daily_error_count)),
-                                                                   str(daily_command_count), api_calls, date))
+                    a_log_file.write("{}, {}, {}, {}, {}\n".format(len(client.guilds), int(daily_error_count),
+                                                                   daily_command_count, api_calls, date))
         daily_command_count = 0
         daily_error_count = 0
         print("Logged commands and server count.")

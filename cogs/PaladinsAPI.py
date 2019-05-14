@@ -188,7 +188,10 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         player_id = cls.get_player_id(player_name)
         if player_id == -1:
             return cls.player_id_error.format(player_name)
-        info = paladinsAPI.getPlayer(player_id)
+        try:
+            info = paladinsAPI.getPlayer(player_id)
+        except PlayerNotFound:
+            return cls.player_id_error.format(player_name)
 
         # Overall Info
         ss = "Casual stats: \n{}\nName: {}\nAccount Level: {}\nWin Rate: {}% out of {} matches.\nTimes Deserted: {}\n\n"
@@ -565,7 +568,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         await ctx.send("```diff\n" + match_data2 + "```")
 
     # Returns an image of a match with player details
-    @commands.command(name='match')
+    @commands.command(name='match')  # todo work on this command
     @commands.cooldown(2, 30, commands.BucketType.user)
     async def match(self, ctx, player_name, match_id=-1):
         if str(player_name) == "me":
@@ -576,7 +579,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 return None
         else:
             pass
-        await helper.store_commands(ctx.author.id, "last")
+        # await helper.store_commands(ctx.author.id, "match")
         player_id = self.get_player_id(player_name)
 
         if player_id == -1:
@@ -618,7 +621,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                         team2_data.append([pd.killsPlayer, pd.deaths, pd.assists, pd.damagePlayer, pd.damageTaken,
                                            pd.healing, pd.healingPlayerSelf, pd.objectiveAssists])
                         team2_champs.append(pd.referenceName)
-                        team1_parties.append(pd.partyId)
+                        team2_parties.append(pd.partyId)
                         # print("Team 2: " + str(pd.playerName) + str(pd.partyId))
 
                 # Todo implement counting parties
@@ -635,8 +638,8 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 """
 
                 buffer = await helper.create_history_image(team1_champs, team2_champs, team1_data, team2_data)
-                file = discord.File(filename="Team.png", fp=buffer)
-                await ctx.send("``` sup```", file=file)
+                file = discord.File(filename="TeamMatch.png", fp=buffer)
+                await ctx.send("```sup```", file=file)
                 return None
 
                 # ss = str('Champion: {}\nKDA: {} ({}-{}-{})\nDamage: {}\nDamage Taken: {}'
@@ -687,14 +690,14 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             if match_id == -1 or match_id == match.matchId:
                 match_data = str('{}\'s {} match:\n\n').format(str(player_name), str(match.mapName).replace("LIVE", ""))
                 ss = str('`Match Status: {} ({} mins)\nChampion: {}\nKDA: {} ({}-{}-{})\nDamage: {}\nDamage Taken: {}'
-                         '\nHealing: {}\nSelf Healing: {}\nObjective Time: {}`\n')
+                         '\nHealing: {}\nSelf Healing: {}\nObjective Time: {}\nShielding: {}`\n')
                 kills = match.kills
                 deaths = match.deaths
                 assists = match.assists
                 kda = await self.calc_kda(kills, deaths, assists)
                 match_data += ss.format(match.winStatus, match.matchMinutes, match.godName, kda, kills, deaths, assists,
                                         match.damage, match.damageTaken, match.healing, match.healingPlayerSelf,
-                                        match.objectiveAssists)
+                                        match.objectiveAssists, match.damageMitigated)
 
                 embed = discord.Embed(
                     description=match_data,
@@ -748,6 +751,12 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 return None
             data = paladinsAPI.getPlayerStatus(player_id)
 
+            # Private account if it makes it this far in the code
+            if data.status == 5:
+                await ctx.send("`Can't get the current match for {} because their account is private.`\n"
+                               "<:ying_mad:576792455148601345><:lian_palm:576792454968246282>".format(player_name))
+                return None
+
             if data == 0:
                 await ctx.send(str("Player " + player_name + " is not found."))
                 return None
@@ -767,6 +776,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             # match_queue_id = 469 = DTM
             # match_queue_id = 486 = Ranked (Invalid)
 
+            print(data.queueId)
             current_match_queue_id = data.queueId
 
             match_string = "Unknown match Type"
@@ -789,9 +799,10 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             try:
                 players = paladinsAPI.getMatch(data.matchId, True)
             except BaseException as e:
-                await ctx.send("An problem occurred. Please make sure you are not using this command on the event mode."
-                               + str(e))
-                return None
+                    await ctx.send("Please makes sure you use the current command on Siege, Ranked, Team Death Match, "
+                                   "or Ranked. Other match queues are not fully supported by Hi-Rez for getting. " +
+                                   str(e))
+                    return None
             # print(players)
             team1 = []
             team1_ranks = []

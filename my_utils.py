@@ -1,4 +1,4 @@
-from PIL import Image, ImageFont, ImageDraw
+from PIL import Image, ImageFont, ImageDraw, ImageOps
 import requests
 from io import BytesIO
 from datetime import datetime, timedelta
@@ -512,20 +512,28 @@ async def create_deck_image_old(player_name, champ_name, deck):
 
 # Creates a match image based on the two teams champions #ToDo Finish implementation in the future
 async def create_history_image(team1, team2, t1_data, t2_data):
-    image_size = 512
+    shrink = 140
+    image_size_x = 512 - shrink*2
+    image_size_y = 512
     offset = 5
-    history_image = Image.new('RGB', (image_size*10, image_size*10))
+    history_image = Image.new('RGB', (image_size_x*10, image_size_x*10))
     for i, (champ, champ2) in enumerate(zip(team1, team2)):
         champ_url = await get_champ_image(champ)
         response = requests.get(champ_url)
         champ_image = Image.open(BytesIO(response.content))
-        history_image.paste(champ_image, (0, image_size*i, image_size, image_size*(i+1)))
+        border = (0, shrink, 0, shrink)  # left, up, right, bottom
+        champ_image = ImageOps.crop(champ_image, border)
+        # history_image.paste(champ_image, (0, image_size*i, image_size, image_size*(i+1)))
+        history_image.paste(champ_image, (0, image_size_x*i))
 
         # Second team
         champ_url = await get_champ_image(champ2)
         response = requests.get(champ_url)
         champ_image = Image.open(BytesIO(response.content))
-        history_image.paste(champ_image, (0, image_size * (i + offset), image_size, image_size * (i + 1 + offset)))
+        border = (0, shrink, 0, shrink)  # left, up, right, bottom
+        champ_image = ImageOps.crop(champ_image, border)
+        history_image.paste(champ_image, (0, image_size_x * (i + offset)))
+        # history_image.paste(champ_image, (0, image_size * (i + offset), image_size, image_size * (i + 1 + offset)))
     # history_image.show()
 
     # Creates a buffer to store the image in

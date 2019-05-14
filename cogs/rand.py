@@ -27,8 +27,8 @@ class RandomCog(commands.Cog, name="Random Commands"):
     TEAM_CMD = ["team", "drużyna", "time", "comp"]
     MAP_CMD = ["map", "mapa"]
     # Map Names
-    MAPS = ["Frog Isle", "Jaguar Falls", "Serpent Beach", "Frozen Guard", "Ice Mines", "Ice Mines", "Fish Market",
-            "Timber Mill", "Stone Keep", "Brightmarsh", "Splitstone Quarry", "Ascension Peak", "Warder's Gate"]
+    MAPS = ["Frog Isle", "Jaguar Falls", "Serpent Beach", "Frozen Guard", "Ice Mines", "Fish Market", "Timber Mill",
+            "Stone Keep", "Brightmarsh", "Splitstone Quarry", "Ascension Peak", "Warder's Gate", "Shattered Desert"]
 
     lang_dict = {}
     file_name = "languages/random_lang_dict"
@@ -111,10 +111,10 @@ class RandomCog(commands.Cog, name="Random Commands"):
                 team = await self.gen_team()
                 buffer = await helper.create_team_image(list(filter(None, team.splitlines())), [])
                 file = discord.File(filename="Team.png", fp=buffer)
-                await ctx.send(self.lang_dict["random_team"][lang] + "\n```css\n" + team + "```", file=file)
+                await ctx.send("{}\n```css\n{}```".format(self.lang_dict["random_team"][lang], team), file=file)
         elif command in self.MAP_CMD:
-            await  ctx.send(self.lang_dict["random_map"][lang] + "```css\n" + secure_random.choice(self.MAPS)
-                            + "```")
+            await ctx.send("{}```css\n{}```".format(self.lang_dict["random_map"][lang], secure_random.choice(self.MAPS))
+                           )
         else:
             await ctx.send(self.lang_dict["random_invalid"][lang])
 

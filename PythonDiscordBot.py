@@ -150,7 +150,7 @@ async def log_information():
             # Updates tracked information for the current day or the next day
             if old_date.strip() == date:
                 lines[-1] = "{}, {}, {}, {}, {}\n".format(len(client.guilds), int(daily_error_count) + int(old_errors),
-                                                          daily_command_count + int(num_cmd), api_calls, date)
+                                                          int(daily_command_count) + int(num_cmd), api_calls, date)
                 with open("log_file.csv", 'w') as w_log_file:
                     w_log_file.write("\n".join(lines))
             else:

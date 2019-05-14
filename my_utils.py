@@ -117,6 +117,15 @@ async def reset_command_uses():
     print("Finished resetting command uses.")
 
 
+# Gets minutes left in the hour
+async def get_second_until_hour():
+    minutes_left_in_hour = 60 - datetime.now().minute   # Get minutes left until the next hour
+    minutes_left_in_hour = minutes_left_in_hour - 5     # (5 minutes before the hour)
+    if minutes_left_in_hour < 0:
+        return 0
+    return minutes_left_in_hour
+
+
 # This function will get the number of second until 6est. when I want to reset data
 async def get_seconds_until_reset():
     """Get the number of seconds until 6am est."""

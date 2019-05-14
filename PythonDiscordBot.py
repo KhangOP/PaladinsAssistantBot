@@ -133,7 +133,7 @@ async def reset_uses():
 @client.event
 async def log_information():
     await client.wait_until_ready()
-    sleep_time = await helper.get_seconds_until_reset()
+    sleep_time = await helper.get_second_until_hour()
     await asyncio.sleep(sleep_time)
     while not client.is_closed():
         with open("log_file.csv", 'r') as r_log_file:

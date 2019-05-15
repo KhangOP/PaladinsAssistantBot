@@ -612,7 +612,8 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 for pd in match_data:
                     # print(player_data)
                     if pd.taskForce == 1:
-                        team1_data.append([pd.killsPlayer, pd.deaths, pd.assists, pd.damagePlayer, pd.damageTaken,
+                        kda = "{}/{}/{}".format(pd.killsPlayer, pd.deaths, pd.assists)
+                        team1_data.append([kda, pd.damagePlayer, pd.damageTaken,
                                            pd.healing, pd.healingPlayerSelf, pd.objectiveAssists])
                         team1_champs.append(pd.referenceName)
                         team1_parties.append(pd.partyId)
@@ -638,8 +639,8 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 """
 
                 buffer = await helper.create_history_image(team1_champs, team2_champs, team1_data, team2_data)
-                file = discord.File(filename="TeamMatch.png", fp=buffer)
-                await ctx.send("```sup```", file=file)
+                # file = discord.File(filename="TeamMatch.png", fp=buffer)
+                # await ctx.send("```sup```", file=file)
                 return None
 
                 # ss = str('Champion: {}\nKDA: {} ({}-{}-{})\nDamage: {}\nDamage Taken: {}'

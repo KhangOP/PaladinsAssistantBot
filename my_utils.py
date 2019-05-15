@@ -524,6 +524,8 @@ async def create_history_image(team1, team2, t1_data, t2_data):
         border = (0, shrink, 0, shrink)  # left, up, right, bottom
         champ_image = ImageOps.crop(champ_image, border)
         # history_image.paste(champ_image, (0, image_size*i, image_size, image_size*(i+1)))
+        await create_player_stats_image(champ_image, t1_data[0])
+        break
         history_image.paste(champ_image, (0, image_size_x*i))
 
         # Second team
@@ -546,6 +548,23 @@ async def create_history_image(team1, team2, t1_data, t2_data):
     final_buffer.seek(0)
 
     return final_buffer
+
+
+async def create_player_stats_image(champ_icon, champ_stats):
+    shrink = 140
+    offset = 10
+    image_size_y = 512 - shrink * 2
+    image_size_x = 512
+    middle = image_size_y/2 - 50
+    color = (65, 105, 225)
+    champ_stats_image = Image.new('RGB', (image_size_x*8, image_size_y+offset*2), color=color)
+    champ_stats_image.paste(champ_icon, (offset, offset))
+
+    base_draw = ImageDraw.Draw(champ_stats_image)
+    base_draw.text((image_size_x + 20, middle), str(champ_stats[0]), font=ImageFont.truetype("arial", 100))
+    base_draw.text((image_size_x + 400, middle), str(champ_stats[1]), font=ImageFont.truetype("arial", 100))
+    base_draw.text((image_size_x + 800, middle), str(champ_stats[2]), font=ImageFont.truetype("arial", 100))
+    champ_stats_image.show()
 
 
 # Class of commands that are solo (a.k.a) are not used/related to other functions

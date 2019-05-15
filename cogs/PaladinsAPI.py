@@ -602,7 +602,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             team2_data = []
             team1_champs = []
             team2_champs = []
-            team1_parties = []
+            team1_parties = {}
             team2_parties = []
 
             if match_id == -1 or match_id == match.matchId:
@@ -613,35 +613,37 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                     # print(player_data)
                     if pd.taskForce == 1:
                         kda = "{}/{}/{}".format(pd.killsPlayer, pd.deaths, pd.assists)
-                        team1_data.append([kda, pd.damagePlayer, pd.damageTaken,
-                                           pd.healing, pd.healingPlayerSelf, pd.objectiveAssists])
+                        account = "{}({})".format(pd.playerName, pd.accountLevel)
+                        team1_data.append([account, pd.referenceName, "{:,}".format(pd.goldEarned), kda,
+                                           "{:,}".format(pd.damagePlayer), "{:,}".format(pd.damageTaken),
+                                           pd.objectiveAssists, "{:,}".format(pd.damageMitigated),
+                                           "{:,}".format(pd.healing)])
                         team1_champs.append(pd.referenceName)
-                        team1_parties.append(pd.partyId)
+                        team1_parties.setdefault(pd.partyId, []).append(pd.playerName)
+                        # team1_parties.append(pd.partyId)
                         # print("Team 1: " + str(pd.playerName) + str(pd.partyId))
                     else:
-                        team2_data.append([pd.killsPlayer, pd.deaths, pd.assists, pd.damagePlayer, pd.damageTaken,
-                                           pd.healing, pd.healingPlayerSelf, pd.objectiveAssists])
+                        kda = "{}/{}/{}".format(pd.killsPlayer, pd.deaths, pd.assists)
+                        account = "{}({})".format(pd.playerName, pd.accountLevel)
+                        team2_data.append([account, pd.referenceName, "{:,}".format(pd.goldEarned), kda,
+                                           "{:,}".format(pd.damagePlayer), "{:,}".format(pd.damageTaken),
+                                           pd.objectiveAssists, "{:,}".format(pd.damageMitigated),
+                                           "{:,}".format(pd.healing)])
                         team2_champs.append(pd.referenceName)
                         team2_parties.append(pd.partyId)
                         # print("Team 2: " + str(pd.playerName) + str(pd.partyId))
 
                 # Todo implement counting parties
-                """
-                party_id = 0
-                party_status = []
-                for player in team1_parties:
-                    if team1_parties.count(player) > 2:
 
-                    print(player)
+                print(team1_parties)
 
-                for player in team2_parties:
-                    print(player)
-                """
+                # for player in team2_parties:
+                #    print(player)
 
-                buffer = await helper.create_history_image(team1_champs, team2_champs, team1_data, team2_data)
+                # buffer = await helper.create_history_image(team1_champs, team2_champs, team1_data, team2_data)
                 # file = discord.File(filename="TeamMatch.png", fp=buffer)
                 # await ctx.send("```sup```", file=file)
-                return None
+                # return None
 
                 # ss = str('Champion: {}\nKDA: {} ({}-{}-{})\nDamage: {}\nDamage Taken: {}'
                 #         '\nHealing: {} \nObjective Time: {}`\n')

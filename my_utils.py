@@ -513,10 +513,15 @@ async def create_deck_image_old(player_name, champ_name, deck):
 # Creates a match image based on the two teams champions #ToDo Finish implementation in the future
 async def create_history_image(team1, team2, t1_data, t2_data):
     shrink = 140
-    image_size_x = 512 - shrink*2
-    image_size_y = 512
+    image_size_y = 512 - shrink*2
+    image_size_x = 512
     offset = 5
-    history_image = Image.new('RGB', (image_size_x*10, image_size_x*10))
+    history_image = Image.new('RGB', (image_size_x*8, image_size_y*12))
+
+    key = await create_player_key_image(image_size_x, image_size_y)
+    history_image.paste(key, (0, 0))
+
+    # Adding in player data
     for i, (champ, champ2) in enumerate(zip(team1, team2)):
         champ_url = await get_champ_image(champ)
         response = requests.get(champ_url)
@@ -524,9 +529,11 @@ async def create_history_image(team1, team2, t1_data, t2_data):
         border = (0, shrink, 0, shrink)  # left, up, right, bottom
         champ_image = ImageOps.crop(champ_image, border)
         # history_image.paste(champ_image, (0, image_size*i, image_size, image_size*(i+1)))
-        await create_player_stats_image(champ_image, t1_data[0])
-        break
-        history_image.paste(champ_image, (0, image_size_x*i))
+        x, y = history_image.size
+        player_panel = await create_player_stats_image(champ_image, t1_data[i])
+        x2, y2 = player_panel.size
+        print(x, x2, y, y2)
+        history_image.paste(player_panel, (0, image_size_y*i+132))
 
         # Second team
         champ_url = await get_champ_image(champ2)
@@ -534,8 +541,10 @@ async def create_history_image(team1, team2, t1_data, t2_data):
         champ_image = Image.open(BytesIO(response.content))
         border = (0, shrink, 0, shrink)  # left, up, right, bottom
         champ_image = ImageOps.crop(champ_image, border)
-        history_image.paste(champ_image, (0, image_size_x * (i + offset)))
-        # history_image.paste(champ_image, (0, image_size * (i + offset), image_size, image_size * (i + 1 + offset)))
+
+        player_panel = await create_player_stats_image(champ_image, t2_data[i])
+        history_image.paste(player_panel, (0, image_size_y * (i+offset) + 450))
+
     # history_image.show()
 
     # Creates a buffer to store the image in
@@ -561,10 +570,65 @@ async def create_player_stats_image(champ_icon, champ_stats):
     champ_stats_image.paste(champ_icon, (offset, offset))
 
     base_draw = ImageDraw.Draw(champ_stats_image)
-    base_draw.text((image_size_x + 20, middle), str(champ_stats[0]), font=ImageFont.truetype("arial", 100))
-    base_draw.text((image_size_x + 400, middle), str(champ_stats[1]), font=ImageFont.truetype("arial", 100))
-    base_draw.text((image_size_x + 800, middle), str(champ_stats[2]), font=ImageFont.truetype("arial", 100))
-    champ_stats_image.show()
+    # Player name and champion name
+    base_draw.text((image_size_x + 20, middle-40), str(champ_stats[0]), font=ImageFont.truetype("arial", 80))
+    base_draw.text((image_size_x + 20, middle+60), str(champ_stats[1]), font=ImageFont.truetype("arial", 80))
+
+    # Credits/Gold earned
+    base_draw.text((image_size_x + 900, middle), str(champ_stats[2]), font=ImageFont.truetype("arial", 100), fill=(238, 232, 170))
+
+    # KDA
+    base_draw.text((image_size_x + 1200, middle), str(champ_stats[3]), font=ImageFont.truetype("arial", 100))
+
+    # Damage done
+    base_draw.text((image_size_x + 1630, middle), str(champ_stats[4]), font=ImageFont.truetype("arial", 100))
+
+    # Damage taken
+    base_draw.text((image_size_x + 2050, middle), str(champ_stats[5]), font=ImageFont.truetype("arial", 100))
+
+    # Objective time
+    base_draw.text((image_size_x + 2500, middle), str(champ_stats[6]), font=ImageFont.truetype("arial", 100))
+
+    # Shielding
+    base_draw.text((image_size_x + 2750, middle), str(champ_stats[7]), font=ImageFont.truetype("arial", 100))
+
+    # Healing
+    base_draw.text((image_size_x + 3200, middle), str(champ_stats[8]), font=ImageFont.truetype("arial", 100))
+
+    return champ_stats_image
+
+
+# Creates the text at the top of the image
+async def create_player_key_image(x, y):
+    key = Image.new('RGB', (x * 8, y-100), color=(160, 82, 45))
+    base_draw = ImageDraw.Draw(key)
+    # ss = "Player Credits K/D/A  Damage  Taken  Objective Time  Shielding  Healing"
+    base_draw.text((x + 20, 0), "Player", font=ImageFont.truetype("arial", 80))
+
+    # Credits/Gold earned
+    base_draw.text((x + 900, 0), "Credits", font=ImageFont.truetype("arial", 80),
+                   fill=(238, 232, 170))
+
+    # KDA
+    base_draw.text((x + 1250, 0), "K/D/A", font=ImageFont.truetype("arial", 80))
+
+    # Damage done
+    base_draw.text((x + 1630, 0), "Damage", font=ImageFont.truetype("arial", 80))
+
+    # Damage taken
+    base_draw.text((x + 2050, 0), "Taken", font=ImageFont.truetype("arial", 80))
+
+    # Objective time
+    base_draw.text((x + 2450, 0), "Objective", font=ImageFont.truetype("arial", 60))
+    base_draw.text((x + 2500, 55), "Time", font=ImageFont.truetype("arial", 60))
+
+    # Shielding
+    base_draw.text((x + 2750, 0), "Shielding", font=ImageFont.truetype("arial", 80))
+
+    # Healing
+    base_draw.text((x + 3200, 0), "Healing", font=ImageFont.truetype("arial", 80))
+
+    return key
 
 
 # Class of commands that are solo (a.k.a) are not used/related to other functions

@@ -516,7 +516,7 @@ async def create_history_image(team1, team2, t1_data, t2_data, p1, p2, match_dat
     image_size_y = 512 - shrink*2
     image_size_x = 512
     offset = 5
-    history_image = Image.new('RGB', (image_size_x*8, image_size_y*12 + 270))
+    history_image = Image.new('RGB', (image_size_x*8, image_size_y*12 + 264))
 
     # Adds the top key panel
     key = await create_player_key_image(image_size_x, image_size_y)
@@ -524,7 +524,7 @@ async def create_history_image(team1, team2, t1_data, t2_data, p1, p2, match_dat
 
     # Creates middle panel
     mid_panel = await create_middle_info_panel(match_data)
-    history_image.paste(mid_panel, (0, 1392-60))
+    history_image.paste(mid_panel, (0, 1392-40))
 
     #"""
     # Adding in player data
@@ -539,7 +539,7 @@ async def create_history_image(team1, team2, t1_data, t2_data, p1, p2, match_dat
         player_panel = await create_player_stats_image(champ_image, t1_data[i], i, p1)
         x2, y2 = player_panel.size
         print(x, x2, y, y2)
-        history_image.paste(player_panel, (0, image_size_y*i+132))
+        history_image.paste(player_panel, (0, (image_size_y+10)*i+132))
 
         # Second team
         champ_url = await get_champ_image(champ2)
@@ -549,7 +549,7 @@ async def create_history_image(team1, team2, t1_data, t2_data, p1, p2, match_dat
         champ_image = ImageOps.crop(champ_image, border)
 
         player_panel = await create_player_stats_image(champ_image, t2_data[i], i+offset-1, p2)
-        history_image.paste(player_panel, (0, image_size_y * (i+offset) + 700))
+        history_image.paste(player_panel, (0, image_size_y * (i+offset) + 704))
     #"""
     # history_image.show()
 

@@ -608,42 +608,41 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
             if match_id == -1 or match_id == match.matchId:
                 match_data = paladinsAPI.getMatch(match.matchId)
-                print(match.winStatus, match.matchMinutes, match.matchRegion,
-                      str(match.mapName).replace("LIVE", ""))
+                match_info = [match.winStatus, match.matchMinutes, match.matchRegion,
+                              str(match.mapName).replace("LIVE", ""), match.team1Score, match.team2Score]
+                # print(match.winStatus, match.matchMinutes, match.matchRegion,
+                #      str(match.mapName).replace("LIVE", ""))
                 for pd in match_data:
-                    # print(player_data)
+                    print(pd.banName1, pd.banName2, pd.banName3, pd.banName4)
                     if pd.taskForce == 1:
                         kda = "{}/{}/{}".format(pd.killsPlayer, pd.deaths, pd.assists)
-                        account = "{}({})".format(pd.playerName, pd.accountLevel)
-                        team1_data.append([account, pd.referenceName, "{:,}".format(pd.goldEarned), kda,
+                        # account = "{}({})".format(pd.playerName, pd.accountLevel)
+                        team1_data.append([pd.playerName, pd.accountLevel, "{:,}".format(pd.goldEarned), kda,
                                            "{:,}".format(pd.damagePlayer), "{:,}".format(pd.damageTaken),
                                            pd.objectiveAssists, "{:,}".format(pd.damageMitigated),
-                                           "{:,}".format(pd.healing)])
+                                           "{:,}".format(pd.healing), pd.partyId])
                         team1_champs.append(pd.referenceName)
                         if pd.partyId not in team1_parties:
-                            team1_parties[pd.partyId] = "Solo"
+                            team1_parties[pd.partyId] = ""
                         else:
-                            team1_parties[pd.partyId] = "Party " + str(new_party_id)
+                            team1_parties[pd.partyId] = "" + str(new_party_id)
                             new_party_id += 1
                     else:
                         kda = "{}/{}/{}".format(pd.killsPlayer, pd.deaths, pd.assists)
-                        account = "{}({})".format(pd.playerName, pd.accountLevel)
-                        team2_data.append([account, pd.referenceName, "{:,}".format(pd.goldEarned), kda,
+                        # account = "{}({})".format(pd.playerName, pd.accountLevel)
+                        team2_data.append([pd.playerName, pd.accountLevel, "{:,}".format(pd.goldEarned), kda,
                                            "{:,}".format(pd.damagePlayer), "{:,}".format(pd.damageTaken),
                                            pd.objectiveAssists, "{:,}".format(pd.damageMitigated),
-                                           "{:,}".format(pd.healing)])
+                                           "{:,}".format(pd.healing), pd.partyId])
                         team2_champs.append(pd.referenceName)
                         if pd.partyId not in team2_parties:
-                            team2_parties[pd.partyId] = "Solo"
+                            team2_parties[pd.partyId] = ""
                         else:
-                            team2_parties[pd.partyId] = "Party " + str(new_party_id)
+                            team2_parties[pd.partyId] = str(new_party_id)
                             new_party_id += 1
 
-                # Todo implement counting parties
-                print(team1_parties)
-                print(team2_parties)
-
-                buffer = await helper.create_history_image(team1_champs, team2_champs, team1_data, team2_data)
+                buffer = await helper.create_history_image(team1_champs, team2_champs, team1_data, team2_data,
+                                                           team1_parties, team2_parties, match_info)
                 file = discord.File(filename="TeamMatch.png", fp=buffer)
                 await ctx.send("```sup```", file=file)
                 return None

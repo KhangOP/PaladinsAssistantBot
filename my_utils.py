@@ -376,10 +376,14 @@ async def create_card_image(card_image, champ_info):
     if cool_down != 0:
         # add in number
         draw = ImageDraw.Draw(image_base)
-        draw.text((int(frame_x/2)+2, frame_y - 66), str(cool_down), font=ImageFont.truetype("arial", 30), fill=(64, 64, 64))
+        draw.text((int(frame_x/2)+2, frame_y - 66), str(cool_down), font=ImageFont.truetype("arial", 30),
+                  fill=(64, 64, 64))
 
         # add in cool down icon
-        response = requests.get("https://c-3sux78kvnkay76x24mgskvkjogx2eiax78ykijtx2eius.g00.gamepedia.com/g00/3_c-3vgrgjoty.mgskvkjog.ius_/c-3SUXKVNKAY76x24nzzvyx3ax2fx2fmgskvkjog.iax78ykijt.iusx2fvgrgjoty_mgskvkjogx2flx2fl1x2fIuurjuct_Oiut.vtmx3fbkx78youtx3d53lijk999h1kll086lg16j7kjh186821x26o76i.sgx78qx3dosgmk_$/$/$/$/$")
+        response = requests.get("https://c-3sux78kvnkay76x24mgskvkjogx2eiax78ykijtx2eius.g00.gamepedia.com/g00/3_"
+                                "c-3vgrgjoty.mgskvkjog.ius_/c-3SUXKVNKAY76x24nzzvyx3ax2fx2fmgskvkjog.iax78ykijt."
+                                "iusx2fvgrgjoty_mgskvkjogx2flx2fl1x2fIuurjuct_Oiut."
+                                "vtmx3fbkx78youtx3d53lijk999h1kll086lg16j7kjh186821x26o76i.sgx78qx3dosgmk_$/$/$/$/$")
         cool_down_icon = Image.open(BytesIO(response.content)).convert("RGBA")
         image_base.paste(cool_down_icon, (int(frame_x/2)-20, frame_y - 60), mask=cool_down_icon)
 
@@ -398,8 +402,6 @@ async def create_card_image(card_image, champ_info):
 
 # Creates a image desks
 async def create_deck_image(player_name, champ_name, deck):
-    image_size_xy = 256
-
     card_image_x = 314
     card_image_y = 479
 
@@ -510,7 +512,7 @@ async def create_deck_image_old(player_name, champ_name, deck):
     return final_buffer
 
 
-# Creates a match image based on the two teams champions #ToDo Finish implementation in the future
+# Creates a match image based on the two teams champions
 async def create_history_image(team1, team2, t1_data, t2_data, p1, p2, match_data):
     shrink = 140
     image_size_y = 512 - shrink*2
@@ -565,8 +567,8 @@ async def create_history_image(team1, team2, t1_data, t2_data, p1, p2, match_dat
     return final_buffer
 
 
-async def create_middle_info_panel(md):
-    middle_panel = Image.new('RGB', (512*9, 512), color=(217,247,247))
+async def create_middle_info_panel(md):  # update this section
+    middle_panel = Image.new('RGB', (512*9, 512), color=(217, 247, 247))
 
     # Adding in map to image
     map_name = map_file_name = (md[3].strip().replace("Ranked ", "").replace(" (TDM)", "").replace(" (Onslaught)", "")
@@ -585,7 +587,8 @@ async def create_middle_info_panel(md):
     ds = 50  # Down Shift
     rs = 20  # Right Shift
     draw_panel.text((512 * 2 + rs, 0 + ds), str(md[0]), font=ImageFont.truetype("arial", 100), fill=(0, 0, 0))
-    draw_panel.text((512 * 2 + rs, 100 + ds), (str(md[1]) + " minutes"), font=ImageFont.truetype("arial", 100), fill=(0, 0, 0))
+    draw_panel.text((512 * 2 + rs, 100 + ds), (str(md[1]) + " minutes"), font=ImageFont.truetype("arial", 100),
+                    fill=(0, 0, 0))
     draw_panel.text((512 * 2 + rs, 200 + ds), str(md[2]), font=ImageFont.truetype("arial", 100), fill=(0, 0, 0))
     draw_panel.text((512 * 2 + rs, 300 + ds), str(map_name), font=ImageFont.truetype("arial", 100), fill=(0, 0, 0))
 
@@ -595,15 +598,11 @@ async def create_middle_info_panel(md):
     draw_panel.text((512 * 4 + rs, 0), "Team 1", font=ImageFont.truetype("arial", 100), fill=(0, 0, 0))
     draw_panel.text((512 * 4 + rs, 100), str(md[4]), font=ImageFont.truetype("arial", 100), fill=(0, 0, 0))
     # Bans
-    champ_url = await get_champ_image(str(md[6]))
-    response = requests.get(champ_url)
-    champ_image = Image.open(BytesIO(response.content))
+    champ_image = Image.open("icons/champ_icons/{}.png".format(await convert_champion_name(str(md[6]))))
     champ_image = champ_image.resize((200, 200))
     middle_panel.paste(champ_image, (512 * 4 + rs, 300))
-    # draw_panel.text((512 * 4 + rs, 300), str(md[6]), font=ImageFont.truetype("arial", 100), fill=(0, 0, 0))
-    champ_url = await get_champ_image(str(md[7]))
-    response = requests.get(champ_url)
-    champ_image = Image.open(BytesIO(response.content))
+
+    champ_image = Image.open("icons/champ_icons/{}.png".format(await convert_champion_name(str(md[7]))))
     champ_image = champ_image.resize((256, 256))
     middle_panel.paste(champ_image, (512 * 4 + rs+220, 244))
     # draw_panel.text((512 * 4 + rs, 400), str(md[7]), font=ImageFont.truetype("arial", 100), fill=(0, 0, 0))

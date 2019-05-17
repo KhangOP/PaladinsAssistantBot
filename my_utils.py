@@ -516,17 +516,17 @@ async def create_history_image(team1, team2, t1_data, t2_data, p1, p2, match_dat
     image_size_y = 512 - shrink*2
     image_size_x = 512
     offset = 5
-    history_image = Image.new('RGB', (image_size_x*8, image_size_y*12 + 264))
+    history_image = Image.new('RGB', (image_size_x*9, image_size_y*12 + 264))
 
     # Adds the top key panel
-    key = await create_player_key_image(image_size_x, image_size_y)
+    key = await create_player_key_image(image_size_x, image_size_y, True)
     history_image.paste(key, (0, 0))
 
     # Creates middle panel
     mid_panel = await create_middle_info_panel(match_data)
     history_image.paste(mid_panel, (0, 1392-40))
 
-    #"""
+    # """
     # Adding in player data
     for i, (champ, champ2) in enumerate(zip(team1, team2)):
         champ_url = await get_champ_image(champ)
@@ -548,9 +548,9 @@ async def create_history_image(team1, team2, t1_data, t2_data, p1, p2, match_dat
         border = (0, shrink, 0, shrink)  # left, up, right, bottom
         champ_image = ImageOps.crop(champ_image, border)
 
-        player_panel = await create_player_stats_image(champ_image, t2_data[i], i+offset-1, p2)
+        player_panel = await create_player_stats_image(champ_image, t2_data[i], i+offset-1, p2, True)
         history_image.paste(player_panel, (0, image_size_y * (i+offset) + 704))
-    #"""
+    # """
     # history_image.show()
 
     # Creates a buffer to store the image in
@@ -566,8 +566,7 @@ async def create_history_image(team1, team2, t1_data, t2_data, p1, p2, match_dat
 
 
 async def create_middle_info_panel(md):
-    middle_panel = Image.new('RGB', (512*8, 512), color=(255, 255, 255))
-    print(md)
+    middle_panel = Image.new('RGB', (512*9, 512), color=(217,247,247))
 
     # Adding in map to image
     map_name = map_file_name = (md[3].strip().replace("Ranked ", "").replace(" (TDM)", "").replace(" (Onslaught)", "")
@@ -583,25 +582,55 @@ async def create_middle_info_panel(md):
     draw_panel = ImageDraw.Draw(middle_panel)
 
     # Add in match information
-    draw_panel.text((512 * 2, 0), str(md[0]), font=ImageFont.truetype("arial", 100), fill=(0, 0, 0))
-    draw_panel.text((512 * 2, 100), (str(md[1]) + " minutes"), font=ImageFont.truetype("arial", 100), fill=(0, 0, 0))
-    draw_panel.text((512 * 2, 200), str(md[2]), font=ImageFont.truetype("arial", 100), fill=(0, 0, 0))
-    draw_panel.text((512 * 2, 300), str(map_name), font=ImageFont.truetype("arial", 100), fill=(0, 0, 0))
+    ds = 50  # Down Shift
+    rs = 20  # Right Shift
+    draw_panel.text((512 * 2 + rs, 0 + ds), str(md[0]), font=ImageFont.truetype("arial", 100), fill=(0, 0, 0))
+    draw_panel.text((512 * 2 + rs, 100 + ds), (str(md[1]) + " minutes"), font=ImageFont.truetype("arial", 100), fill=(0, 0, 0))
+    draw_panel.text((512 * 2 + rs, 200 + ds), str(md[2]), font=ImageFont.truetype("arial", 100), fill=(0, 0, 0))
+    draw_panel.text((512 * 2 + rs, 300 + ds), str(map_name), font=ImageFont.truetype("arial", 100), fill=(0, 0, 0))
 
-    middle_panel.show()
+    # Right shift
+    rs = 100
+    # Team 1
+    draw_panel.text((512 * 4 + rs, 0), "Team 1", font=ImageFont.truetype("arial", 100), fill=(0, 0, 0))
+    draw_panel.text((512 * 4 + rs, 100), str(md[4]), font=ImageFont.truetype("arial", 100), fill=(0, 0, 0))
+    # Bans
+    champ_url = await get_champ_image(str(md[6]))
+    response = requests.get(champ_url)
+    champ_image = Image.open(BytesIO(response.content))
+    champ_image = champ_image.resize((200, 200))
+    middle_panel.paste(champ_image, (512 * 4 + rs, 300))
+    # draw_panel.text((512 * 4 + rs, 300), str(md[6]), font=ImageFont.truetype("arial", 100), fill=(0, 0, 0))
+    champ_url = await get_champ_image(str(md[7]))
+    response = requests.get(champ_url)
+    champ_image = Image.open(BytesIO(response.content))
+    champ_image = champ_image.resize((256, 256))
+    middle_panel.paste(champ_image, (512 * 4 + rs+220, 244))
+    # draw_panel.text((512 * 4 + rs, 400), str(md[7]), font=ImageFont.truetype("arial", 100), fill=(0, 0, 0))
+
+    # VS
+    draw_panel.text((512 * 5+80 + rs, 200), "VS", font=ImageFont.truetype("arialbd", 130), fill=(0, 0, 0))
+
+    # Team 2
+    draw_panel.text((512 * 6 + rs, 0), "Team 2", font=ImageFont.truetype("arial", 100), fill=(0, 0, 0))
+    draw_panel.text((512 * 6 + rs, 100), str(md[5]), font=ImageFont.truetype("arial", 100), fill=(0, 0, 0))
+    # Bans
+    draw_panel.text((512 * 6 + rs, 300), str(md[8]), font=ImageFont.truetype("arial", 100), fill=(0, 0, 0))
+    draw_panel.text((512 * 6 + rs, 400), str(md[9]), font=ImageFont.truetype("arial", 100), fill=(0, 0, 0))
+
     return middle_panel
 
 
-async def create_player_stats_image(champ_icon, champ_stats, index, party):
+async def create_player_stats_image(champ_icon, champ_stats, index, party, color=False):
     shrink = 140
     offset = 10
     image_size_y = 512 - shrink * 2
-    image_size_x = 512
+    img_x = 512
     middle = image_size_y/2 - 50
-    color = (175, 238, 238) if index % 2 == 0 else (196, 242, 242)
+    im_color = (175, 238, 238) if index % 2 == 0 else (196, 242, 242)
     # color = (175, 238, 238)   # light blue
     # color = (196, 242, 242)     # lighter blue
-    champ_stats_image = Image.new('RGB', (image_size_x*8, image_size_y+offset*2), color=color)
+    champ_stats_image = Image.new('RGB', (img_x*9, image_size_y+offset*2), color=im_color)
     champ_stats_image.paste(champ_icon, (offset, offset))
 
     base_draw = ImageDraw.Draw(champ_stats_image)
@@ -611,69 +640,84 @@ async def create_player_stats_image(champ_icon, champ_stats, index, party):
         champ_stats[0] = "*****"
 
     # Player name and champion name
-    base_draw.text((image_size_x + 20, middle-40), str(champ_stats[0]), font=ImageFont.truetype("arialbd", 80), fill=(0,0,0))
-    base_draw.text((image_size_x + 20, middle+60), str(champ_stats[1]), font=ImageFont.truetype("arial", 80), fill=(0,0,0))
+    base_draw.text((img_x + 20, middle-40), str(champ_stats[0]), font=ImageFont.truetype("arialbd", 80), fill=(0, 0, 0))
+    base_draw.text((img_x + 20, middle+60), str(champ_stats[1]), font=ImageFont.truetype("arial", 80), fill=(0, 0, 0))
 
     # Parties
-    base_draw.text((image_size_x + 750, middle), party[champ_stats[9]], font=ImageFont.truetype("arial", 100),
-                   fill=(128, 0, 128))
+    fill = (128, 0, 128) if color else (0, 0, 0)
+    base_draw.text((img_x + 750, middle), party[champ_stats[9]], font=ImageFont.truetype("arial", 100), fill=fill)
 
     # Credits/Gold earned
-    base_draw.text((image_size_x + 900, middle), str(champ_stats[2]), font=ImageFont.truetype("arial", 100), fill=(218,165,32))
+    fill = (218, 165, 32) if color else (0, 0, 0)
+    base_draw.text((img_x + 900, middle), str(champ_stats[2]), font=ImageFont.truetype("arial", 100), fill=fill)
 
     # KDA
-    base_draw.text((image_size_x + 1200, middle), str(champ_stats[3]), font=ImageFont.truetype("arial", 100), fill=(101,33,67))
+    fill = (101, 33, 67) if color else (0, 0, 0)
+    base_draw.text((img_x + 1300, middle), str(champ_stats[3]), font=ImageFont.truetype("arial", 100), fill=fill)
 
     # Damage done
-    base_draw.text((image_size_x + 1630, middle), str(champ_stats[4]), font=ImageFont.truetype("arial", 100), fill=(255,0,0))
+    fill = (255, 0, 0) if color else (0, 0, 0)
+    base_draw.text((img_x + 1830, middle), str(champ_stats[4]), font=ImageFont.truetype("arial", 100), fill=fill)
 
     # Damage taken
-    base_draw.text((image_size_x + 2050, middle), str(champ_stats[5]), font=ImageFont.truetype("arial", 100), fill=(220,20,60))
+    fill = (220, 20, 60) if color else (0, 0, 0)
+    base_draw.text((img_x + 2350, middle), str(champ_stats[5]), font=ImageFont.truetype("arial", 100), fill=fill)
 
     # Objective time
-    base_draw.text((image_size_x + 2500, middle), str(champ_stats[6]), font=ImageFont.truetype("arial", 100), fill=(159,105,52))
+    fill = (159, 105, 52) if color else (0, 0, 0)
+    base_draw.text((img_x + 2850, middle), str(champ_stats[6]), font=ImageFont.truetype("arial", 100), fill=fill)
 
     # Shielding
-    base_draw.text((image_size_x + 2750, middle), str(champ_stats[7]), font=ImageFont.truetype("arial", 100), fill=(0, 51, 102))
+    fill = (0, 51, 102) if color else (0, 0, 0)
+    base_draw.text((img_x + 3150, middle), str(champ_stats[7]), font=ImageFont.truetype("arial", 100), fill=fill)
 
     # Healing
-    base_draw.text((image_size_x + 3200, middle), str(champ_stats[8]), font=ImageFont.truetype("arial", 100), fill=(0,128,0))
+    fill = (0, 128, 0) if color else (0, 0, 0)
+    base_draw.text((img_x + 3600, middle), str(champ_stats[8]), font=ImageFont.truetype("arial", 100), fill=fill)
 
     return champ_stats_image
 
 
 # Creates the text at the top of the image
-async def create_player_key_image(x, y):
-    key = Image.new('RGB', (x * 8, y-100), color=(112, 225, 225))
+async def create_player_key_image(x, y, color=False):
+    key = Image.new('RGB', (x * 9, y-100), color=(112, 225, 225))
     base_draw = ImageDraw.Draw(key)
     # ss = "Player Credits K/D/A  Damage  Taken  Objective Time  Shielding  Healing"
     base_draw.text((20, 0), "Champion", font=ImageFont.truetype("arial", 80), fill=(0, 0, 0))
     base_draw.text((x + 20, 0), "Player", font=ImageFont.truetype("arial", 80), fill=(0, 0, 0))
 
     # Parties
-    base_draw.text((x + 750, 0), "P", font=ImageFont.truetype("arial", 100), fill=(128, 0, 128))
+    fill = (128, 0, 128) if color else (0, 0, 0)
+    base_draw.text((x + 750, 0), "P", font=ImageFont.truetype("arial", 100), fill=fill)
 
     # Credits/Gold earned
-    base_draw.text((x + 900, 0), "Credits", font=ImageFont.truetype("arial", 80), fill=(218,165,32))
+    fill = (218, 165, 32) if color else (0, 0, 0)
+    base_draw.text((x + 900, 0), "Credits", font=ImageFont.truetype("arial", 80), fill=fill)
 
     # KDA
-    base_draw.text((x + 1250, 0), "K/D/A", font=ImageFont.truetype("arial", 80), fill=(101,33,67))
+    fill = (101, 33, 67) if color else (0, 0, 0)
+    base_draw.text((x + 1300, 0), "K/D/A", font=ImageFont.truetype("arial", 80), fill=fill)
 
     # Damage done
-    base_draw.text((x + 1630, 0), "Damage", font=ImageFont.truetype("arial", 80), fill=(255,0,0))
+    fill = (255, 0, 0) if color else (0, 0, 0)
+    base_draw.text((x + 1830, 0), "Damage", font=ImageFont.truetype("arial", 80), fill=fill)
 
     # Damage taken
-    base_draw.text((x + 2050, 0), "Taken", font=ImageFont.truetype("arial", 80), fill=(220,20,60))
+    fill = (220, 20, 60) if color else (0, 0, 0)
+    base_draw.text((x + 2350, 0), "Taken", font=ImageFont.truetype("arial", 80), fill=fill)
 
     # Objective time
-    base_draw.text((x + 2450, 0), "Objective", font=ImageFont.truetype("arial", 60), fill=(159,105,52))
-    base_draw.text((x + 2500, 60), "Time", font=ImageFont.truetype("arial", 60), fill=(159,105,52))
+    fill = (159, 105, 52) if color else (0, 0, 0)
+    base_draw.text((x + 2800, 0), "Objective", font=ImageFont.truetype("arial", 60), fill=fill)
+    base_draw.text((x + 2850, 60), "Time", font=ImageFont.truetype("arial", 60), fill=fill)
 
     # Shielding
-    base_draw.text((x + 2750, 0), "Shielding", font=ImageFont.truetype("arial", 80), fill=(0, 51, 102))
+    fill = (0, 51, 102) if color else (0, 0, 0)
+    base_draw.text((x + 3150, 0), "Shielding", font=ImageFont.truetype("arial", 80), fill=fill)
 
     # Healing
-    base_draw.text((x + 3200, 0), "Healing", font=ImageFont.truetype("arial", 80), fill=(0,128,0))
+    fill = (0, 128, 0) if color else (0, 0, 0)
+    base_draw.text((x + 3600, 0), "Healing", font=ImageFont.truetype("arial", 80), fill=fill)
 
     return key
 

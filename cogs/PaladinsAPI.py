@@ -604,7 +604,8 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             team2_champs = []
             team1_parties = {}
             team2_parties = {}
-            new_party_id = 1
+            temp = []
+            new_party_id = 0
 
             if match_id == -1 or match_id == match.matchId:
                 match_data = paladinsAPI.getMatch(match.matchId)
@@ -613,7 +614,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 # print(match.winStatus, match.matchMinutes, match.matchRegion,
                 #      str(match.mapName).replace("LIVE", ""))
                 for pd in match_data:
-                    print(pd.banName1, pd.banName2, pd.banName3, pd.banName4)
+                    temp = [pd.banName1, pd.banName2, pd.banName3, pd.banName4]
                     if pd.taskForce == 1:
                         kda = "{}/{}/{}".format(pd.killsPlayer, pd.deaths, pd.assists)
                         # account = "{}({})".format(pd.playerName, pd.accountLevel)
@@ -622,11 +623,12 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                                            pd.objectiveAssists, "{:,}".format(pd.damageMitigated),
                                            "{:,}".format(pd.healing), pd.partyId])
                         team1_champs.append(pd.referenceName)
-                        if pd.partyId not in team1_parties:
+                        if pd.partyId not in team1_parties or pd.partyId == 0:
                             team1_parties[pd.partyId] = ""
                         else:
+                            if team1_parties[pd.partyId] == "":
+                                new_party_id += 1
                             team1_parties[pd.partyId] = "" + str(new_party_id)
-                            new_party_id += 1
                     else:
                         kda = "{}/{}/{}".format(pd.killsPlayer, pd.deaths, pd.assists)
                         # account = "{}({})".format(pd.playerName, pd.accountLevel)
@@ -635,14 +637,17 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                                            pd.objectiveAssists, "{:,}".format(pd.damageMitigated),
                                            "{:,}".format(pd.healing), pd.partyId])
                         team2_champs.append(pd.referenceName)
-                        if pd.partyId not in team2_parties:
+                        if pd.partyId not in team2_parties or pd.partyId == 0:
                             team2_parties[pd.partyId] = ""
                         else:
+                            if team2_parties[pd.partyId] == "":
+                                new_party_id += 1
                             team2_parties[pd.partyId] = str(new_party_id)
-                            new_party_id += 1
+
+                # print("team1: " + str(team1_parties), "team2: " + str(team2_parties))
 
                 buffer = await helper.create_history_image(team1_champs, team2_champs, team1_data, team2_data,
-                                                           team1_parties, team2_parties, match_info)
+                                                           team1_parties, team2_parties, (match_info + temp))
                 file = discord.File(filename="TeamMatch.png", fp=buffer)
                 await ctx.send("```sup```", file=file)
                 return None

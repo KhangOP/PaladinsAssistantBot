@@ -568,9 +568,9 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         await ctx.send("```diff\n" + match_data2 + "```")
 
     # Returns an image of a match with player details
-    @commands.command(name='match')  # todo work on this command
-    @commands.cooldown(2, 30, commands.BucketType.user)
-    async def match(self, ctx, player_name, match_id=-1):
+    @commands.command(name='match')
+    @commands.cooldown(7, 30, commands.BucketType.user)
+    async def match(self, ctx, player_name, match_id=None, colored="-b"):
         if str(player_name) == "me":
             player_name = self.check_player_name(str(ctx.author.id))
             if player_name == "None":
@@ -591,78 +591,87 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             await ctx.send(embed=embed)
             return None
 
-        paladins_data = paladinsAPI.getMatchHistory(player_id)
-        for match in paladins_data:
-            # Check to see if this player does have match history
-            if match.playerName is None:
-                await ctx.send("Player does not have recent match data or their account is private.")
-                return None
+        async with ctx.channel.typing():
+            paladins_data = paladinsAPI.getMatchHistory(player_id)
+            for match in paladins_data:
+                # Check to see if this player does have match history
+                if match.playerName is None:
+                    await ctx.send("Player does not have recent match data or their account is private.")
+                    return None
 
-            team1_data = []
-            team2_data = []
-            team1_champs = []
-            team2_champs = []
-            team1_parties = {}
-            team2_parties = {}
-            temp = []
-            new_party_id = 0
+                team1_data = []
+                team2_data = []
+                team1_champs = []
+                team2_champs = []
+                team1_parties = {}
+                team2_parties = {}
+                temp = []
+                new_party_id = 0
 
-            if match_id == -1 or match_id == match.matchId:
-                match_data = paladinsAPI.getMatch(match.matchId)
-                match_info = [match.winStatus, match.matchMinutes, match.matchRegion,
-                              str(match.mapName).replace("LIVE", ""), match.team1Score, match.team2Score]
-                # print(match.winStatus, match.matchMinutes, match.matchRegion,
-                #      str(match.mapName).replace("LIVE", ""))
-                for pd in match_data:
-                    temp = [pd.banName1, pd.banName2, pd.banName3, pd.banName4]
-                    if pd.taskForce == 1:
-                        kda = "{}/{}/{}".format(pd.killsPlayer, pd.deaths, pd.assists)
-                        # account = "{}({})".format(pd.playerName, pd.accountLevel)
-                        team1_data.append([pd.playerName, pd.accountLevel, "{:,}".format(pd.goldEarned), kda,
-                                           "{:,}".format(pd.damagePlayer), "{:,}".format(pd.damageTaken),
-                                           pd.objectiveAssists, "{:,}".format(pd.damageMitigated),
-                                           "{:,}".format(pd.healing), pd.partyId])
-                        team1_champs.append(pd.referenceName)
-                        if pd.partyId not in team1_parties or pd.partyId == 0:
-                            team1_parties[pd.partyId] = ""
+                # handles if they provide the color option and no match id
+                try:
+                    match_id = int(match_id)
+                except ValueError:
+                    colored = match_id
+                    match_id = -1
+
+                if match_id == -1 or match_id == match.matchId:
+                    match_data = paladinsAPI.getMatch(match.matchId)
+                    match_info = [match.winStatus, match.matchMinutes, match.matchRegion,
+                                  str(match.mapName).replace("LIVE", ""), match.team1Score, match.team2Score]
+                    # print(match.winStatus, match.matchMinutes, match.matchRegion,
+                    #      str(match.mapName).replace("LIVE", ""))
+                    for pd in match_data:
+                        temp = [pd.banName1, pd.banName2, pd.banName3, pd.banName4]
+                        if pd.taskForce == 1:
+                            kda = "{}/{}/{}".format(pd.killsPlayer, pd.deaths, pd.assists)
+                            # account = "{}({})".format(pd.playerName, pd.accountLevel)
+                            team1_data.append([pd.playerName, pd.accountLevel, "{:,}".format(pd.goldEarned), kda,
+                                               "{:,}".format(pd.damagePlayer), "{:,}".format(pd.damageTaken),
+                                               pd.objectiveAssists, "{:,}".format(pd.damageMitigated),
+                                               "{:,}".format(pd.healing), pd.partyId])
+                            team1_champs.append(pd.referenceName)
+                            if pd.partyId not in team1_parties or pd.partyId == 0:
+                                team1_parties[pd.partyId] = ""
+                            else:
+                                if team1_parties[pd.partyId] == "":
+                                    new_party_id += 1
+                                team1_parties[pd.partyId] = "" + str(new_party_id)
                         else:
-                            if team1_parties[pd.partyId] == "":
-                                new_party_id += 1
-                            team1_parties[pd.partyId] = "" + str(new_party_id)
-                    else:
-                        kda = "{}/{}/{}".format(pd.killsPlayer, pd.deaths, pd.assists)
-                        # account = "{}({})".format(pd.playerName, pd.accountLevel)
-                        team2_data.append([pd.playerName, pd.accountLevel, "{:,}".format(pd.goldEarned), kda,
-                                           "{:,}".format(pd.damagePlayer), "{:,}".format(pd.damageTaken),
-                                           pd.objectiveAssists, "{:,}".format(pd.damageMitigated),
-                                           "{:,}".format(pd.healing), pd.partyId])
-                        team2_champs.append(pd.referenceName)
-                        if pd.partyId not in team2_parties or pd.partyId == 0:
-                            team2_parties[pd.partyId] = ""
-                        else:
-                            if team2_parties[pd.partyId] == "":
-                                new_party_id += 1
-                            team2_parties[pd.partyId] = str(new_party_id)
+                            kda = "{}/{}/{}".format(pd.killsPlayer, pd.deaths, pd.assists)
+                            # account = "{}({})".format(pd.playerName, pd.accountLevel)
+                            team2_data.append([pd.playerName, pd.accountLevel, "{:,}".format(pd.goldEarned), kda,
+                                               "{:,}".format(pd.damagePlayer), "{:,}".format(pd.damageTaken),
+                                               pd.objectiveAssists, "{:,}".format(pd.damageMitigated),
+                                               "{:,}".format(pd.healing), pd.partyId])
+                            team2_champs.append(pd.referenceName)
+                            if pd.partyId not in team2_parties or pd.partyId == 0:
+                                team2_parties[pd.partyId] = ""
+                            else:
+                                if team2_parties[pd.partyId] == "":
+                                    new_party_id += 1
+                                team2_parties[pd.partyId] = str(new_party_id)
 
-                # print("team1: " + str(team1_parties), "team2: " + str(team2_parties))
+                    # print("team1: " + str(team1_parties), "team2: " + str(team2_parties))
+                    color = True if colored == "-c" else False
 
-                buffer = await helper.create_history_image(team1_champs, team2_champs, team1_data, team2_data,
-                                                           team1_parties, team2_parties, (match_info + temp))
-                file = discord.File(filename="TeamMatch.png", fp=buffer)
-                await ctx.send("```sup```", file=file)
-                return None
+                    buffer = await helper.create_history_image(team1_champs, team2_champs, team1_data, team2_data,
+                                                               team1_parties, team2_parties, (match_info + temp), color)
+                    file = discord.File(filename="TeamMatch.png", fp=buffer)
+                    await ctx.send("```sup```", file=file)
+                    return None
 
-        # If the match id could not be found
-        embed = discord.Embed(
-            description="Could not find a match with the match id: " + str(match_id),
-            colour=discord.colour.Color.dark_teal()
-        )
+            # If the match id could not be found
+            embed = discord.Embed(
+                description="Could not find a match with the match id: " + str(match_id),
+                colour=discord.colour.Color.dark_teal()
+            )
 
-        # If player has not played recently
-        if match_id == -1:
-            embed.description = "Player does not have recent match data."
+            # If player has not played recently
+            if match_id == -1:
+                embed.description = "Player does not have recent match data."
 
-        await ctx.send(embed=embed)
+            await ctx.send(embed=embed)
 
     # Returns simple match history details
     @commands.command(name='last')
@@ -783,7 +792,6 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             # match_queue_id = 469 = DTM
             # match_queue_id = 486 = Ranked (Invalid)
 
-            print(data.queueId)
             current_match_queue_id = data.queueId
 
             match_string = "Unknown match Type"

@@ -513,7 +513,7 @@ async def create_deck_image_old(player_name, champ_name, deck):
 
 
 # Creates a match image based on the two teams champions
-async def create_history_image(team1, team2, t1_data, t2_data, p1, p2, match_data):
+async def create_history_image(team1, team2, t1_data, t2_data, p1, p2, match_data, colored):
     shrink = 140
     image_size_y = 512 - shrink*2
     image_size_x = 512
@@ -521,14 +521,13 @@ async def create_history_image(team1, team2, t1_data, t2_data, p1, p2, match_dat
     history_image = Image.new('RGB', (image_size_x*9, image_size_y*12 + 264))
 
     # Adds the top key panel
-    key = await create_player_key_image(image_size_x, image_size_y, True)
+    key = await create_player_key_image(image_size_x, image_size_y, colored)
     history_image.paste(key, (0, 0))
 
     # Creates middle panel
     mid_panel = await create_middle_info_panel(match_data)
     history_image.paste(mid_panel, (0, 1392-40))
 
-    # """
     # Adding in player data
     for i, (champ, champ2) in enumerate(zip(team1, team2)):
         champ_url = await get_champ_image(champ)
@@ -537,10 +536,7 @@ async def create_history_image(team1, team2, t1_data, t2_data, p1, p2, match_dat
         border = (0, shrink, 0, shrink)  # left, up, right, bottom
         champ_image = ImageOps.crop(champ_image, border)
         # history_image.paste(champ_image, (0, image_size*i, image_size, image_size*(i+1)))
-        x, y = history_image.size
-        player_panel = await create_player_stats_image(champ_image, t1_data[i], i, p1)
-        x2, y2 = player_panel.size
-        print(x, x2, y, y2)
+        player_panel = await create_player_stats_image(champ_image, t1_data[i], i, p1, colored)
         history_image.paste(player_panel, (0, (image_size_y+10)*i+132))
 
         # Second team
@@ -550,10 +546,8 @@ async def create_history_image(team1, team2, t1_data, t2_data, p1, p2, match_dat
         border = (0, shrink, 0, shrink)  # left, up, right, bottom
         champ_image = ImageOps.crop(champ_image, border)
 
-        player_panel = await create_player_stats_image(champ_image, t2_data[i], i+offset-1, p2, True)
+        player_panel = await create_player_stats_image(champ_image, t2_data[i], i+offset-1, p2, colored)
         history_image.paste(player_panel, (0, image_size_y * (i+offset) + 704))
-    # """
-    # history_image.show()
 
     # Creates a buffer to store the image in
     final_buffer = BytesIO()
@@ -595,27 +589,40 @@ async def create_middle_info_panel(md):  # update this section
     # Right shift
     rs = 100
     # Team 1
-    draw_panel.text((512 * 4 + rs, 0), "Team 1", font=ImageFont.truetype("arial", 100), fill=(0, 0, 0))
-    draw_panel.text((512 * 4 + rs, 100), str(md[4]), font=ImageFont.truetype("arial", 100), fill=(0, 0, 0))
-    # Bans
-    champ_image = Image.open("icons/champ_icons/{}.png".format(await convert_champion_name(str(md[6]))))
-    champ_image = champ_image.resize((200, 200))
-    middle_panel.paste(champ_image, (512 * 4 + rs, 300))
+    draw_panel.text((512 * 4 + rs, ds), "Team 1 Score: ", font=ImageFont.truetype("arial", 100), fill=(0, 0, 0))
+    draw_panel.text((512 * 4 + rs * 8, ds), str(md[4]), font=ImageFont.truetype("arialbd", 100), fill=(0, 0, 0))
 
-    champ_image = Image.open("icons/champ_icons/{}.png".format(await convert_champion_name(str(md[7]))))
-    champ_image = champ_image.resize((256, 256))
-    middle_panel.paste(champ_image, (512 * 4 + rs+220, 244))
-    # draw_panel.text((512 * 4 + rs, 400), str(md[7]), font=ImageFont.truetype("arial", 100), fill=(0, 0, 0))
-
+    center = (512/2 - 130/2)
+    center2 = (512/2 - 80/2)
     # VS
-    draw_panel.text((512 * 5+80 + rs, 200), "VS", font=ImageFont.truetype("arialbd", 130), fill=(0, 0, 0))
+    draw_panel.text((512 * 5-150, center), "VS", font=ImageFont.truetype("arialbd", 130), fill=(0, 0, 0))
 
     # Team 2
-    draw_panel.text((512 * 6 + rs, 0), "Team 2", font=ImageFont.truetype("arial", 100), fill=(0, 0, 0))
-    draw_panel.text((512 * 6 + rs, 100), str(md[5]), font=ImageFont.truetype("arial", 100), fill=(0, 0, 0))
-    # Bans
-    draw_panel.text((512 * 6 + rs, 300), str(md[8]), font=ImageFont.truetype("arial", 100), fill=(0, 0, 0))
-    draw_panel.text((512 * 6 + rs, 400), str(md[9]), font=ImageFont.truetype("arial", 100), fill=(0, 0, 0))
+    draw_panel.text((512 * 4 + rs, 372), "Team 2 Score: ", font=ImageFont.truetype("arial", 100), fill=(0, 0, 0))
+    draw_panel.text((512 * 4 + rs * 8, 372), str(md[5]), font=ImageFont.truetype("arialbd", 100), fill=(0, 0, 0))
+
+    #  add in banned champs if it's a ranked match
+    if md[6] is not None:
+        # Ranked bans
+        draw_panel.text((512 * 5 + rs * 8, center2), "Bans:", font=ImageFont.truetype("arialbd", 80), fill=(0, 0, 0))
+
+        # Team 1 Bans
+        champ_image = Image.open("icons/champ_icons/{}.png".format(await convert_champion_name(str(md[6]))))
+        champ_image = champ_image.resize((200, 200))
+        middle_panel.paste(champ_image, (512 * 7 + rs, ds))
+
+        champ_image = Image.open("icons/champ_icons/{}.png".format(await convert_champion_name(str(md[7]))))
+        champ_image = champ_image.resize((200, 200))
+        middle_panel.paste(champ_image, (512 * 7 + rs + 240, ds))
+
+        # Team 2 Bans
+        champ_image = Image.open("icons/champ_icons/{}.png".format(await convert_champion_name(str(md[8]))))
+        champ_image = champ_image.resize((200, 200))
+        middle_panel.paste(champ_image, (512 * 7 + rs, ds+232))
+
+        champ_image = Image.open("icons/champ_icons/{}.png".format(await convert_champion_name(str(md[9]))))
+        champ_image = champ_image.resize((200, 200))
+        middle_panel.paste(champ_image, (512 * 7 + rs + 240, ds+232))
 
     return middle_panel
 

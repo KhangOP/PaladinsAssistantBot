@@ -611,7 +611,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 # handles if they provide the color option and no match id
                 try:
                     match_id = int(match_id)
-                except ValueError:
+                except BaseException:
                     colored = match_id
                     match_id = -1
 
@@ -658,7 +658,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                     buffer = await helper.create_history_image(team1_champs, team2_champs, team1_data, team2_data,
                                                                team1_parties, team2_parties, (match_info + temp), color)
                     file = discord.File(filename="TeamMatch.png", fp=buffer)
-                    await ctx.send("```sup```", file=file)
+                    await ctx.send("```You are an amazing person!```", file=file)
                     return None
 
             # If the match id could not be found

@@ -63,8 +63,9 @@ class HelpCog(commands.Cog, name="Help Commands"):
                              text="Bot created by FeistyJalapeno#9045.")
             # If you have questions, suggestions, found a bug, etc. feel free to DM me.")
             embed.add_field(name='help', value='Returns this message.', inline=False)
-            # embed.add_field(name='about', value='Returns more information about the bot.', inline=False)
-            embed.add_field(name='last', value='Returns stats for a player\'s last match.', inline=False)
+            embed.add_field(name='store', value='Stores a players IGN in Paladins for the bot to use.', inline=False)
+            embed.add_field(name='last', value='Returns stats for a player\'s match.', inline=False)
+            embed.add_field(name='match', value='Returns detailed stats for a player\'s match.', inline=False)
             embed.add_field(name='stats', value='Returns simple overall stats for a player.', inline=False)
             embed.add_field(name='random', value='Randomly chooses a map, champion, or team to help with '
                                                  'custom matches.', inline=False)
@@ -92,11 +93,34 @@ class HelpCog(commands.Cog, name="Help Commands"):
                     print("We have failed to message the help commands to the person.")
 
     @help.command()
+    async def store(self, ctx):
+        command_name = "store"
+        command_description = "Stores a players IGN in Paladins for the bot to use. Once this command is done a " \
+                              "player can type the word [me] instead of their name."
+        parameters = ["player_name"]
+        descriptions = ["Player's Paladins IGN"]
+        await ctx.send(embed=create_embed(command_name, command_description, parameters, descriptions))
+
+    @help.command()
     async def last(self, ctx):
         command_name = "last"
         command_description = "Returns stats for a player\'s last match."
-        parameters = ["player_name"]
-        descriptions = ["Player's Paladins IGN"]
+        parameters = ["player_name", "match_id"]
+        descriptions = ["Player's Paladins IGN", "The match id of the game. This can be found in game in Paladin's "
+                                                 "History tab or in this bots >>history command.\n[Optional parameter]:"
+                                                 " if not provide, defaults to most recent match"]
+        await ctx.send(embed=create_embed(command_name, command_description, parameters, descriptions))
+
+    @help.command()
+    async def match(self, ctx):
+        command_name = "match"
+        command_description = "Returns detailed stats for a player\'s match."
+        parameters = ["player_name", "match_id", "colored"]
+        descriptions = ["Player's Paladins IGN", "The match id of the game. This can be found in game in Paladin's "
+                                                 "History tab or in this bots >>history command.\n[Optional parameter]:"
+                                                 " if not provide, defaults to most recent match",
+                        "If someone wants the text to be colored in the image created by the command then they need to "
+                        "type [-c].\n[Optional parameter]: if not provide, defaults to black text"]
         await ctx.send(embed=create_embed(command_name, command_description, parameters, descriptions))
 
     @help.command()

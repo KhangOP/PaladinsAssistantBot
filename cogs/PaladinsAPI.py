@@ -591,6 +591,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             await ctx.send(embed=embed)
             return None
 
+        await helper.store_commands(ctx.author.id, "match")
         async with ctx.channel.typing():
             paladins_data = paladinsAPI.getMatchHistory(player_id)
             for match in paladins_data:

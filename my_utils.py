@@ -21,7 +21,7 @@ limits = "limits"
 current_uses_per_day = 4
 card_frames_dir = "icons/card_frames"
 
-command_list = ['last', 'stats', 'random', 'current', 'history']
+command_list = ['last', 'stats', 'random', 'current', 'history', 'deck', 'match']
 command_limits = ['current']
 
 
@@ -454,64 +454,6 @@ async def create_deck_image(player_name, champ_name, deck):
     return final_buffer
 
 
-# Creates a image desks
-async def create_deck_image_old(player_name, champ_name, deck):
-    image_size_xy = 256
-
-    card_image_x = 314
-    card_image_y = 479
-
-    # Champ icon image
-    champ_url = await get_champ_image(champ_name)
-    response = requests.get(champ_url)
-    champ_icon_image = Image.open(BytesIO(response.content))
-    champ_icon_image = champ_icon_image.resize((image_size_xy, image_size_xy))
-
-    # Main image
-    color = (0, 0, 0, 0)
-    deck_image = Image.new('RGBA', (card_image_x * 5, card_image_y*2), color=color)
-
-    deck_image.paste(champ_icon_image, (0, 0, image_size_xy, image_size_xy))
-
-    # Loop to add all the cards in
-    for i, card in enumerate(deck.cards):
-        card_m = str(card).split("(")
-        number = str(card_m[1]).split(")")[0]
-        info = [champ_name, card_m[0].strip(), number]
-
-        card_icon_url = await get_deck_cards_url(card_m[0].strip())
-        response = requests.get(card_icon_url)
-        try:
-            card_icon_image = Image.open(BytesIO(response.content))
-        except OSError:
-            card_icon_image = Image.open("icons/temp_card_art.png")
-
-        card_icon = await create_card_image(card_icon_image, info)
-
-        # box – The crop rectangle, as a (left, upper, right, lower)- tuple.
-        deck_image.paste(Image.open(card_icon), (card_image_x * i, image_size_xy, card_image_x * (i + 1),
-                                                 image_size_xy + card_image_y))
-
-    color = (255, 255, 255)
-
-    # Adding in other text on image
-    draw = ImageDraw.Draw(deck_image)
-    draw.text((image_size_xy, 0), str(player_name), color, font=ImageFont.truetype("arial", 64))
-    draw.text((image_size_xy, 64), str(champ_name), color, font=ImageFont.truetype("arial", 64))
-    draw.text((image_size_xy, 128), str(deck.deckName), color, font=ImageFont.truetype("arial", 64))
-
-    # Creates a buffer to store the image in
-    final_buffer = BytesIO()
-
-    # Store the pillow image we just created into the buffer with the PNG format
-    deck_image.save(final_buffer, "png")
-
-    # seek back to the start of the buffer stream
-    final_buffer.seek(0)
-
-    return final_buffer
-
-
 # Creates a match image based on the two teams champions
 async def create_history_image(team1, team2, t1_data, t2_data, p1, p2, match_data, colored):
     shrink = 140
@@ -742,6 +684,6 @@ class Lang:
             return "en"
 
 
-with open(Lang.file_name) as json_f:
+with open(Lang.file_name) as json_lang:
     print("Loaded server languages for lang class")
-    Lang.lan = json.load(json_f)
+    Lang.lan = json.load(json_lang)

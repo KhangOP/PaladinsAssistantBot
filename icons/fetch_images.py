@@ -1,4 +1,5 @@
 import requests
+import os
 from PIL import Image
 from io import BytesIO
 
@@ -11,9 +12,14 @@ champs = [ "androxus", "atlas", "ash", "barik", "bomb king", "buck", "cassie", "
 # Saves image from URL into a folder
 def save_image(image_url, folder, name):
     response = requests.get(image_url)
-    image = Image.open(BytesIO(response.content))
-    path = "{}/{}.png".format(folder, name)
-    image.save(path, "PNG")
+    try:
+        image = Image.open(BytesIO(response.content))
+        path = "{}/{}.png".format(folder, name)
+        exists = os.path.isfile(path)
+        if not exists:
+            image.save(path, "PNG")
+    except OSError:
+        print("Could not save {} as an image.".format(name))
 
 
 def save_champ_icons(name):
@@ -28,18 +34,20 @@ def save_champ_headers(name):
     print("Fetched champion header for: ", name)
 
 
+def save_champ_cards(name):
+    json_data = requests.get("https://cms.paladins.com/wp-json/wp/v2/champions?slug={}&lang_id=1"
+                             .format(name.replace(' ', '-')))
+
+    for card in json_data.json()[0].get("cards"):
+        card_name = card.get("card_name_english").lower().replace(' ', '-')
+        champ_card = "https://web2.hirez.com/paladins/champion-cards/{}.jpg".format(card_name)
+        save_image(champ_card, "champ_cards", card_name)
+        print("Fetched champion cards for: {}: {}".format(name, card_name))
+
+
 for champ in champs:
     champ_name = champ.replace(' ', '-')
 
-    save_champ_icons(champ_name)
-    save_champ_headers(champ_name)
-
-    # get and write champHeader on HD
-    """
-    json_data = requests.get("https://cms.paladins.com/wp-json/wp/v2/champions?slug={}&lang_id=1"
-                             .format(champ.replace(' ', '-')))
-
-    for card in json_data.json()[0].get("cards"):
-        cardImg = "https://web2.hirez.com/paladins/champion-cards/{}.jpg".format(card.get("card_name_english").lower().replace(' ', '-'))
-        # get and write cardImg on HD
-    """
+    # save_champ_icons(champ_name)
+    # save_champ_headers(champ_name)
+    # save_champ_cards(champ_name)

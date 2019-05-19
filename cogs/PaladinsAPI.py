@@ -207,7 +207,8 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         lose = int(ranked.losses)
         wr = await cls.calc_win_rate(win, win + lose)
         ss += ss1.format(str(ranked.currentSeason), cls.dashes, str(ranked.currentRank.getName()),
-                         str(ranked.currentTrumpPoints), str(ranked.leaderboardIndex), wr, win, lose, str(ranked.leaves))
+                         str(ranked.currentTrumpPoints), str(ranked.leaderboardIndex), wr, win, lose,
+                         str(ranked.leaves))
 
         # Extra info
         ss2 = "Extra details:\n{}\nAccount created on: {}\nLast login on: {}\nPlatform: {}\nMasteryLevel: {}\n" \
@@ -655,7 +656,6 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
                     # print("team1: " + str(team1_parties), "team2: " + str(team2_parties))
                     color = True if colored == "-c" else False
-
                     buffer = await helper.create_history_image(team1_champs, team2_champs, team1_data, team2_data,
                                                                team1_parties, team2_parties, (match_info + temp), color)
                     file = discord.File(filename="TeamMatch.png", fp=buffer)
@@ -934,7 +934,6 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 ss2 = ss2.format("Team2", str(int(team2_overall[1] / team2_overall[0])), str(team2_wr),
                                  str(round(team2_overall[3]/team2_overall[0], 2)))
                 match_data += ss2
-
             buffer = await helper.create_match_image(team1_champs, team2_champs, team1_ranks, team2_ranks)
             file = discord.File(filename="Team.png", fp=buffer)
             await ctx.send("```diff\n" + match_data + "```", file=file)

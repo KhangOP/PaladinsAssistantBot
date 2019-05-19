@@ -12,6 +12,13 @@ import re
 from concurrent.futures import ThreadPoolExecutor
 import asyncio
 
+"""
+start = time.time()
+"the code you want to test stays here"
+end = time.time()
+print(end - start)
+"""
+
 '''This file servers to provide helper functions that our used in more than one other program.'''
 
 
@@ -186,9 +193,7 @@ async def create_team_image(champ_list, ranks):
 
     for champ in champ_list:
         if champ != "?":  # and "Atlas" != champ:  # Temp fix
-            champ_url = await get_champ_image(champ)
-            response = requests.get(champ_url)
-            champion_images.append(Image.open(BytesIO(response.content)))
+            champion_images.append(Image.open("icons/champ_icons/{}.png".format(await convert_champion_name(champ))))
         else:
             image_size = 512
             base = Image.new('RGB', (image_size, image_size), "black")
@@ -409,10 +414,7 @@ async def create_deck_image(player_name, champ_name, deck):
     color = (0, 0, 0, 0)
     deck_image = Image.new('RGBA', (1570, 800), color=color)
 
-    # deck_image.paste(champ_icon_image, (0, 0, image_size_xy, image_size_xy))
-    response = requests.get("https://web2.hirez.com/paladins/champion-headers/{}.png"
-                            .format(await convert_champion_name(champ_name)))
-    champ_background = Image.open(BytesIO(response.content))
+    champ_background = Image.open("icons/champ_headers/{}.png".format(await convert_champion_name(champ_name)))
     champ_background = champ_background.resize((1570, 800), Image.ANTIALIAS)
     deck_image.paste(champ_background, (0, 0))
 
@@ -422,10 +424,8 @@ async def create_deck_image(player_name, champ_name, deck):
         number = str(card_m[1]).split(")")[0]
         info = [champ_name, card_m[0].strip(), number]
 
-        card_icon_url = await get_deck_cards_url(card_m[0].strip())
-        response = requests.get(card_icon_url)
         try:
-            card_icon_image = Image.open(BytesIO(response.content))
+            card_icon_image = Image.open("icons/champ_cards/{}.png".format(card_m[0].strip().lower().replace(" ", "-")))
         except OSError:
             card_icon_image = Image.open("icons/temp_card_art.png")
 
@@ -472,9 +472,7 @@ async def create_history_image(team1, team2, t1_data, t2_data, p1, p2, match_dat
 
     # Adding in player data
     for i, (champ, champ2) in enumerate(zip(team1, team2)):
-        champ_url = await get_champ_image(champ)
-        response = requests.get(champ_url)
-        champ_image = Image.open(BytesIO(response.content))
+        champ_image = Image.open("icons/champ_icons/{}.png".format(await convert_champion_name(champ)))
         border = (0, shrink, 0, shrink)  # left, up, right, bottom
         champ_image = ImageOps.crop(champ_image, border)
         # history_image.paste(champ_image, (0, image_size*i, image_size, image_size*(i+1)))
@@ -482,9 +480,7 @@ async def create_history_image(team1, team2, t1_data, t2_data, p1, p2, match_dat
         history_image.paste(player_panel, (0, (image_size_y+10)*i+132))
 
         # Second team
-        champ_url = await get_champ_image(champ2)
-        response = requests.get(champ_url)
-        champ_image = Image.open(BytesIO(response.content))
+        champ_image = Image.open("icons/champ_icons/{}.png".format(await convert_champion_name(champ2)))
         border = (0, shrink, 0, shrink)  # left, up, right, bottom
         champ_image = ImageOps.crop(champ_image, border)
 

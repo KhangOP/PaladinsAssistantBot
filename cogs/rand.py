@@ -38,8 +38,6 @@ class RandomCog(commands.Cog, name="Random Commands"):
         with open(self.file_name, encoding='utf-8') as json_f:
             print("Loaded random command language dictionary.")
             self.lang_dict = json.load(json_f)
-            # print(self.lang_dict)
-            # print(self.lang_dict["random_damage"]["en"])
 
     async def pick_random_champion(self):
         secure_random = random.SystemRandom()

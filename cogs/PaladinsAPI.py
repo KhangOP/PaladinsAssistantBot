@@ -183,7 +183,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
     # Uses Paladins API to get overall stats for a player
     @classmethod
-    async def get_player_stats_api(cls, player_name):
+    async def get_player_stats_api(cls, player_name):  # ToDo add in Polish translation
         # Player level, played hours, etc
         player_id = cls.get_player_id(player_name)
         if player_id == -1:
@@ -570,7 +570,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
     # Returns an image of a match with player details
     @commands.command(name='match')
-    @commands.cooldown(7, 30, commands.BucketType.user)
+    @commands.cooldown(2, 30, commands.BucketType.user)
     async def match(self, ctx, player_name, match_id=None, colored="-b"):
         if str(player_name) == "me":
             player_name = self.check_player_name(str(ctx.author.id))
@@ -706,8 +706,8 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
             if match_id == -1 or match_id == match.matchId:
                 match_data = str('{}\'s {} match:\n\n').format(str(player_name), str(match.mapName).replace("LIVE", ""))
-                ss = str('`Match Status: {} ({} mins)\nChampion: {}\nKDA: {} ({}-{}-{})\nDamage: {}\nDamage Taken: {}'
-                         '\nHealing: {}\nSelf Healing: {}\nObjective Time: {}\nShielding: {}`\n')
+                ss = str('`Match Status: {} ({} mins)\nChampion: {}\nKDA: {} ({}-{}-{})\nDamage: {:,}\nDamage Taken: '
+                         '{:,}\nHealing: {:,}\nSelf Healing: {:,}\nObjective Time: {}\nShielding: {:,}`\n')
                 kills = match.kills
                 deaths = match.deaths
                 assists = match.assists

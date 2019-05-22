@@ -213,7 +213,7 @@ def load_cogs():
         try:
             client.load_extension(extension)
             print("loaded extension:", extension)
-        except helper.MyException:
+        except BaseException:
             print("failed to load: ", extension)
 
 

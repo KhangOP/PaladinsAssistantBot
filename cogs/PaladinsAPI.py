@@ -27,6 +27,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
     def __init__(self, bot):
         self.bot = bot
+        self.load_lang()
 
     DAMAGES = ["Cassie", "Kinessa", "Drogoz", "Bomb King", "Viktor", "Sha Lin", "Tyra", "Willo", "Lian", "Strix",
                "Vivian", "Dredge", "Imani"]
@@ -37,6 +38,16 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     dashes = "----------------------------------------"
     player_id_error = "Can't find the player: {} or their account is private. Please make sure the name is spelled " \
                       "correctly (Capitalization does not matter)."
+
+    lang_dict = {}
+    file_name = "languages/paladins_api_lang_dict"
+
+    def load_lang(self):
+        # Loads in language dictionary (need encoding option so it does not mess up other languages)
+        with open(self.file_name, encoding='utf-8') as json_f:
+            print("Loaded language dictionary for PaladinsAPICog...")
+            self.lang_dict = json.load(json_f)
+            # print(self.lang_dict)
 
     # Returns a number for indexing in a list
     @classmethod
@@ -64,8 +75,8 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
     # Get the player id for a player based on their name. First it checks a dictionary and if they are not in there then
     # it does an API call to get the player's id. Then it writes that id to the dictionary. Helps save API calls.
-    @classmethod
-    def get_player_id(cls, player_name):
+    @staticmethod
+    def get_player_id(player_name):
         player_name = player_name.lower()
         with open("player_ids") as json_f:
             player_ids = json.load(json_f)
@@ -182,39 +193,36 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         return stats
 
     # Uses Paladins API to get overall stats for a player
-    @classmethod
-    async def get_player_stats_api(cls, player_name):  # ToDo add in Polish translation
+    async def get_player_stats_api(self, player_name, lang):  # ToDo add in Polish translation
         # Player level, played hours, etc
-        player_id = cls.get_player_id(player_name)
+        player_id = self.get_player_id(player_name)
         if player_id == -1:
-            return cls.player_id_error.format(player_name)
+            return self.player_id_error.format(player_name)
         try:
             info = paladinsAPI.getPlayer(player_id)
         except PlayerNotFound:
-            return cls.player_id_error.format(player_name)
+            return self.player_id_error.format(player_name)
 
         # Overall Info
-        ss = "Casual stats: \n{}\nName: {}\nAccount Level: {}\nWin Rate: {}% out of {} matches.\nTimes Deserted: {}\n\n"
+        ss = self.lang_dict["stats_s1"][lang]
         total = int(info.wins) + int(info.losses)
-        wr = await cls.calc_win_rate(int(info.wins), total)
-        ss = ss.format(cls.dashes, str(info.playerName), str(info.accountLevel), wr, str(total), str(info.leaves))
+        wr = await self.calc_win_rate(int(info.wins), total)
+        ss = ss.format(self.dashes, str(info.playerName), str(info.accountLevel), wr, str(total), str(info.leaves))
 
         # Ranked Info
-        ss1 = "Ranked stats for Season {}:\n{}\nRank: {}\nTP: {} (position: {})\nWin Rate: {}% ({}-{})\n" \
-              "Times Deserted: {}\n\n"
+        s2 = self.lang_dict["stats_s2"][lang]
         ranked = info.rankedKeyboard
         win = int(ranked.wins)
         lose = int(ranked.losses)
-        wr = await cls.calc_win_rate(win, win + lose)
-        ss += ss1.format(str(ranked.currentSeason), cls.dashes, str(ranked.currentRank.getName()),
-                         str(ranked.currentTrumpPoints), str(ranked.leaderboardIndex), wr, win, lose,
-                         str(ranked.leaves))
+        wr = await self.calc_win_rate(win, win + lose)
+        ss += s2.format(str(ranked.currentSeason), self.dashes, str(ranked.currentRank.getName()),
+                        str(ranked.currentTrumpPoints), str(ranked.leaderboardIndex), wr, win, lose,
+                        str(ranked.leaves))
 
         # Extra info
-        ss2 = "Extra details:\n{}\nAccount created on: {}\nLast login on: {}\nPlatform: {}\nMasteryLevel: {}\n" \
-              "Steam Achievements completed: {}/58"
-        ss += ss2.format(cls.dashes, str(info.createdDatetime).split()[0], str(info.lastLoginDatetime).split()[0],
-                         str(info.platform), str(info.playedGods), str(info.totalAchievements))
+        s3 = self.lang_dict["stats_s3"][lang]
+        ss += s3.format(self.dashes, str(info.createdDatetime).split()[0], str(info.lastLoginDatetime).split()[0],
+                        str(info.platform), str(info.playedGods), str(info.totalAchievements))
         return ss
 
     @classmethod
@@ -580,7 +588,6 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 return None
         else:
             pass
-        # await helper.store_commands(ctx.author.id, "match")
         player_id = self.get_player_id(player_name)
 
         if player_id == -1:
@@ -754,8 +761,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         value = -1
         if option == "-a":
             value = 1
-        # can_use = await helper.store_commands(ctx.author.id, "current", value)
-        can_use = True
+        can_use = await helper.store_commands(ctx.author.id, "current", value)
         async with ctx.channel.typing():
             # Data Format
             # {'Match': 795950194, 'match_queue_id': 452, 'personal_status_message': 0, 'ret_msg': 0, 'status': 3,
@@ -941,9 +947,11 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 await ctx.send("```diff\n" + player_champ_data + "```")
 
     # Returns simple stats based on the option they choose (champ_name, me, or elo)
-    @commands.command(name='stats', aliases=['stat'])
+    @commands.command(name='stats', aliases=['stat'])  # Todo add in Polish translation
     @commands.cooldown(3, 30, commands.BucketType.user)
     async def stats(self, ctx, player_name, option=None):
+        await helper.store_commands(ctx.author.id, "stats")
+        lang = await helper.Lang.check_language(ctx=ctx)
         # Maybe convert the player name
         if str(player_name) == "me":
             player_name = self.check_player_name(str(ctx.author.id))
@@ -953,7 +961,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 return None
 
         if option is None:
-            result = await self.get_player_stats_api(player_name)
+            result = await self.get_player_stats_api(player_name, lang=lang)
             await ctx.send("```md\n" + result + "```")
         elif option == "elo":
             await ctx.send("```Guru's site is currently under(as of 4/4/2019) development and until they finish "

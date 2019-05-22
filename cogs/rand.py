@@ -69,7 +69,7 @@ class RandomCog(commands.Cog, name="Random Commands"):
     @commands.command(name='rand', aliases=["random", "losuj"])
     @commands.cooldown(3, 30, commands.BucketType.user)
     async def rand(self, ctx, command):
-        # await helper.store_commands(ctx.author.id, "random")
+        await helper.store_commands(ctx.author.id, "random")
         lang = await helper.Lang.check_language(ctx=ctx)
         command = str(command).lower()
         embed = discord.Embed(

@@ -1,0 +1,17 @@
+{
+  "stats_s1": {
+    "en": "Casual stats: \n{}\nName: {}\nAccount Level: {}\nWin Rate: {}% out of {} matches.\nTimes Deserted: {}\n\n",
+    "pl": "Polish Translation",
+    "pt": ""
+  },
+  "stats_s2": {
+    "en": "Ranked stats for Season {}:\n{}\nRank: {}\nTP: {} (position: {})\nWin Rate: {}% ({}-{})\nTimes Deserted: {}\n\n",
+    "pl": "Polish Translation",
+    "pt": ""
+  },
+  "stats_s3": {
+    "en": "Extra details:\n{}\nAccount created on: {}\nLast login on: {}\nPlatform: {}\nMasteryLevel: {}\nSteam Achievements completed: {}/58",
+    "pl": "Polish Translation",
+    "pt": ""
+  }
+}

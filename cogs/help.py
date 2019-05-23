@@ -67,8 +67,8 @@ class HelpCog(commands.Cog, name="Help Commands"):
             embed.add_field(name='last', value='Returns stats for a player\'s match.', inline=False)
             embed.add_field(name='match', value='Returns detailed stats for a player\'s match.', inline=False)
             embed.add_field(name='stats', value='Returns simple overall stats for a player.', inline=False)
-            embed.add_field(name='random', value='Randomly chooses a map, champion, or team to help with '
-                                                 'custom matches.', inline=False)
+            embed.add_field(name='random', value='Allows user to generate a random siege map, champion, or team.'
+                                                 , inline=False)
             embed.add_field(name='current', value='Returns stats for a player\'s current match.', inline=False)
             embed.add_field(name='history', value='Returns simple stats for a player\'s last amount of matches.',
                             inline=False)
@@ -152,6 +152,22 @@ class HelpCog(commands.Cog, name="Help Commands"):
                       "2. <champion_name>: will return the player's stats on the name of the champion entered."
         # "3. <elo>: will return the player's Guru elo.\n" \
         descriptions = ["Player's Paladins IGN", long_string]
+        await ctx.send(embed=create_embed(command_name, command_description, parameters, descriptions))
+
+    @help.command()
+    async def random(self, ctx):
+        command_name = "stats"
+        command_description = "Allows user to generate a random siege map, champion, or team."
+        parameters = ["option"]
+        long_string = "can be one of the following: \n\n" \
+                      "1. <champ>: will return any champion in the game.\n" \
+                      "2. <damage>: will return a damage champion.\n" \
+                      "3. <healer>: will return a support champion.\n" \
+                      "4. <flank>: will return a flank champion.\n" \
+                      "5. <tank>: will return a tank champion.\n" \
+                      "6. <map>: will return a siege map.\n" \
+                      "7. <flank>: will return a flank champion.\n"
+        descriptions = [long_string]
         await ctx.send(embed=create_embed(command_name, command_description, parameters, descriptions))
 
     @help.command()

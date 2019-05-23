@@ -87,7 +87,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         else:
             try:
                 player = paladinsAPI.getPlayer(player_name)
-            except PlayerNotFound:
+            except BaseException:
                 return -1  # invalid name
             new_id = player.playerId
             player_ids[player_name] = new_id  # store the new id in the dictionary
@@ -174,19 +174,22 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
     # Gets KDA and Win Rate for a player from Guru
     @classmethod
-    async def get_global_kda(cls, player_name):
-        url = "http://nonsocial.herokuapp.com/api/kda?player=" + player_name
+    async def get_global_kda(cls, player_id):
+        url = "http://nonsocial.herokuapp.com/api/kda?player=" + str(player_id)
         soup = BeautifulSoup(requests.get(url, headers={'Connection': 'close'}).text, 'html.parser')
         soup = str(soup.get_text())
 
         # Error checking to make sure that the player was found on the site
         if 'ERROR' in soup:
-            error = [player_name, "???", "???", "???"]
+            error = ["Private Account", "???", "???", "???"]
             return error
 
-        level = soup.split("(Level ")[1].split(")")[0]          # level
+        split1 = soup.split("(Level ")
+
+        player_name = str(split1[0]).strip()                                 # Player Name
+        level = split1[1].split(")")[0]                         # Level
         kda = soup.split("- ")[1].split(" KDA")[0]              # KDA
-        win_rate = soup.split("Win rate: ")[1].split("%")[0]    # Win rate
+        win_rate = soup.split("Win rate: ")[1].split("%")[0]    # Win Rate
 
         stats = [player_name, level, win_rate, kda]
 
@@ -822,8 +825,8 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 players = paladinsAPI.getMatch(data.matchId, True)
             except BaseException as e:
                     await ctx.send("Please makes sure you use the current command on Siege, Ranked, Team Death Match, "
-                                   "or Ranked. Other match queues are not fully supported by Hi-Rez for getting. " +
-                                   str(e))
+                                   "or Ranked. Other match queues are not fully supported by Hi-Rez for getting stats.")
+                    # + str(e))
                     return None
             # print(players)
             team1 = []
@@ -837,7 +840,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             team2_overall = [0, 0, 0, 0]  # num, level, win rate, kda
 
             for player in players:
-                name = str(player.playerName)  # Some names are not strings (example: symbols, etc.)
+                name = int(player.playerId)
                 if int(player.taskForce) == 1:
                     team1.append(name)
                     team1_champs.append(player.godName)
@@ -885,7 +888,6 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             player_champ_data += "\n"
 
             for player, champ in zip(team2, team2_champs):
-                # print(get_global_kda(player))
                 pl = await self.get_global_kda(player)
                 ss = str('*{:18} Lv. {:3}  {:8}  {:6}\n')
                 ss = ss.format(pl[0], str(pl[1]), pl[2], pl[3])

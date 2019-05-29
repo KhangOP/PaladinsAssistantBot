@@ -77,7 +77,8 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     # it does an API call to get the player's id. Then it writes that id to the dictionary. Helps save API calls.
     @staticmethod
     def get_player_id(player_name):
-        player_name = player_name.lower()
+        if str(player_name).isnumeric():
+            return player_name
         with open("player_ids") as json_f:
             player_ids = json.load(json_f)
 
@@ -286,7 +287,12 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 colour=discord.colour.Color.dark_teal()
             )
             return embed
-        stats = paladinsAPI.getChampionRanks(player_id)
+        try:
+            stats = paladinsAPI.getChampionRanks(player_id)
+        except BaseException:
+            ss = str('*   {:15} Lv. {:3}  {:7}   {:6}\n')
+            ss = ss.format(champ, "???", "???", "???")
+            return ss
         if stats is None:  # Private account
             if simple == 1:
                 ss = str('*{:18} Lv. {:3}  {:7}   {:6}\n')
@@ -372,6 +378,26 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         return embed
 
     '''Commands below ############################################################'''
+    @commands.command(name='console', pass_context=True)
+    @commands.cooldown(2, 30, commands.BucketType.user)
+    async def console(self, ctx, player_name, platform, player_level=-1):
+        async with ctx.channel.typing():
+            if platform == "Xbox":
+                platform = "10"
+            elif platform == "PS4":
+                platform = "9"
+            elif platform == "Switch":
+                platform = "22"
+            else:
+                await ctx.send("```md\nInvalid platform name. Valid platform names are:\n1. Xbox\n2. PS4\n3. Switch```")
+                return None
+
+            players = paladinsAPI.getPlayerId(player_name, platform)
+            ss = ""
+            for player in players:
+                ss += str(player) + "\n"
+            await ctx.send(ss)
+
     @commands.command(name='deck', pass_context=True)
     @commands.cooldown(2, 30, commands.BucketType.user)
     async def deck(self, ctx, player_name, champ_name, deck_index=None):
@@ -765,6 +791,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         if option == "-a":
             value = 1
         can_use = await helper.store_commands(ctx.author.id, "current", value)
+        can_use = True
         async with ctx.channel.typing():
             # Data Format
             # {'Match': 795950194, 'match_queue_id': 452, 'personal_status_message': 0, 'ret_msg': 0, 'status': 3,

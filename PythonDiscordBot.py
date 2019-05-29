@@ -5,6 +5,7 @@ from discord.ext.commands import Bot
 import asyncio
 import random
 import json
+import traceback
 
 import my_utils as helper
 from cogs import PaladinsAPI
@@ -60,7 +61,7 @@ async def send_error(cont, msg):
 
 
 # Handles errors when a user messes up the spelling or forgets an argument to a command or an error occurs
-# """
+#"""
 @client.event
 async def on_command_error(ctx, error):
     if isinstance(error, commands.MissingRequiredArgument):
@@ -78,16 +79,24 @@ async def on_command_error(ctx, error):
         await send_error(cont=ctx, msg=error)
     elif isinstance(error, commands.CheckFailure):
         await send_error(cont=ctx, msg=error)
+    elif isinstance(error, ConnectionError):
+        await send_error(cont=ctx, msg="Connection to API error. Please try again.")
     else:
         global daily_error_count
         daily_error_count = daily_error_count + 1
         print("An uncaught error occurred: ", error)  # More error checking
+        error_file = str(await helper.get_est_time()).replace("/", "-").replace(" ", "_").replace(":", "-")
+        with open("error_logs/{}.csv".format(error_file), 'w+') as error_log_file:
+            error_trace = str(ctx.message.content) + "\n\n"
+            error_log_file.write(error_trace)
+            traceback.print_exception(type(error), error, error.__traceback__, file=error_log_file)
+
         msg = "Unfortunately, something messed up. If you entered the command correctly just wait a few seconds " \
               "and then try again. \n\n \N{CROSS MARK}"
         # " Please dm me the error or post this error in the error channel" \
         # "of the bot support server if the problem keeps happening:\n\n`" + str(error) + "`"
         await send_error(cont=ctx, msg=msg)
-# """
+#"""
 
 
 # We can use this code to track when people message this bot (a.k.a asking it commands)
@@ -159,7 +168,7 @@ async def log_information():
                                                                    daily_command_count, api_calls, date))
         daily_command_count = 0
         daily_error_count = 0
-        print("Logged commands and server count.")
+        print("Logged commands and server count: {}".format(await helper.get_est_time()))
         await asyncio.sleep(60*60)  # Log information every hour
 
 

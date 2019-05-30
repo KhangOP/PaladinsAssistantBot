@@ -674,7 +674,7 @@ class Lang:
     @classmethod
     async def check_language(cls, ctx):
         guild_id = str(ctx.guild.id)
-        if guild_id in cls.lan:
+        if guild_id in cls.lan and "lang" in cls.lan[guild_id]:
             return cls.lan[guild_id]["lang"]
         else:  # default
             return "en"

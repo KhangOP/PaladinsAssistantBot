@@ -75,7 +75,7 @@ class SoloCommandCog(commands.Cog, name="Solo Commands"):
             elif language == "reset":
                 with open(self.file_name) as json_f:
                     server_ids = json.load(json_f)
-                    server_ids.pop(str(ctx.guild.id), None)
+                    server_ids[str(ctx.guild.id)].pop("lang", None)
                 # need to update the file now
                 with open(self.file_name, 'w') as json_d:
                     json.dump(server_ids, json_d)
@@ -87,7 +87,7 @@ class SoloCommandCog(commands.Cog, name="Solo Commands"):
                 for abbr, lang, in zip(self.abbreviations, self.languages):
                     lines += "`" + abbr + ":` " + lang + "\n"
                 await ctx.send("You entered an invalid language. The available languages are: \n" + lines +
-                               "`reset: Resets the bot to use English"
+                               "`reset:` Resets the bot to use English"
                                "\nNote that by default the language is English so there is no need to set it to that.")
             # print(ctx.channel.id, ctx.guild.id)
             # print("This server's id is:" + str(ctx.guild.id))
@@ -96,11 +96,11 @@ class SoloCommandCog(commands.Cog, name="Solo Commands"):
     @commands.command(name='check')
     async def check_server_language(self, ctx):
         guild_id = str(ctx.guild.id)
-        if guild_id in self.lan:
-            await ctx.send("this servers language is: " + self.lan[guild_id]["lang"])
+        if guild_id in self.lan and "lang" in self.lan[guild_id]:
+            await ctx.send("This server's language is: " + self.lan[guild_id]["lang"])
             return self.lan[guild_id]["lang"]
         else:
-            await ctx.send("this servers language is English")
+            await ctx.send("This server's language is English")
             return "English"
 
     # Print how many times a person has used each command

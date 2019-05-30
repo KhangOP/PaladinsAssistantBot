@@ -61,7 +61,7 @@ async def send_error(cont, msg):
 
 
 # Handles errors when a user messes up the spelling or forgets an argument to a command or an error occurs
-#"""
+# """
 @client.event
 async def on_command_error(ctx, error):
     if isinstance(error, commands.MissingRequiredArgument):
@@ -96,7 +96,7 @@ async def on_command_error(ctx, error):
         # " Please dm me the error or post this error in the error channel" \
         # "of the bot support server if the problem keeps happening:\n\n`" + str(error) + "`"
         await send_error(cont=ctx, msg=msg)
-#"""
+# """
 
 
 # We can use this code to track when people message this bot (a.k.a asking it commands)

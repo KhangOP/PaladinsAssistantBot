@@ -1,0 +1,41 @@
+>>stats me
+
+Traceback (most recent call last):
+  File "C:\Users\Ethan\Anaconda3\envs\Rewrite\lib\site-packages\discord\ext\commands\core.py", line 63, in wrapped
+    ret = await coro(*args, **kwargs)
+  File "F:\PaladinsAssistantBot\cogs\PaladinsAPI.py", line 994, in stats
+    await ctx.send("```md\n" + result + "```")
+  File "C:\Users\Ethan\Anaconda3\envs\Rewrite\lib\site-packages\discord\abc.py", line 772, in send
+    data = await state.http.send_message(channel.id, content, tts=tts, embed=embed, nonce=nonce)
+  File "C:\Users\Ethan\Anaconda3\envs\Rewrite\lib\site-packages\discord\http.py", line 154, in request
+    async with self._session.request(method, url, **kwargs) as r:
+  File "C:\Users\Ethan\Anaconda3\envs\Rewrite\lib\site-packages\aiohttp\client.py", line 692, in __aenter__
+    self._resp = yield from self._coro
+  File "C:\Users\Ethan\Anaconda3\envs\Rewrite\lib\site-packages\aiohttp\client.py", line 269, in _request
+    conn = yield from self._connector.connect(req)
+  File "C:\Users\Ethan\Anaconda3\envs\Rewrite\lib\site-packages\aiohttp\connector.py", line 392, in connect
+    proto = yield from self._create_connection(req)
+  File "C:\Users\Ethan\Anaconda3\envs\Rewrite\lib\site-packages\aiohttp\connector.py", line 737, in _create_connection
+    _, proto = yield from self._create_direct_connection(req)
+  File "C:\Users\Ethan\Anaconda3\envs\Rewrite\lib\site-packages\aiohttp\connector.py", line 785, in _create_direct_connection
+    hosts = yield from self._resolve_host(req.url.raw_host, req.port)
+  File "C:\Users\Ethan\Anaconda3\envs\Rewrite\lib\site-packages\aiohttp\connector.py", line 715, in _resolve_host
+    loop=self._loop)
+  File "C:\Users\Ethan\Anaconda3\envs\Rewrite\lib\site-packages\aiohttp\resolver.py", line 31, in resolve
+    host, port, type=socket.SOCK_STREAM, family=family)
+  File "C:\Users\Ethan\Anaconda3\envs\Rewrite\lib\concurrent\futures\thread.py", line 56, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "C:\Users\Ethan\Anaconda3\envs\Rewrite\lib\socket.py", line 745, in getaddrinfo
+    for res in _socket.getaddrinfo(host, port, family, type, proto, flags):
+socket.gaierror: [Errno 11001] getaddrinfo failed
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\Ethan\Anaconda3\envs\Rewrite\lib\site-packages\discord\ext\commands\bot.py", line 814, in invoke
+    await ctx.command.invoke(ctx)
+  File "C:\Users\Ethan\Anaconda3\envs\Rewrite\lib\site-packages\discord\ext\commands\core.py", line 683, in invoke
+    await injected(*ctx.args, **ctx.kwargs)
+  File "C:\Users\Ethan\Anaconda3\envs\Rewrite\lib\site-packages\discord\ext\commands\core.py", line 72, in wrapped
+    raise CommandInvokeError(exc) from exc
+discord.ext.commands.errors.CommandInvokeError: Command raised an exception: gaierror: [Errno 11001] getaddrinfo failed

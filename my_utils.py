@@ -504,7 +504,7 @@ async def create_middle_info_panel(md):  # update this section
 
     # Adding in map to image
     map_name = map_file_name = (md[3].strip().replace("Ranked ", "").replace(" (TDM)", "").replace(" (Onslaught)", "")
-                                .replace(" (Siege)", ""))
+                                .replace(" (Siege)", "")).replace("Practice ", "")
     if "WIP" in map_name:
         map_file_name = "test_maps"
         map_name = map_name.replace("WIP ", "")

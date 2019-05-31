@@ -324,10 +324,10 @@ champ = "barik"
 print(get_champ_stats_my_paladins(player_name, champ))
 
 '''
-@client.command(name='test',
+@client.command(name='placeholder',
                 pass_context=True,
                 aliases=['t'])
-async def test(ctx):
+async def placeholder(ctx):
     """
     embed = discord.Embed(
         colour=discord.colour.Color.dark_teal()

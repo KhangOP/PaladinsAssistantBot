@@ -7,7 +7,6 @@ import my_utils as helper
 from pyrez.api import PaladinsAPI
 from pyrez.exceptions import PlayerNotFound
 import json
-import time
 
 file_name = "token"
 # Gets ID and KEY from a file
@@ -378,26 +377,6 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         return embed
 
     '''Commands below ############################################################'''
-    @commands.command(name='console', pass_context=True)
-    @commands.cooldown(2, 30, commands.BucketType.user)
-    async def console(self, ctx, player_name, platform, player_level=-1):
-        async with ctx.channel.typing():
-            if platform == "Xbox":
-                platform = "10"
-            elif platform == "PS4":
-                platform = "9"
-            elif platform == "Switch":
-                platform = "22"
-            else:
-                await ctx.send("```md\nInvalid platform name. Valid platform names are:\n1. Xbox\n2. PS4\n3. Switch```")
-                return None
-
-            players = paladinsAPI.getPlayerId(player_name, platform)
-            ss = ""
-            for player in players:
-                ss += str(player) + "\n"
-            await ctx.send(ss)
-
     @commands.command(name='deck', pass_context=True)
     @commands.cooldown(2, 30, commands.BucketType.user)
     async def deck(self, ctx, player_name, champ_name, deck_index=None):
@@ -791,7 +770,6 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         if option == "-a":
             value = 1
         can_use = await helper.store_commands(ctx.author.id, "current", value)
-        can_use = True
         async with ctx.channel.typing():
             # Data Format
             # {'Match': 795950194, 'match_queue_id': 452, 'personal_status_message': 0, 'ret_msg': 0, 'status': 3,
@@ -850,7 +828,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             # 'playerName': 'NabbitOW', 'ret_msg': None, 'taskForce': 1, 'tierLosses': 0, 'tierWins': 0}
             try:
                 players = paladinsAPI.getMatch(data.matchId, True)
-            except BaseException as e:
+            except BaseException:
                     await ctx.send("Please makes sure you use the current command on Siege, Ranked, Team Death Match, "
                                    "or Ranked. Other match queues are not fully supported by Hi-Rez for getting stats.")
                     # + str(e))

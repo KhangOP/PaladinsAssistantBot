@@ -283,7 +283,7 @@ def get_player_in_match(player_name):
         return "Player is in lobby."
     elif j['status'] == 2:
         return "Player in champion selection."
-    # Need to test for champ banning and selection
+    # Need to placeholder for champ banning and selection
     # print(match_id)
 
     # ValueError: 2509 is not a valid Champions (Imani)

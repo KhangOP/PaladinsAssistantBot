@@ -6,6 +6,7 @@ import asyncio
 import random
 import json
 import traceback
+from socket import gaierror
 
 import my_utils as helper
 from cogs import PaladinsAPI
@@ -64,6 +65,22 @@ async def send_error(cont, msg):
 # """
 @client.event
 async def on_command_error(ctx, error):
+    # checks for non-discord command related errors
+    if hasattr(error, "original"):
+        if isinstance(error.original, ConnectionError):
+            await send_error(cont=ctx, msg="Connection to API error. Please try again.")
+            return None
+        elif isinstance(error.original, TimeoutError):
+            await send_error(cont=ctx, msg="Connection to API error. Please try again.")
+            return None
+        elif isinstance(error.original, gaierror):
+            await send_error(cont=ctx, msg="Connection to API error. Please try again.")
+            return None
+        elif isinstance(error.original, ValueError):
+            await send_error(cont=ctx, msg="Well that's embarrassing...try again.")
+            return None
+
+    # Checks for discord command errors
     if isinstance(error, commands.MissingRequiredArgument):
         await send_error(cont=ctx, msg="A required argument to the command you called is missing"+"\N{CROSS MARK}")
     elif isinstance(error, commands.BadArgument):  # This should do nothing since I check in functions for input error
@@ -79,8 +96,6 @@ async def on_command_error(ctx, error):
         await send_error(cont=ctx, msg=error)
     elif isinstance(error, commands.CheckFailure):
         await send_error(cont=ctx, msg=error)
-    elif isinstance(error, ConnectionError):
-        await send_error(cont=ctx, msg="Connection to API error. Please try again.")
     else:
         global daily_error_count
         daily_error_count = daily_error_count + 1
@@ -91,10 +106,9 @@ async def on_command_error(ctx, error):
             error_log_file.write(error_trace)
             traceback.print_exception(type(error), error, error.__traceback__, file=error_log_file)
 
-        msg = "Unfortunately, something messed up. If you entered the command correctly just wait a few seconds " \
-              "and then try again. \n\n \N{CROSS MARK}"
-        # " Please dm me the error or post this error in the error channel" \
-        # "of the bot support server if the problem keeps happening:\n\n`" + str(error) + "`"
+        msg = "Unfortunately, something really messed up. If you entered the command correctly just wait a few seconds"\
+              "and then try again. If the problem occurs again it is most likely a bug that will need be fixed." \
+              "\n\n \N{CROSS MARK}"
         await send_error(cont=ctx, msg=msg)
 # """
 

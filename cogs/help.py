@@ -67,16 +67,16 @@ class HelpCog(commands.Cog, name="Help Commands"):
             embed.add_field(name='last', value='Returns stats for a player\'s match.', inline=False)
             embed.add_field(name='match', value='Returns detailed stats for a player\'s match.', inline=False)
             embed.add_field(name='stats', value='Returns simple overall stats for a player.', inline=False)
-            embed.add_field(name='random', value='Allows user to generate a random siege map, champion, or team.'
-                                                 , inline=False)
+            embed.add_field(name='random', value='Allows user to generate a random siege map, champion, or team.',
+                            inline=False)
             embed.add_field(name='current', value='Returns stats for a player\'s current match.', inline=False)
             embed.add_field(name='history', value='Returns simple stats for a player\'s last amount of matches.',
                             inline=False)
             embed.add_field(name='deck', value='Prints out all the decks a player has for a champion. If an a number is'
                                                'given after the character name then an image will be created of that '
                                                'deck.', inline=False)
-            embed.add_field(name='usage', value='Returns how many times you have used commands for this bot in the form'
-                                                'of a pie-chart.', inline=False)
+            embed.add_field(name='usage', value='Returns how many times you have used commands for this bot.',
+                            inline=False)
             embed.add_field(name='prefix', value='Lets the server owner change the prefix of the bot.',
                             inline=False)
             embed.add_field(name='language', value='Lets the server owner change the language the bot uses.',
@@ -187,7 +187,7 @@ class HelpCog(commands.Cog, name="Help Commands"):
     @help.command()
     async def usage(self, ctx):
         command_name = "usage"
-        command_description = "Returns how many times you have used commands for this bot in the form of a pie-chart."
+        command_description = "Returns how many times you have used commands for this bot."
         parameters = ["None"]
         descriptions = ["Parameterless command"]
         await ctx.send(embed=create_embed(command_name, command_description, parameters, descriptions))

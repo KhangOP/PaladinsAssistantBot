@@ -14,7 +14,7 @@ import asyncio
 
 """
 start = time.time()
-"the code you want to test stays here"
+"the code you want to placeholder stays here"
 end = time.time()
 print(end - start)
 """
@@ -673,6 +673,8 @@ class Lang:
 
     @classmethod
     async def check_language(cls, ctx):
+        if ctx.guild is None:  # DM to the bot will not have guild.id
+            return "en"
         guild_id = str(ctx.guild.id)
         if guild_id in cls.lan and "lang" in cls.lan[guild_id]:
             return cls.lan[guild_id]["lang"]

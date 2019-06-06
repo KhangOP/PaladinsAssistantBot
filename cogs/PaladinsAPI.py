@@ -377,6 +377,102 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         return embed
 
     '''Commands below ############################################################'''
+    @commands.command(name='top', pass_context=True)
+    @commands.cooldown(2, 30, commands.BucketType.user)
+    # Gets stats for a champ using Paladins API
+    async def top(self, ctx, player_name, option, amount=3, order="False"):
+        if str(player_name) == "me":
+            player_name = self.check_player_name(str(ctx.author.id))
+            if player_name == "None":
+                await ctx.send("You have not stored your IGN yet. To do so please use the store command like so: "
+                               "`>>store Paladins_IGN`")
+                return None
+        await helper.store_commands(ctx.author.id, "top")
+        # get amount and decide if its a number or they left it blank
+        if int(amount) < 3 or int(amount) > 10:
+            await ctx.send("```md\n Invalid amount. Amount must be between 3 and 10.```")
+            amount = 3
+
+        # Gets player id and error checks
+        player_id = self.get_player_id(player_name)
+        if player_id == -1:
+            match_data = self.player_id_error.format(player_name)
+            embed = discord.Embed(
+                description=match_data,
+                colour=discord.colour.Color.dark_teal()
+            )
+            return embed
+        try:
+            stats = paladinsAPI.getChampionRanks(player_id)
+        except BaseException:
+            match_data = "Can't get stats for {} because their account is private.".format(player_name)
+            embed = discord.Embed(
+                description=match_data,
+                colour=discord.colour.Color.dark_teal()
+            )
+            return embed
+        if stats is None:  # Private account
+            match_data = "Can't get stats for {} because their account is private.".format(player_name)
+            embed = discord.Embed(
+                description=match_data,
+                colour=discord.colour.Color.dark_teal()
+            )
+            return embed
+
+        player_champion_data = []
+        count = 0
+
+        for stat in stats:
+            count += 1
+            wins = stat.wins
+            losses = stat.losses
+            kda = await self.calc_kda(stat.kills, stat.deaths, stat.assists)
+
+            # champ we want to get the stats on
+            win_rate = await self.calc_win_rate(wins, wins + losses)
+            level = stat.godLevel
+
+            last_played = str(stat.lastPlayed)
+            if not last_played:  # Bought the champ but never played them
+                break
+
+            player_champion_data.append([stat.godName, level, kda, win_rate, wins + losses, stat.json['Minutes']])
+
+        # Convert option
+        ordering = False if order == "low" else True
+
+        # Converts key word to index in list
+        index = {
+            "level": 1,
+            "kda": 2,
+            "wl": 3,
+            "matches": 4,
+            "time": 5,
+        }.get(option.lower(), -1)
+        if index == -1:
+            await ctx.send("```md\n Invalid option. Valid options are:\n1. {}\n2. {}\n3. {}\n4. {}\n5. {}```"
+                           .format("Level", "KDA", "WL", "Matches", "Time"))
+            return None
+
+        player_champion_data = sorted(player_champion_data, key=lambda x: x[index], reverse=ordering)
+        message = "{:15}    {:7} {:6} {:10} {:9} {:6}\n{}\n"\
+            .format("Champion", "Level", "KDA", "Win Rate", "Matches", "Time(mins.)",
+                    "------------------------------------------------------------------")
+
+        for i, champ in enumerate(player_champion_data, start=0):
+            if i == int(amount):
+                break
+            champ = [str(j) for j in champ]  # convert all elements to string to make formatting easier
+            hours = int(int(champ[5]) / 60)
+            minutes = int(champ[5]) % 60
+            champ[5] = "{}h {}m".format(hours, minutes)
+            if i == 9:
+                message += "{}. {:15}{:7} {:6} {:10} {:9} {:6}\n".format(i + 1, *champ)
+            else:
+                message += "{}.  {:15}{:7} {:6} {:10} {:9} {:6}\n".format(i + 1, *champ)
+
+        await ctx.send("```md\n" + message + "```")
+
     @commands.command(name='deck', pass_context=True)
     @commands.cooldown(2, 30, commands.BucketType.user)
     async def deck(self, ctx, player_name, champ_name, deck_index=None):
@@ -386,8 +482,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 await ctx.send("You have not stored your IGN yet. To do so please use the store command like so: "
                                "`>>store Paladins_IGN`")
                 return None
-        else:
-            pass
+
         await helper.store_commands(ctx.author.id, "deck")
         async with ctx.channel.typing():
             player_id = self.get_player_id(player_name)
@@ -594,8 +689,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 await ctx.send("You have not stored your IGN yet. To do so please use the store command like so: "
                                "`>>store Paladins_IGN`")
                 return None
-        else:
-            pass
+
         player_id = self.get_player_id(player_name)
 
         if player_id == -1:
@@ -699,8 +793,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 await ctx.send("You have not stored your IGN yet. To do so please use the store command like so: "
                                "`>>store Paladins_IGN`")
                 return None
-        else:
-            pass
+
         await helper.store_commands(ctx.author.id, "last")
         player_id = self.get_player_id(player_name)
 

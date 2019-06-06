@@ -76,9 +76,6 @@ async def on_command_error(ctx, error):
         elif isinstance(error.original, gaierror):
             await send_error(cont=ctx, msg="Connection to API error. Please try again.")
             return None
-        elif isinstance(error.original, ValueError):
-            await send_error(cont=ctx, msg="Well that's embarrassing...try again.")
-            return None
 
     # Checks for discord command errors
     if isinstance(error, commands.MissingRequiredArgument):

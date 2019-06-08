@@ -3,6 +3,7 @@ from discord.ext import commands
 from bs4 import BeautifulSoup
 import requests
 import my_utils as helper
+from datetime import datetime; datetime.now
 
 from pyrez.api import PaladinsAPI
 from pyrez.exceptions import PlayerNotFound
@@ -17,7 +18,14 @@ with open(file_name, 'r') as f:
     KEY = f.readline()
 f.close()
 
+
+def session_created(session):
+    print("New sessionID: {}".format(session))
+    print("Timestamp: {}".format(datetime.now()))
+
+
 paladinsAPI = PaladinsAPI(devId=ID, authKey=KEY)
+paladinsAPI.onSessionCreated += session_created
 
 
 # All functions in this class use Pyrez wrapper to access Paladins API
@@ -380,7 +388,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     @commands.command(name='top', pass_context=True)
     @commands.cooldown(2, 30, commands.BucketType.user)
     # Gets stats for a champ using Paladins API
-    async def top(self, ctx, player_name, option, amount=3, order="False"):
+    async def top(self, ctx, player_name, option, order="False"):
         if str(player_name) == "me":
             player_name = self.check_player_name(str(ctx.author.id))
             if player_name == "None":
@@ -388,10 +396,6 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                                "`>>store Paladins_IGN`")
                 return None
         await helper.store_commands(ctx.author.id, "top")
-        # get amount and decide if its a number or they left it blank
-        if int(amount) < 3 or int(amount) > 10:
-            await ctx.send("```md\n Invalid amount. Amount must be between 3 and 10.```")
-            amount = 3
 
         # Gets player id and error checks
         player_id = self.get_player_id(player_name)
@@ -460,7 +464,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                     "------------------------------------------------------------------")
 
         for i, champ in enumerate(player_champion_data, start=0):
-            if i == int(amount):
+            if i == 10:
                 break
             champ = [str(j) for j in champ]  # convert all elements to string to make formatting easier
             hours = int(int(champ[5]) / 60)

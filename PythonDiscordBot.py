@@ -7,6 +7,7 @@ import random
 import json
 import traceback
 from socket import gaierror
+import requests
 
 import my_utils as helper
 from cogs import PaladinsAPI
@@ -51,12 +52,15 @@ client.remove_command('help')  # Removing default help command.
 # Bot tries to message the error in the channel where its caused and then tries to dm the error to the user
 @client.event
 async def send_error(cont, msg):
+    error_msg = "```diff\n- {}```".format(msg)
     try:  # First lets try to send the message to the channel the command was called
-        await cont.send(msg)
+        await cont.send(error_msg)
+        print("---" + msg)
     except BaseException:
         try:  # Next lets try to DM the message to the user
-            # await client.send_message(cont.message.author, msg)
-            await cont.send(msg)
+            author = cont.message.author
+            await author.send(error_msg)
+            print("---" + msg)
         except BaseException:  # Bad sign if we end up here but is possible if the user blocks some DM's
             print("The bot can't message the user in their DM's or in the channel they called the function.")
 
@@ -67,7 +71,10 @@ async def send_error(cont, msg):
 async def on_command_error(ctx, error):
     # checks for non-discord command related errors
     if hasattr(error, "original"):
-        if isinstance(error.original, ConnectionError):
+        if isinstance(error.original, requests.exceptions.RequestException):
+            await send_error(cont=ctx, msg="Connection to API error. Please try again.")
+            return None
+        elif isinstance(error.original, ConnectionError):
             await send_error(cont=ctx, msg="Connection to API error. Please try again.")
             return None
         elif isinstance(error.original, TimeoutError):
@@ -76,11 +83,16 @@ async def on_command_error(ctx, error):
         elif isinstance(error.original, gaierror):
             await send_error(cont=ctx, msg="Connection to API error. Please try again.")
             return None
+        elif isinstance(error.original, discord.Forbidden):
+            await send_error(cont=ctx, msg="The bot does not have permission to send messages in the channel:\n{}"
+                                           "\n\n- where "
+                                           "you just called the command:\n{}".format(ctx.channel, ctx.message.content))
+            return None
 
     # Checks for discord command errors
     if isinstance(error, commands.MissingRequiredArgument):
-        await send_error(cont=ctx, msg="A required argument to the command you called is missing"+"\N{CROSS MARK}")
-    elif isinstance(error, commands.BadArgument):  # This should do nothing since I check in functions for input error
+        await send_error(cont=ctx, msg="A required argument to the command you called is missing.")
+    elif isinstance(error, commands.BadArgument):
         await send_error(cont=ctx, msg="Make sure the command is in the correct format.")
     elif isinstance(error, commands.CommandNotFound):
         msg = f"\N{WARNING SIGN} {error}"
@@ -98,14 +110,13 @@ async def on_command_error(ctx, error):
         daily_error_count = daily_error_count + 1
         print("An uncaught error occurred: ", error)  # More error checking
         error_file = str(await helper.get_est_time()).replace("/", "-").replace(" ", "_").replace(":", "-")
-        with open("error_logs/{}.csv".format(error_file), 'w+') as error_log_file:
+        with open("error_logs/{}.csv".format(error_file), 'w+', encoding="utf-8") as error_log_file:
             error_trace = str(ctx.message.content) + "\n\n"
             error_log_file.write(error_trace)
             traceback.print_exception(type(error), error, error.__traceback__, file=error_log_file)
 
         msg = "Unfortunately, something really messed up. If you entered the command correctly just wait a few seconds"\
-              "and then try again. If the problem occurs again it is most likely a bug that will need be fixed." \
-              "\n\n \N{CROSS MARK}"
+              " and then try again. If the problem occurs again it is most likely a bug that will need be fixed."
         await send_error(cont=ctx, msg=msg)
 # """
 
@@ -130,7 +141,7 @@ async def on_message(message):
             await message.channel.send(msg)
         except BaseException:
             try:    # Next lets try to DM the message to the user
-                await message.channel.send(msg)
+                await message.author.send(msg)
             except BaseException:  # Bad sign if we end up here but is possible if the user blocks some DM's
                 print("The bot can't message the user in their DM's or in the channel they called the function.")
 
@@ -233,8 +244,8 @@ def load_cogs():
         try:
             client.load_extension(extension)
             print("loaded extension:", extension)
-        except BaseException:
-            print("failed to load: ", extension)
+        except BaseException as e:
+            print("failed to load: {} because of {}".format(extension, e))
 
 
 load_cogs()

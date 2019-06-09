@@ -204,7 +204,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         return stats
 
     # Uses Paladins API to get overall stats for a player
-    async def get_player_stats_api(self, player_name, lang):  # ToDo add in Polish translation
+    async def get_player_stats_api(self, player_name, lang):
         # Player level, played hours, etc
         player_id = self.get_player_id(player_name)
         if player_id == -1:
@@ -220,6 +220,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         wr = await self.calc_win_rate(int(info.wins), total)
         ss = ss.format(self.dashes, str(info.playerName), str(info.accountLevel), wr, str(total), str(info.leaves))
 
+        # info.platform  # ToDo Update Ranked info for platform base
         # Ranked Info
         s2 = self.lang_dict["stats_s2"][lang]
         ranked = info.rankedKeyboard
@@ -1051,7 +1052,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 await ctx.send("```diff\n" + player_champ_data + "```")
 
     # Returns simple stats based on the option they choose (champ_name, me, or elo)
-    @commands.command(name='stats', aliases=['stat'])  # Todo add in Polish translation
+    @commands.command(name='stats', aliases=['stat'])
     @commands.cooldown(3, 30, commands.BucketType.user)
     async def stats(self, ctx, player_name, option=None):
         await helper.store_commands(ctx.author.id, "stats")

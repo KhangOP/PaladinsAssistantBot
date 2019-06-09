@@ -508,7 +508,13 @@ async def create_middle_info_panel(md):  # update this section
     if "WIP" in map_name:
         map_file_name = "test_maps"
         map_name = map_name.replace("WIP ", "")
-    match_map = Image.open("icons/maps/{}.png".format(map_file_name.lower().replace(" ", "_").replace("'", "")))
+
+    # Needed to catch weird-unknown map modes
+    try:
+        match_map = Image.open("icons/maps/{}.png".format(map_file_name.lower().replace(" ", "_").replace("'", "")))
+    except FileNotFoundError:
+        match_map = Image.open("icons/maps/test_maps.png")
+
     match_map = match_map.resize((512*2, 512), Image.ANTIALIAS)
     middle_panel.paste(match_map, (0, 0))
 
@@ -545,22 +551,34 @@ async def create_middle_info_panel(md):  # update this section
         draw_panel.text((512 * 5 + rs * 8, center2), "Bans:", font=ImageFont.truetype("arialbd", 80), fill=(0, 0, 0))
 
         # Team 1 Bans
-        champ_image = Image.open("icons/champ_icons/{}.png".format(await convert_champion_name(str(md[6]))))
-        champ_image = champ_image.resize((200, 200))
-        middle_panel.paste(champ_image, (512 * 7 + rs, ds))
+        try:
+            champ_image = Image.open("icons/champ_icons/{}.png".format(await convert_champion_name(str(md[6]))))
+            champ_image = champ_image.resize((200, 200))
+            middle_panel.paste(champ_image, (512 * 7 + rs, ds))
+        except FileNotFoundError:
+            pass
 
-        champ_image = Image.open("icons/champ_icons/{}.png".format(await convert_champion_name(str(md[7]))))
-        champ_image = champ_image.resize((200, 200))
-        middle_panel.paste(champ_image, (512 * 7 + rs + 240, ds))
+        try:
+            champ_image = Image.open("icons/champ_icons/{}.png".format(await convert_champion_name(str(md[7]))))
+            champ_image = champ_image.resize((200, 200))
+            middle_panel.paste(champ_image, (512 * 7 + rs + 240, ds))
+        except FileNotFoundError:
+            pass
 
         # Team 2 Bans
-        champ_image = Image.open("icons/champ_icons/{}.png".format(await convert_champion_name(str(md[8]))))
-        champ_image = champ_image.resize((200, 200))
-        middle_panel.paste(champ_image, (512 * 7 + rs, ds+232))
+        try:
+            champ_image = Image.open("icons/champ_icons/{}.png".format(await convert_champion_name(str(md[8]))))
+            champ_image = champ_image.resize((200, 200))
+            middle_panel.paste(champ_image, (512 * 7 + rs, ds+232))
+        except FileNotFoundError:
+            pass
 
-        champ_image = Image.open("icons/champ_icons/{}.png".format(await convert_champion_name(str(md[9]))))
-        champ_image = champ_image.resize((200, 200))
-        middle_panel.paste(champ_image, (512 * 7 + rs + 240, ds+232))
+        try:
+            champ_image = Image.open("icons/champ_icons/{}.png".format(await convert_champion_name(str(md[9]))))
+            champ_image = champ_image.resize((200, 200))
+            middle_panel.paste(champ_image, (512 * 7 + rs + 240, ds+232))
+        except FileNotFoundError:
+            pass
 
     return middle_panel
 

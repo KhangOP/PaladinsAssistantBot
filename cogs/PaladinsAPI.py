@@ -1052,7 +1052,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 await ctx.send("```diff\n" + player_champ_data + "```")
 
     # Returns simple stats based on the option they choose (champ_name, me, or elo)
-    @commands.command(name='stats', aliases=['stat'])
+    @commands.command(name='stats', aliases=['stat'])  # ToDo stuff with this command
     @commands.cooldown(3, 30, commands.BucketType.user)
     async def stats(self, ctx, player_name, option=None):
         await helper.store_commands(ctx.author.id, "stats")

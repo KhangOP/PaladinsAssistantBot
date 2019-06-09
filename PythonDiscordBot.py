@@ -3,6 +3,7 @@ from discord.ext import commands
 from discord.ext.commands import Bot
 
 import asyncio
+import aiohttp.client_exceptions as aiohttp_client_exceptions
 import random
 import json
 import traceback
@@ -71,6 +72,11 @@ async def send_error(cont, msg):
 async def on_command_error(ctx, error):
     # checks for non-discord command related errors
     if hasattr(error, "original"):
+        # Catches all aiohttp client exception errors
+        if isinstance(error.original, aiohttp_client_exceptions.ClientError):
+            await send_error(cont=ctx, msg="Client Connection error. Please try again.")
+            return None
+        # Catches all requests exceptions ???
         if isinstance(error.original, requests.exceptions.RequestException):
             await send_error(cont=ctx, msg="Connection to API error. Please try again.")
             return None

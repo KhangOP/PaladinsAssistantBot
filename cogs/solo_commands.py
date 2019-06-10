@@ -5,6 +5,9 @@ import my_utils as helper
 
 def server_owner_only():
     async def predicate(ctx):
+        # If in dm's
+        if ctx.guild is None:
+            return True
         if not ctx.guild.owner == ctx.author:
             raise NotServerOwner("Sorry you are not authorized to use this command. Only the server owner: " +
                                  str(ctx.guild.owner) + " can use this command")
@@ -36,6 +39,7 @@ class SoloCommandCog(commands.Cog, name="Solo Commands"):
             self.lan = json.load(json_f)
 
     @commands.command(name='prefix')
+    @commands.guild_only()
     @server_owner_only()
     async def set_server_prefix(self, ctx, prefix):
         async with ctx.channel.typing():
@@ -52,6 +56,7 @@ class SoloCommandCog(commands.Cog, name="Solo Commands"):
                 await ctx.send("This bot is now set to use the prefix: `" + prefix + "` in this server")
 
     @commands.command(name='language')
+    @commands.guild_only()
     @server_owner_only()
     async def set_server_language(self, ctx, language: str):
         async with ctx.channel.typing():

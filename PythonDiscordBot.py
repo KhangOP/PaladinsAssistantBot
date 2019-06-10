@@ -56,8 +56,9 @@ async def send_error(cont, msg):
     error_msg = "```diff\n- {}```".format(msg)
     try:  # First lets try to send the message to the channel the command was called
         await cont.send(error_msg)
-        print("---" + msg)
-    except BaseException:
+        print("---" + str(msg))
+    except BaseException as e:
+        print(e)
         try:  # Next lets try to DM the message to the user
             author = cont.message.author
             await author.send(error_msg)

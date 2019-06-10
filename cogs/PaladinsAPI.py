@@ -390,12 +390,19 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     @commands.cooldown(2, 30, commands.BucketType.user)
     # Gets stats for a champ using Paladins API
     async def top(self, ctx, player_name, option, order="False"):
+        # Maybe convert the player name
         if str(player_name) == "me":
             player_name = self.check_player_name(str(ctx.author.id))
-            if player_name == "None":
-                await ctx.send("You have not stored your IGN yet. To do so please use the store command like so: "
-                               "`>>store Paladins_IGN`")
-                return None
+        elif player_name[0] == "<" and player_name[1] == "@":  # 99% that someone has been mentioned
+            player_name = player_name.replace("<", "").replace(">", "").replace("@", "")
+            if len(player_name) == 18:
+                player_name = self.check_player_name(player_name)
+
+        if player_name == "None":
+            await ctx.send("You have not stored your IGN yet. To do so please use the store command like so: "
+                           "`>>store Paladins_IGN`")
+            return None
+
         await helper.store_commands(ctx.author.id, "top")
 
         # Gets player id and error checks
@@ -481,12 +488,18 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     @commands.command(name='deck', pass_context=True)
     @commands.cooldown(2, 30, commands.BucketType.user)
     async def deck(self, ctx, player_name, champ_name, deck_index=None):
+        # Maybe convert the player name
         if str(player_name) == "me":
             player_name = self.check_player_name(str(ctx.author.id))
-            if player_name == "None":
-                await ctx.send("You have not stored your IGN yet. To do so please use the store command like so: "
-                               "`>>store Paladins_IGN`")
-                return None
+        elif player_name[0] == "<" and player_name[1] == "@":  # 99% that someone has been mentioned
+            player_name = player_name.replace("<", "").replace(">", "").replace("@", "")
+            if len(player_name) == 18:
+                player_name = self.check_player_name(player_name)
+
+        if player_name == "None":
+            await ctx.send("You have not stored your IGN yet. To do so please use the store command like so: "
+                           "`>>store Paladins_IGN`")
+            return None
 
         await helper.store_commands(ctx.author.id, "deck")
         async with ctx.channel.typing():
@@ -547,12 +560,18 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     @commands.command(name='history', pass_context=True)
     @commands.cooldown(2, 30, commands.BucketType.user)
     async def history(self, ctx, player_name, amount=10, champ_name=None):
+        # Maybe convert the player name
         if str(player_name) == "me":
             player_name = self.check_player_name(str(ctx.author.id))
-            if player_name == "None":
-                await ctx.send("You have not stored your IGN yet. To do so please use the store command like so: "
-                               "`>>store Paladins_IGN`")
-                return None
+        elif player_name[0] == "<" and player_name[1] == "@":  # 99% that someone has been mentioned
+            player_name = player_name.replace("<", "").replace(">", "").replace("@", "")
+            if len(player_name) == 18:
+                player_name = self.check_player_name(player_name)
+
+        if player_name == "None":
+            await ctx.send("You have not stored your IGN yet. To do so please use the store command like so: "
+                           "`>>store Paladins_IGN`")
+            return None
 
         await helper.store_commands(ctx.author.id, "history")
         async with ctx.channel.typing():
@@ -581,6 +600,8 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 if match.playerName is None:
                     await ctx.send("Player does not have recent match data or their account is private.")
                     return None
+                else:
+                    player_name = match.playerName
 
                 # empty string means to get everything or only get matches with a certain champ
                 if not champ_name or champ_name == match.godName:
@@ -688,12 +709,18 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     @commands.command(name='match')
     @commands.cooldown(2, 30, commands.BucketType.user)
     async def match(self, ctx, player_name, match_id=None, colored="-b"):
+        # Maybe convert the player name
         if str(player_name) == "me":
             player_name = self.check_player_name(str(ctx.author.id))
-            if player_name == "None":
-                await ctx.send("You have not stored your IGN yet. To do so please use the store command like so: "
-                               "`>>store Paladins_IGN`")
-                return None
+        elif player_name[0] == "<" and player_name[1] == "@":  # 99% that someone has been mentioned
+            player_name = player_name.replace("<", "").replace(">", "").replace("@", "")
+            if len(player_name) == 18:
+                player_name = self.check_player_name(player_name)
+
+        if player_name == "None":
+            await ctx.send("You have not stored your IGN yet. To do so please use the store command like so: "
+                           "`>>store Paladins_IGN`")
+            return None
 
         player_id = self.get_player_id(player_name)
 
@@ -792,12 +819,18 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     @commands.command(name='last')
     @commands.cooldown(2, 30, commands.BucketType.user)
     async def last(self, ctx, player_name, match_id=-1):
+        # Maybe convert the player name
         if str(player_name) == "me":
             player_name = self.check_player_name(str(ctx.author.id))
-            if player_name == "None":
-                await ctx.send("You have not stored your IGN yet. To do so please use the store command like so: "
-                               "`>>store Paladins_IGN`")
-                return None
+        elif player_name[0] == "<" and player_name[1] == "@":  # 99% that someone has been mentioned
+            player_name = player_name.replace("<", "").replace(">", "").replace("@", "")
+            if len(player_name) == 18:
+                player_name = self.check_player_name(player_name)
+
+        if player_name == "None":
+            await ctx.send("You have not stored your IGN yet. To do so please use the store command like so: "
+                           "`>>store Paladins_IGN`")
+            return None
 
         await helper.store_commands(ctx.author.id, "last")
         player_id = self.get_player_id(player_name)
@@ -818,7 +851,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 break
 
             if match_id == -1 or match_id == match.matchId:
-                match_data = str('{}\'s {} match:\n\n').format(str(player_name), str(match.mapName).replace("LIVE", ""))
+                match_data = str('{}\'s {} match:\n\n').format(str(match.playerName), str(match.mapName).replace("LIVE", ""))
                 ss = str('`Match Status: {} ({} mins)\nChampion: {}\nKDA: {} ({}-{}-{})\nDamage: {:,}\nDamage Taken: '
                          '{:,}\nHealing: {:,}\nSelf Healing: {:,}\nObjective Time: {}\nShielding: {:,}`\n')
                 kills = match.kills
@@ -859,10 +892,15 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         # Maybe convert the player name
         if str(player_name) == "me":
             player_name = self.check_player_name(str(ctx.author.id))
-            if player_name == "None":
-                await ctx.send("You have not stored your IGN yet. To do so please use the store command like so: "
-                               "`>>store Paladins_IGN`")
-                return None
+        elif player_name[0] == "<" and player_name[1] == "@":  # 99% that someone has been mentioned
+            player_name = player_name.replace("<", "").replace(">", "").replace("@", "")
+            if len(player_name) == 18:
+                player_name = self.check_player_name(player_name)
+
+        if player_name == "None":
+            await ctx.send("You have not stored your IGN yet. To do so please use the store command like so: "
+                           "`>>store Paladins_IGN`")
+            return None
 
         value = -1
         if option == "-a":
@@ -1052,21 +1090,27 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 await ctx.send("```diff\n" + player_champ_data + "```")
 
     # Returns simple stats based on the option they choose (champ_name, me, or elo)
-    @commands.command(name='stats', aliases=['stat'])  # ToDo stuff with this command
+    @commands.command(name='stats', aliases=['stat'])
     @commands.cooldown(3, 30, commands.BucketType.user)
     async def stats(self, ctx, player_name, option=None):
         await helper.store_commands(ctx.author.id, "stats")
         lang = await helper.Lang.check_language(ctx=ctx)
+
         # Maybe convert the player name
         if str(player_name) == "me":
             player_name = self.check_player_name(str(ctx.author.id))
-            if player_name == "None":
-                await ctx.send("You have not stored your IGN yet. To do so please use the store command like so: "
-                               "`>>store Paladins_IGN`")
-                return None
+        elif player_name[0] == "<" and player_name[1] == "@":  # 99% that someone has been mentioned
+            player_name = player_name.replace("<", "").replace(">", "").replace("@", "")
+            if len(player_name) == 18:
+                player_name = self.check_player_name(player_name)
+
+        if player_name == "None":
+            await ctx.send("You have not stored your IGN yet. To do so please use the store command like so: "
+                           "`>>store Paladins_IGN`")
+            return None
 
         if option is None:
-            result = await self.get_player_stats_api(player_name, lang=lang)
+            result = await self.ta(player_name, lang=lang)
             await ctx.send("```md\n" + result + "```")
         elif option == "elo":
             await ctx.send("```Guru's site is currently under(as of 4/4/2019) development and until they finish "

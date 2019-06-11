@@ -1110,7 +1110,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             return None
 
         if option is None:
-            result = await self.ta(player_name, lang=lang)
+            result = await self.get_player_stats_api(player_name, lang=lang)
             await ctx.send("```md\n" + result + "```")
         elif option == "elo":
             await ctx.send("```Guru's site is currently under(as of 4/4/2019) development and until they finish "

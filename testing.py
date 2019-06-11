@@ -21,3 +21,5 @@ try:
 except BaseException:
     print("could not find")
 """
+print("\33[91{}\33[0m".format("red?"))
+print("hi")

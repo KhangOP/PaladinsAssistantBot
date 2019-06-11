@@ -7,6 +7,7 @@ from datetime import datetime; datetime.now
 
 from pyrez.api import PaladinsAPI
 from pyrez.exceptions import PlayerNotFound
+from pyrez.exceptions import NotFound
 import json
 
 file_name = "token"
@@ -220,10 +221,16 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         wr = await self.calc_win_rate(int(info.wins), total)
         ss = ss.format(self.dashes, str(info.playerName), str(info.accountLevel), wr, str(total), str(info.leaves))
 
-        # info.platform  # ToDo Update Ranked info for platform base
         # Ranked Info
         s2 = self.lang_dict["stats_s2"][lang]
-        ranked = info.rankedKeyboard
+
+        # Get the platform's ranked stats
+        platform = str(info.platform).lower()
+        if platform == "steam" or platform == "hirez":
+            ranked = info.rankedKeyboard
+        else:
+            ranked = info.rankedController
+
         win = int(ranked.wins)
         lose = int(ranked.losses)
         wr = await self.calc_win_rate(win, win + lose)
@@ -386,6 +393,31 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         return embed
 
     '''Commands below ############################################################'''
+    @commands.command(name='console', pass_context=True)
+    @commands.cooldown(2, 30, commands.BucketType.user)
+    async def console(self, ctx, player_name, platform, player_level=-1):
+        async with ctx.channel.typing():
+            if platform == "Xbox":
+                platform = "10"
+            elif platform == "PS4":
+                platform = "9"
+            elif platform == "Switch":
+                platform = "22"
+            else:
+                await ctx.send("```md\nInvalid platform name. Valid platform names are:\n1. Xbox\n2. PS4\n3. Switch```")
+                return None
+
+            # players = paladinsAPI.getPlayerId(player_name, "steam")
+            # players = paladinsAPI.getPlayerId(player_name, platform)
+            players = paladinsAPI.searchPlayers(player_name)
+            players = [player for player in players if player.playerName.lower() == player_name]
+            ss = ""
+            for player in players:
+                if player['portal_id'] == platform:
+                    ss += str(player) + "\n"
+                    print(player)
+            # await ctx.send(ss)
+
     @commands.command(name='top', pass_context=True)
     @commands.cooldown(2, 30, commands.BucketType.user)
     # Gets stats for a champ using Paladins API
@@ -735,7 +767,13 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
         await helper.store_commands(ctx.author.id, "match")
         async with ctx.channel.typing():
-            paladins_data = paladinsAPI.getMatchHistory(player_id)
+            try:
+                paladins_data = paladinsAPI.getMatchHistory(player_id)
+            except NotFound:
+                await ctx.send("Player does not have recent match data or their account is private. Make sure the first"
+                               " parameter is a player name and not the Match Id.")
+                return None
+
             for match in paladins_data:
                 # Check to see if this player does have match history
                 if match.playerName is None:
@@ -844,7 +882,12 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             await ctx.send(embed=embed)
             return None
 
-        paladins_data = paladinsAPI.getMatchHistory(player_id)
+        try:
+            paladins_data = paladinsAPI.getMatchHistory(player_id)
+        except NotFound:
+            await ctx.send("Player does not have recent match data or their account is private. Make sure the first"
+                           " parameter is a player name and not the Match Id.")
+            return None
         for match in paladins_data:
             # Check to see if this player does have match history
             if match.playerName is None:
@@ -981,7 +1024,11 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             team2_overall = [0, 0, 0, 0]  # num, level, win rate, kda
 
             for player in players:
-                name = int(player.playerId)
+                try:
+                    name = int(player.playerId)
+                except TypeError:
+                    print("***Player ID error: " + str(type(player.playerId)))
+                    name = "-1"
                 if int(player.taskForce) == 1:
                     team1.append(name)
                     team1_champs.append(player.godName)

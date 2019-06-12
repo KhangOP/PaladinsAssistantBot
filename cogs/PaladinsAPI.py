@@ -395,7 +395,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     '''Commands below ############################################################'''
     @commands.command(name='console', pass_context=True)
     @commands.cooldown(2, 30, commands.BucketType.user)
-    async def console(self, ctx, player_name, platform, player_level=-1):
+    async def console(self, ctx, player_name, platform):
         async with ctx.channel.typing():
             if platform == "Xbox":
                 platform = "10"
@@ -409,14 +409,40 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
             # players = paladinsAPI.getPlayerId(player_name, "steam")
             # players = paladinsAPI.getPlayerId(player_name, platform)
+            """
             players = paladinsAPI.searchPlayers(player_name)
-            players = [player for player in players if player.playerName.lower() == player_name]
+            players = [player for player in players if player.playerName.lower() == player_name.lower()]
             ss = ""
             for player in players:
                 if player['portal_id'] == platform:
                     ss += str(player) + "\n"
                     print(player)
             # await ctx.send(ss)
+            """
+
+            # Use Guru's DataBase
+            url = "https://api.paladins.guru/v3/search?term={}&type=Player".format(str(player_name))
+            json_player_data = requests.get(url).json()
+            ss = ("    {:20} {:5}  {:20}\n{}\n".format("Player ID", "Level", "Region", self.dashes))
+            index = 1
+            for player in json_player_data:
+                # {'platform': 0, 'id': 704783272, 'name': 'KingDusk', 'seen': '2019-06-11T02:12:34.691Z', 'level': 386,
+                #  'region': 'NA', 'playtime': 32492}
+                # print(player)
+                for names in player['names']:
+                    # print(names['portal'], names['name'])
+                    if names['portal'] == platform:
+                        if index >= 10:
+                            ss += ("{}{:20} {:5}  {:20}\n".format((str(index) + '. '), str(player['id']),
+                                                                  str(player['level']), player['region']))
+                        else:
+                            ss += ("{} {:20} {:5}  {:20}\n".format((str(index) + '. '), str(player['id']),
+                                                                   str(player['level']), player['region']))
+                        index += 1
+                    if index >= 25:
+                        ss += url
+                        break
+            await ctx.send("```md\n{}```".format(ss))
 
     @commands.command(name='top', pass_context=True)
     @commands.cooldown(2, 30, commands.BucketType.user)

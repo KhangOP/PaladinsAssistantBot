@@ -28,7 +28,8 @@ class RandomCog(commands.Cog, name="Random Commands"):
     MAP_CMD = ["map", "mapa"]
     # Map Names
     MAPS = ["Frog Isle", "Jaguar Falls", "Serpent Beach", "Frozen Guard", "Ice Mines", "Fish Market", "Timber Mill",
-            "Stone Keep", "Brightmarsh", "Splitstone Quarry", "Ascension Peak", "Warder's Gate", "Shattered Desert"]
+            "Stone Keep", "Brightmarsh", "Splitstone Quarry", "Ascension Peak", "Warder's Gate", "Shattered Desert",
+            "Bazzar"]
 
     lang_dict = {}
     file_name = "languages/random_lang_dict"
@@ -66,7 +67,7 @@ class RandomCog(commands.Cog, name="Random Commands"):
         return team_string
 
     # Calls different random functions based on input
-    @commands.command(name='rand', aliases=["random", "losuj"])
+    @commands.command(name='rand', aliases=["random", "losuj"], ignore_extra=False)
     @commands.cooldown(3, 30, commands.BucketType.user)
     async def rand(self, ctx, command):
         await helper.store_commands(ctx.author.id, "random")

@@ -156,7 +156,7 @@ class HelpCog(commands.Cog, name="Help Commands"):
 
     @help.command()
     async def random(self, ctx):
-        command_name = "stats"
+        command_name = "random"
         command_description = "Allows user to generate a random siege map, champion, or team."
         parameters = ["option"]
         long_string = "can be one of the following: \n\n" \

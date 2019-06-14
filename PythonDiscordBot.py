@@ -101,6 +101,8 @@ async def on_command_error(ctx, error):
         await send_error(cont=ctx, msg="A required argument to the command you called is missing.")
     elif isinstance(error, commands.BadArgument):
         await send_error(cont=ctx, msg="Make sure the command is in the correct format.")
+    elif isinstance(error, commands.TooManyArguments):
+        await send_error(cont=ctx, msg=error)
     elif isinstance(error, commands.CommandNotFound):
         msg = f"\N{WARNING SIGN} {error}"
         await send_error(cont=ctx, msg=msg)

@@ -393,7 +393,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         return embed
 
     '''Commands below ############################################################'''
-    @commands.command(name='console', pass_context=True)
+    @commands.command(name='console', pass_context=True, ignore_extra=False)
     @commands.cooldown(2, 30, commands.BucketType.user)
     async def console(self, ctx, player_name, platform):
         async with ctx.channel.typing():
@@ -444,7 +444,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                         break
             await ctx.send("```md\n{}```".format(ss))
 
-    @commands.command(name='top', pass_context=True)
+    @commands.command(name='top', pass_context=True, ignore_extra=False)
     @commands.cooldown(2, 30, commands.BucketType.user)
     # Gets stats for a champ using Paladins API
     async def top(self, ctx, player_name, option, order="False"):
@@ -543,7 +543,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
         await ctx.send("```md\n" + message + "```")
 
-    @commands.command(name='deck', pass_context=True)
+    @commands.command(name='deck', pass_context=True, aliases=["decks"], ignore_extra=False)
     @commands.cooldown(2, 30, commands.BucketType.user)
     async def deck(self, ctx, player_name, champ_name, deck_index=None):
         # Maybe convert the player name
@@ -615,7 +615,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 file = discord.File(filename="Deck.png", fp=buffer)
                 await ctx.send("```Enjoy the beautiful image below.```", file=file)
 
-    @commands.command(name='history', pass_context=True)
+    @commands.command(name='history', pass_context=True, ignore_extra=False)
     @commands.cooldown(2, 30, commands.BucketType.user)
     async def history(self, ctx, player_name, amount=10, champ_name=None):
         # Maybe convert the player name
@@ -764,7 +764,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         await ctx.send("```diff\n" + match_data2 + "```")
 
     # Returns an image of a match with player details
-    @commands.command(name='match')
+    @commands.command(name='match', pass_context=True, ignore_extra=False)
     @commands.cooldown(2, 30, commands.BucketType.user)
     async def match(self, ctx, player_name, match_id=None, colored="-b"):
         # Maybe convert the player name
@@ -880,7 +880,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             await ctx.send(embed=embed)
 
     # Returns simple match history details
-    @commands.command(name='last')
+    @commands.command(name='last', pass_context=True, ignore_extra=False)
     @commands.cooldown(2, 30, commands.BucketType.user)
     async def last(self, ctx, player_name, match_id=-1):
         # Maybe convert the player name
@@ -955,7 +955,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
     # Gets details about a player in a current match using the Paladins API
     # Get stats for a player's current match.
-    @commands.command(name='current', pass_context=True, aliases=["cur", 'c', "partida"])
+    @commands.command(name='current', pass_context=True, aliases=["cur", 'c', "partida"], ignore_extra=False)
     @commands.cooldown(2, 30, commands.BucketType.user)
     async def current(self, ctx, player_name, option="-s"):
         # Maybe convert the player name
@@ -1163,7 +1163,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 await ctx.send("```diff\n" + player_champ_data + "```")
 
     # Returns simple stats based on the option they choose (champ_name, me, or elo)
-    @commands.command(name='stats', aliases=['stat'])
+    @commands.command(name='stats', aliases=['stat'], pass_context=True, ignore_extra=False)
     @commands.cooldown(3, 30, commands.BucketType.user)
     async def stats(self, ctx, player_name, option=None):
         await helper.store_commands(ctx.author.id, "stats")
@@ -1197,7 +1197,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             await ctx.send(embed=result)
 
     # Stores Player's IGN for the bot to use
-    @commands.command(name='store')
+    @commands.command(name='store', pass_context=True, ignore_extra=False)
     @commands.cooldown(2, 30, commands.BucketType.user)
     async def store_player_name(self, ctx, player_ign):
         with open("player_discord_ids") as json_f:

@@ -18,8 +18,8 @@ from cogs import PaladinsAPI
 BOT_STATUS = ">>help"
 
 BOT_AUTHOR = "FeistyJalapeno#9045"
-BOT_VERSION = "Version 4.2.2 Beta"
-GAME = ["Paladins", BOT_STATUS, BOT_VERSION, BOT_STATUS, "Errors"]
+BOT_VERSION = "Version 4.2.3 Beta"
+GAME = ["Paladins", BOT_STATUS, BOT_VERSION, BOT_STATUS, "Features"]
 
 file_name = "token"
 # Gets token and prefix from a file
@@ -73,22 +73,11 @@ async def send_error(cont, msg):
 async def on_command_error(ctx, error):
     # checks for non-discord command related errors
     if hasattr(error, "original"):
-        # Catches all aiohttp client exception errors
-        if isinstance(error.original, aiohttp_client_exceptions.ClientError):
-            await send_error(cont=ctx, msg="Client Connection error. Please try again.")
-            return None
-        # Catches all requests exceptions ???
-        if isinstance(error.original, requests.exceptions.RequestException):
-            await send_error(cont=ctx, msg="Connection to API error. Please try again.")
-            return None
-        elif isinstance(error.original, ConnectionError):
-            await send_error(cont=ctx, msg="Connection to API error. Please try again.")
-            return None
-        elif isinstance(error.original, TimeoutError):
-            await send_error(cont=ctx, msg="Connection to API error. Please try again.")
-            return None
-        elif isinstance(error.original, gaierror):
-            await send_error(cont=ctx, msg="Connection to API error. Please try again.")
+        # Catches connection related exceptions
+        if isinstance(error.original, aiohttp_client_exceptions.ClientError) or isinstance(error.original, gaierror) or\
+                isinstance(error.original, ConnectionError) or isinstance(error.original, TimeoutError) or \
+                isinstance(error.original, requests.exceptions.RequestException):
+            await send_error(cont=ctx, msg="Connection error. Please try again.")
             return None
         elif isinstance(error.original, discord.Forbidden):
             await send_error(cont=ctx, msg="The bot does not have permission to send messages in the channel:\n{}"
@@ -118,7 +107,8 @@ async def on_command_error(ctx, error):
         global daily_error_count
         daily_error_count = daily_error_count + 1
         print("An uncaught error occurred: ", error)  # More error checking
-        error_file = str(await helper.get_est_time()).replace("/", "-").replace(" ", "_").replace(":", "-")
+        error_file = str(await helper.get_est_time()).replace("/", "-").replace(":", "-").split()
+        error_file = "_".join(error_file[::-1])
         with open("error_logs/{}.csv".format(error_file), 'w+', encoding="utf-8") as error_log_file:
             error_trace = str(ctx.message.content) + "\n\n"
             error_log_file.write(error_trace)

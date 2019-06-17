@@ -303,7 +303,10 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             )
             return embed
         try:
-            stats = paladinsAPI.getChampionRanks(player_id)
+            stats = paladinsAPI.getChampionRanks(player_id)  # Todo Console name not returned in data (but correct)
+            # {"Assists": 2771, "Deaths": 2058, "Gold": 880190, "Kills": 2444, "LastPlayed": "6/14/2019 9:49:51 PM",
+            # "Losses": 125, "MinionKills": 253, "Minutes": 3527, "Rank": 58, "Wins": 144, "Worshippers": 33582898,
+            # "champion": "Makoa", "champion_id": "2288", "player_id": "704972387", "ret_msg": null}
         except BaseException:
             ss = str('*   {:15} Lv. {:3}  {:7}   {:6}\n')
             ss = ss.format(champ, "???", "???", "???")
@@ -395,13 +398,14 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     '''Commands below ############################################################'''
     @commands.command(name='console', pass_context=True, ignore_extra=False)
     @commands.cooldown(2, 30, commands.BucketType.user)
-    async def console(self, ctx, player_name, platform):
+    async def console(self, ctx, player_name, platform: str, player_level=-1):
         async with ctx.channel.typing():
-            if platform == "Xbox":
+            platform = platform.lower()
+            if platform == "xbox":
                 platform = "10"
-            elif platform == "PS4":
+            elif platform == "ps4":
                 platform = "9"
-            elif platform == "Switch":
+            elif platform == "switch":
                 platform = "22"
             else:
                 await ctx.send("```md\nInvalid platform name. Valid platform names are:\n1. Xbox\n2. PS4\n3. Switch```")
@@ -432,12 +436,13 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 for names in player['names']:
                     # print(names['portal'], names['name'])
                     if names['portal'] == platform:
-                        if index >= 10:
-                            ss += ("{}{:20} {:5}  {:20}\n".format((str(index) + '. '), str(player['id']),
-                                                                  str(player['level']), player['region']))
-                        else:
-                            ss += ("{} {:20} {:5}  {:20}\n".format((str(index) + '. '), str(player['id']),
-                                                                   str(player['level']), player['region']))
+                        if player_level == -1 or player['level'] in range(player_level-50, player_level+50):
+                            if index >= 10:
+                                ss += ("{}{:20} {:5}  {:20}\n".format((str(index) + '. '), str(player['id']),
+                                                                      str(player['level']), player['region']))
+                            else:
+                                ss += ("{} {:20} {:5}  {:20}\n".format((str(index) + '. '), str(player['id']),
+                                                                       str(player['level']), player['region']))
                         index += 1
                     if index >= 25:
                         ss += url
@@ -499,7 +504,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             kda = await self.calc_kda(stat.kills, stat.deaths, stat.assists)
 
             # champ we want to get the stats on
-            win_rate = await self.calc_win_rate(wins, wins + losses)
+            win_rate = float(await self.calc_win_rate(wins, wins + losses))
             level = stat.godLevel
 
             last_played = str(stat.lastPlayed)
@@ -601,7 +606,11 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
             # Correcting player name
             for decks in player_decks:
-                player_name = decks.playerName
+                # print(decks.playerName)  # ToDo Console player name missing
+                if decks.playerName == "":
+                    player_name = str(decks.playerId)
+                else:
+                    player_name = decks.playerName
                 break
 
             if deck_index is None or found is False:
@@ -986,6 +995,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 await ctx.send(self.player_id_error.format(player_name))
                 return None
             data = paladinsAPI.getPlayerStatus(player_id)
+            print(data)
 
             # Private account if it makes it this far in the code
             if data.status == 5:
@@ -1026,6 +1036,8 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 match_string = "Team Death Match"
             elif current_match_queue_id == 486:
                 match_string = "Ranked"
+            elif current_match_queue_id == 428:
+                match_string = "Ranked Console"
 
             # Data Format
             # {'Account_Level': 17, 'ChampionId': 2493, 'ChampionName': 'Koga', 'Mastery_Level': 10, 'Match': 795511902,
@@ -1052,6 +1064,9 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             for player in players:
                 try:
                     name = int(player.playerId)
+                    # console numbers match
+                    if str(player.player_id) == str(player_name):  # ToDo --> gets console player's name ???
+                        player_name = player.playerName
                 except TypeError:
                     print("***Player ID error: " + str(type(player.playerId)))
                     name = "-1"

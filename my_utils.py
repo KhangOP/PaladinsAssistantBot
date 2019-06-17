@@ -8,6 +8,7 @@ import textwrap
 import time
 import os
 import re
+import math
 
 from concurrent.futures import ThreadPoolExecutor
 import asyncio
@@ -355,7 +356,7 @@ async def create_card_image(card_image, champ_info):
 
             # Replacing the scaling text with the correct number
             # desc = desc.replace('{'+str(replacement.group(1))+'}', str(float(scale.group(1)) * int(champ_card_level)))
-            desc = desc.replace('{' + str(replacement.group(1)) + '}', str(int(scale) if scale % 2 == 0 else scale))
+            desc = desc.replace('{' + str(replacement.group(1)) + '}', str(round(scale, 1)))
 
             # Removes the extra text at the start in-between [****]
             desc = re.sub("[\[].*?[\]]", '', desc)

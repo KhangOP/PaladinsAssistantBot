@@ -75,6 +75,10 @@ class HelpCog(commands.Cog, name="Help Commands"):
             embed.add_field(name='deck', value='Prints out all the decks a player has for a champion. If an a number is'
                                                'given after the character name then an image will be created of that '
                                                'deck.', inline=False)
+            embed.add_field(name='top', value='Prints the top 10 highest or lowest stats of a player\'s champions.',
+                            inline=False)
+            embed.add_field(name='console', value='Command console players can use to look up their player_id.',
+                            inline=False)
             embed.add_field(name='usage', value='Returns how many times you have used commands for this bot.',
                             inline=False)
             embed.add_field(name='prefix', value='Lets the server owner change the prefix of the bot.',
@@ -140,6 +144,42 @@ class HelpCog(commands.Cog, name="Help Commands"):
         command_description = "Get stats for a player's current match."
         parameters = ["player_name"]
         descriptions = ["Player's Paladins IGN"]
+        await ctx.send(embed=create_embed(command_name, command_description, parameters, descriptions))
+
+    #embed.add_field(name='console', value='',
+    #                inline=False)
+
+    @help.command()
+    async def top(self, ctx):
+        command_name = "top"
+        command_description = "Prints the top 10 highest or lowest stats of a player\'s champions."
+        parameters = ["player_name", "option", "low?"]
+        option_description = "can be one of the following: \n\n" \
+                             "1. <Level>: Level of a champion.\n" \
+                             "2. <KDA>: KDA of a champion.\n" \
+                             "3. <WL>: Win Rate of with champion.\n" \
+                             "4. <Matches>: total matches played with a champion.\n" \
+                             "5. <Time>: play time of a champion.\n"
+        low_option = "If the word \"low\" is provide then the command returns the 10 lowest "\
+                     "stats for a player's champions.\n" \
+                     "[Optional parameter]: if not provide, the command defaults to returning the 10 highest stats. "
+        descriptions = ["Player's Paladins IGN", option_description, low_option]
+        await ctx.send(embed=create_embed(command_name, command_description, parameters, descriptions))
+
+    @help.command()
+    async def console(self, ctx):
+        command_name = "console"
+        command_description = "Command console players can use to look up their player_id."
+        parameters = ["player_name", "console_type", "player_level"]
+        option_description = "can be one of the following: \n\n" \
+                             "1. <Xbox>\n" \
+                             "2. <PS4>\n" \
+                             "3. <Switch>\n"
+        player_level = "Can be the account level or a guess of the account level of a player. If a level is " \
+                       "provided then it will look plus and minus 50 levels of the level provided\n" \
+                       "[Optional parameter]: if not provide, returns all active players with the other " \
+                       "provided parameters"
+        descriptions = ["Player's Paladins IGN", option_description, player_level]
         await ctx.send(embed=create_embed(command_name, command_description, parameters, descriptions))
 
     @help.command()

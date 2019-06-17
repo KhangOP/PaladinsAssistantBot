@@ -995,7 +995,6 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 await ctx.send(self.player_id_error.format(player_name))
                 return None
             data = paladinsAPI.getPlayerStatus(player_id)
-            print(data)
 
             # Private account if it makes it this far in the code
             if data.status == 5:
@@ -1065,13 +1064,13 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 try:
                     name = int(player.playerId)
                     # console numbers match
-                    if str(player.player_id) == str(player_name):  # ToDo --> gets console player's name ???
+                    if str(player.playerId) == str(player_name):  # ToDo --> gets console player's name ???
                         player_name = player.playerName
                 except TypeError:
                     print("***Player ID error: " + str(type(player.playerId)))
                     name = "-1"
                 except BaseException as e:
-                    print("***Player ID error: " + str(type(player.playerId)) + str(e))
+                    print("***Player ID error: " + str(type(player.playerId)) + "Error: " + str(e))
                     name = "-1"
                 if int(player.taskForce) == 1:
                     team1.append(name)
@@ -1107,7 +1106,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 # For teams total win rate and kda
                 if pl[1] != "???" and float(pl[1]) > 50:
                     team1_overall[0] += 1               # num
-                    team1_overall[1] += int(pl[1])       # level
+                    team1_overall[1] += int(pl[1])      # level
                     team1_overall[2] += float(pl[2])    # win rate
                     team1_overall[3] += float(pl[3])    # kda
 

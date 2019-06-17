@@ -457,7 +457,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         if str(player_name) == "me":
             player_name = self.check_player_name(str(ctx.author.id))
         elif player_name[0] == "<" and player_name[1] == "@":  # 99% that someone has been mentioned
-            player_name = player_name.replace("<", "").replace(">", "").replace("@", "")
+            player_name = player_name.replace("<", "").replace(">", "").replace("@", "").replace("!", "")
             if len(player_name) == 18:
                 player_name = self.check_player_name(player_name)
 
@@ -555,7 +555,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         if str(player_name) == "me":
             player_name = self.check_player_name(str(ctx.author.id))
         elif player_name[0] == "<" and player_name[1] == "@":  # 99% that someone has been mentioned
-            player_name = player_name.replace("<", "").replace(">", "").replace("@", "")
+            player_name = player_name.replace("<", "").replace(">", "").replace("@", "").replace("!", "")
             if len(player_name) == 18:
                 player_name = self.check_player_name(player_name)
 
@@ -631,7 +631,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         if str(player_name) == "me":
             player_name = self.check_player_name(str(ctx.author.id))
         elif player_name[0] == "<" and player_name[1] == "@":  # 99% that someone has been mentioned
-            player_name = player_name.replace("<", "").replace(">", "").replace("@", "")
+            player_name = player_name.replace("<", "").replace(">", "").replace("@", "").replace("!", "")
             if len(player_name) == 18:
                 player_name = self.check_player_name(player_name)
 
@@ -780,7 +780,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         if str(player_name) == "me":
             player_name = self.check_player_name(str(ctx.author.id))
         elif player_name[0] == "<" and player_name[1] == "@":  # 99% that someone has been mentioned
-            player_name = player_name.replace("<", "").replace(">", "").replace("@", "")
+            player_name = player_name.replace("<", "").replace(">", "").replace("@", "").replace("!", "")
             if len(player_name) == 18:
                 player_name = self.check_player_name(player_name)
 
@@ -896,7 +896,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         if str(player_name) == "me":
             player_name = self.check_player_name(str(ctx.author.id))
         elif player_name[0] == "<" and player_name[1] == "@":  # 99% that someone has been mentioned
-            player_name = player_name.replace("<", "").replace(">", "").replace("@", "")
+            player_name = player_name.replace("<", "").replace(">", "").replace("@", "").replace("!", "")
             if len(player_name) == 18:
                 player_name = self.check_player_name(player_name)
 
@@ -971,7 +971,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         if str(player_name) == "me":
             player_name = self.check_player_name(str(ctx.author.id))
         elif player_name[0] == "<" and player_name[1] == "@":  # 99% that someone has been mentioned
-            player_name = player_name.replace("<", "").replace(">", "").replace("@", "")
+            player_name = player_name.replace("<", "").replace(">", "").replace("@", "").replace("!", "")
             if len(player_name) == 18:
                 player_name = self.check_player_name(player_name)
 
@@ -1069,6 +1069,9 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                         player_name = player.playerName
                 except TypeError:
                     print("***Player ID error: " + str(type(player.playerId)))
+                    name = "-1"
+                except BaseException as e:
+                    print("***Player ID error: " + str(type(player.playerId)) + str(e))
                     name = "-1"
                 if int(player.taskForce) == 1:
                     team1.append(name)
@@ -1188,7 +1191,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         if str(player_name) == "me":
             player_name = self.check_player_name(str(ctx.author.id))
         elif player_name[0] == "<" and player_name[1] == "@":  # 99% that someone has been mentioned
-            player_name = player_name.replace("<", "").replace(">", "").replace("@", "")
+            player_name = player_name.replace("<", "").replace(">", "").replace("@", "").replace("!", "")
             if len(player_name) == 18:
                 player_name = self.check_player_name(player_name)
 
@@ -1209,7 +1212,11 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         else:
             champ_name = await self.convert_champion_name(option)
             result = await self.get_champ_stats_api(player_name, champ_name, simple=0)
-            await ctx.send(embed=result)
+            try:
+                await ctx.send(embed=result)
+            except BaseException as e:
+                await ctx.send(result)
+                print("***Stupid error: " + str(e) + "result")
 
     # Stores Player's IGN for the bot to use
     @commands.command(name='store', pass_context=True, ignore_extra=False)

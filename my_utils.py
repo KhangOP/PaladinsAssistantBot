@@ -245,15 +245,15 @@ async def create_match_image(team1, team2, ranks1, ranks2):
     # end = time.time()
     # print("run1", end - start)
 
-    """
-    start = time.time()
+    """ Not really faster....
+    start2 = time.time()
     buffer1, buffer2, middle = await asyncio.gather(
         create_team_image(team1, ranks1),
         create_team_image(team2, ranks2),
         draw_match_vs()
     )
-    end = time.time()
-    print("run2", end - start)
+    end2 = time.time()
+    print("run2", end2 - start2)
     """
 
     offset = 128
@@ -272,6 +272,11 @@ async def create_match_image(team1, team2, ranks1, ranks2):
     # Row 2
     match_image.paste(Image.open(buffer2), (0, image_size + offset, (image_size*len(team1)), image_size*2 + offset))
 
+    #                                                                                       Base speed is 10 - seconds
+    # match_image = match_image.resize((int(1280), int(576)), Image.ANTIALIAS)              # 5 seconds
+    match_image = match_image.resize((1280, 576))                                           # 5 seconds (looks good)
+    # match_image = match_image.resize((int(2560/3), int(1152/3)), Image.ANTIALIAS)         # 2-3 seconds
+    # match_image = match_image.resize((int(2560 / 4), int(1152 / 4)), Image.ANTIALIAS)     # 2-3 seconds
     # match_image.show()
 
     # Creates a buffer to store the image in

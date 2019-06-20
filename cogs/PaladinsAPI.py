@@ -472,10 +472,11 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                             else:
                                 ss += ("{} {:20} {:5}  {:20}\n".format((str(index) + '. '), str(player['id']),
                                                                        str(player['level']), player['region']))
-                        index += 1
+                            index += 1
                     if index >= 25:
                         ss += url
-                        break
+                        await ctx.send("```md\n{}```".format(ss))
+                        return None
             await ctx.send("```md\n{}```".format(ss))
 
     @commands.command(name='top', pass_context=True, ignore_extra=False)

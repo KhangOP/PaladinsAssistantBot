@@ -442,6 +442,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
             # players = paladinsAPI.getPlayerId(player_name, "steam")
             # players = paladinsAPI.getPlayerId(player_name, platform)
+
             """
             players = paladinsAPI.searchPlayers(player_name)
             players = [player for player in players if player.playerName.lower() == player_name.lower()]
@@ -972,10 +973,15 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
                 embed = discord.Embed(
                     description=match_data,
-                    colour=discord.colour.Color.dark_teal()
+                    colour=discord.colour.Color.dark_teal(),
                 )
 
                 embed.set_thumbnail(url=await helper.get_champ_image(match.godName))
+
+                map_name = match.mapName.replace("LIVE ", "").lower().replace(" ", "_")
+                map_url = "https://raw.githubusercontent.com/EthanHicks1/PaladinsAssistantBot/master/icons/maps/{}.png"\
+                    .format(map_name)
+                embed.set_image(url=map_url)
 
                 await ctx.send(embed=embed)
                 return None
@@ -1093,8 +1099,8 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             for player in players:
                 try:
                     name = int(player.playerId)
-                    # console numbers match
-                    if str(player.playerId) == str(player_name):  # ToDo --> gets console player's name ???
+                    # console player's number
+                    if str(player.playerId) == str(player_name):
                         player_name = player.playerName
                 except TypeError:
                     print("***Player ID error: " + str(type(player.playerId)))

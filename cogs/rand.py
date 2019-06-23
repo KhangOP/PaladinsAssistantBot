@@ -29,7 +29,7 @@ class RandomCog(commands.Cog, name="Random Commands"):
     # Map Names
     MAPS = ["Frog Isle", "Jaguar Falls", "Serpent Beach", "Frozen Guard", "Ice Mines", "Fish Market", "Timber Mill",
             "Stone Keep", "Brightmarsh", "Splitstone Quarry", "Ascension Peak", "Warder's Gate", "Shattered Desert",
-            "Bazzar"]
+            "Bazaar"]
 
     lang_dict = {}
     file_name = "languages/random_lang_dict"
@@ -112,8 +112,13 @@ class RandomCog(commands.Cog, name="Random Commands"):
                 file = discord.File(filename="Team.png", fp=buffer)
                 await ctx.send("{}\n```css\n{}```".format(self.lang_dict["random_team"][lang], team), file=file)
         elif command in self.MAP_CMD:
-            await ctx.send("{}```css\n{}```".format(self.lang_dict["random_map"][lang], secure_random.choice(self.MAPS))
-                           )
+            map_name = secure_random.choice(self.MAPS)
+            embed.add_field(name=self.lang_dict["random_map"][lang], value=map_name)
+            map_name = map_name.lower().replace(" ", "_")
+            map_url = "https://raw.githubusercontent.com/EthanHicks1/PaladinsAssistantBot/master/icons/maps/{}.png".\
+                format(map_name)
+            embed.set_image(url=map_url)
+            await ctx.send(embed=embed)
         else:
             await ctx.send(self.lang_dict["random_invalid"][lang])
 

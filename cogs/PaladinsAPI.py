@@ -188,31 +188,6 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     @classmethod
     async def get_global_kda(cls, player_id):
         url = "http://nonsocial.herokuapp.com/api/kda?player=" + str(player_id)
-        soup = BeautifulSoup(requests.get(url, headers={'Connection': 'close'}).text, 'html.parser')
-        soup = str(soup.get_text())
-
-        # Error checking to make sure that the player was found on the site
-        if 'ERROR' in soup:
-            error = ["Private Account", "???", "???", "???"]
-            return error
-
-        split1 = soup.split("(Level ")
-
-        player_name = str(split1[0]).strip()                                 # Player Name
-        level = split1[1].split(")")[0]                         # Level
-        kda = soup.split("- ")[1].split(" KDA")[0]              # KDA
-        win_rate = soup.split("Win rate: ")[1].split("%")[0]    # Win Rate
-
-        stats = [player_name, level, win_rate, kda]
-
-        return stats
-
-    @classmethod
-    async def get_global_kda2(cls, player_id):
-        url = "http://nonsocial.herokuapp.com/api/kda?player=" + str(player_id)
-        # soup = BeautifulSoup(requests.get(url, headers={'Connection': 'close'}).text, 'html.parser')
-        # soup = str(soup.get_text())
-
         async with aiohttp.ClientSession() as cs:
             async with cs.get(url) as r:
                 soup = await r.text()  # returns dict
@@ -423,6 +398,10 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         embed.add_field(name=player_name + "'s stats: ", value='`' + ss + '`', inline=False)
         embed.set_thumbnail(url=await helper.get_champ_image(champ))
         return embed
+
+    @classmethod
+    async def do_nothing(cls):
+        return -1
 
     '''Commands below ############################################################'''
     @commands.command(name='console', pass_context=True, ignore_extra=False)
@@ -1126,12 +1105,32 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                                                                               "Win Rate", "KDA")
 
             # Create a list of tasks to run in parallel
+            # Create a list of tasks to run in parallel
             tasks = []
             for player in team1:
-                tasks.append(self.get_global_kda2(player))
+                tasks.append(self.get_global_kda(player))
+
+            # Fill in the missing team mates with a function that returns nothing
+            while len(team1) != 5:
+                tasks.append(self.do_nothing())
+
+            for player in team2:
+                tasks.append(self.get_global_kda(player))
+
+            # Fill in the missing team mates with a function that returns nothing
+            while len(team2) != 5:
+                tasks.append(self.do_nothing())
+
+            # Add in image creation task
+            tasks.append(helper.create_match_image(team1_champs, team2_champs, team1_ranks, team2_ranks))
 
             # Run the tasks
-            data1 = await asyncio.gather(*tasks)
+            data = await asyncio.gather(*tasks)
+
+            # Image
+            buffer = data.pop()
+            data1 = data[:5]
+            data2 = data[5:]
 
             for pl, champ in zip(data1, team1_champs):
                 ss = str('*{:18} Lv. {:3}  {:8}  {:6}\n')
@@ -1155,19 +1154,10 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
                 # Add in champ stats
                 if option == "-a" and can_use:
-                    player_champ_data += await self.get_champ_stats_api(pl, champ, 1)
-                    # match_data += player_champ_data
+                    player_champ_data += await self.get_champ_stats_api(pl[0], champ, 1)
 
             match_data += "\n"
             player_champ_data += "\n"
-
-            # Create a list of tasks to run in parallel
-            tasks2 = []
-            for player in team2:
-                tasks2.append(self.get_global_kda2(player))
-
-            # Run the tasks
-            data2 = await asyncio.gather(*tasks2)
 
             for pl, champ in zip(data2, team2_champs):
                 ss = str('*{:18} Lv. {:3}  {:8}  {:6}\n')
@@ -1191,8 +1181,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
                 # Add in champ stats
                 if option == "-a" and can_use:
-                    player_champ_data += await self.get_champ_stats_api(pl, champ, 1)
-                    # match_data += player_champ_data
+                    player_champ_data += await self.get_champ_stats_api(pl[0], champ, 1)
 
             # Adding team win rate's and kda's
 
@@ -1223,268 +1212,10 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 ss2 = ss2.format("Team2", str(int(team2_overall[1] / team2_overall[0])), str(team2_wr),
                                  str(round(team2_overall[3]/team2_overall[0], 2)))
                 match_data += ss2
-            buffer = await helper.create_match_image(team1_champs, team2_champs, team1_ranks, team2_ranks)
             file = discord.File(filename="Team.png", fp=buffer)
             await ctx.send("```diff\n" + match_data + "```", file=file)
             if "\n" in player_champ_data and value != -1:
                 await ctx.send("```diff\n" + player_champ_data + "```")
-
-    # Gets details about a player in a current match using the Paladins API
-    # Get stats for a player's current match.
-    @commands.command(name='current2', pass_context=True, ignore_extra=False)
-    @commands.cooldown(4, 30, commands.BucketType.user)
-    async def current2(self, ctx, player_name, option="-s"):
-        start = time.time()
-        """
-        # Maybe convert the player name
-        if str(player_name) == "me":
-            player_name = self.check_player_name(str(ctx.author.id))
-        elif player_name[0] == "<" and player_name[1] == "@":  # 99% that someone has been mentioned
-            player_name = player_name.replace("<", "").replace(">", "").replace("@", "").replace("!", "")
-            if len(player_name) == 18:
-                player_name = self.check_player_name(player_name)
-
-        if player_name == "None":
-            await ctx.send("You have not stored your IGN yet. To do so please use the store command like so: "
-                           "`>>store Paladins_IGN`")
-            return None
-
-        value = -1
-        if option == "-a":
-            value = 1
-        can_use = await helper.store_commands(ctx.author.id, "current", value)
-        """
-        async with ctx.channel.typing():
-            """
-            # Data Format
-            # {'Match': 795950194, 'match_queue_id': 452, 'personal_status_message': 0, 'ret_msg': 0, 'status': 3,
-            # 'status_string': 'In Game'}
-
-            # Gets player id and error checks
-            player_id = self.get_player_id(player_name)
-            if player_id == -1:
-                await ctx.send(self.player_id_error.format(player_name))
-                return None
-            data = paladinsAPI.getPlayerStatus(player_id)
-
-            # Private account if it makes it this far in the code
-            if data.status == 5:
-                await ctx.send("`Can't get the current match for {} because their account is private.`\n"
-                               "<:ying_mad:576792455148601345><:lian_palm:576792454968246282>".format(player_name))
-                return None
-
-            if data == 0:
-                await ctx.send(str("Player " + player_name + " is not found."))
-                return None
-            if data.status == 0:
-                await ctx.send("Player is offline.")
-                return None
-            elif data.status == 1:
-                await ctx.send("Player is in lobby.")
-                return None
-            elif data.status == 2:
-                await ctx.send("Player in champion selection.")
-                return None
-
-            # match_queue_id = 424 = Siege
-            # match_queue_id = 445 = Test Maps (NoneType) --> no json data
-            # match_queue_id = 452 = Onslaught
-            # match_queue_id = 469 = DTM
-            # match_queue_id = 486 = Ranked (Invalid)
-
-            current_match_queue_id = data.queueId
-
-            match_string = "Unknown match Type"
-            if current_match_queue_id == 424:
-                match_string = "Siege"
-            elif current_match_queue_id == 445:
-                await ctx.send("No data for Test Maps.")
-                return None
-            elif current_match_queue_id == 452:
-                match_string = "Onslaught"
-            elif current_match_queue_id == 469:
-                match_string = "Team Death Match"
-            elif current_match_queue_id == 486:
-                match_string = "Ranked"
-            elif current_match_queue_id == 428:
-                match_string = "Ranked Console"
-
-            # Data Format
-            # {'Account_Level': 17, 'ChampionId': 2493, 'ChampionName': 'Koga', 'Mastery_Level': 10, 'Match': 795511902,
-            # 'Queue': '424', 'SkinId': 0, 'Tier': 0, 'playerCreated': '11/10/2017 10:00:03 PM', 'playerId': '12368291',
-            # 'playerName': 'NabbitOW', 'ret_msg': None, 'taskForce': 1, 'tierLosses': 0, 'tierWins': 0}
-            try:
-                players = paladinsAPI.getMatch(data.matchId, True)
-            except BaseException:
-                await ctx.send("Please makes sure you use the current command on Siege, Ranked, Team Death Match, "
-                               "or Ranked. Other match queues are not fully supported by Hi-Rez for getting stats.")
-                # + str(e))
-                return None
-            # print(players)
-            """
-            team1 = ["Seris", "Seris", "Seris", "Seris", "Seris"]
-            team1_ranks = []
-            team1_champs = ["Ash", "Grover", "Makoa", "Willo", "Seris"]
-            team1_overall = [0, 0, 0, 0]  # num, level, win rate, kda
-
-            team2 = ["z1unknown", "xxc0ld", "PromisedOne", "FeistyJalapeno", "MadameSeris"]
-            team2_ranks = []
-            team2_champs = ["Ash", "Grover", "Makoa", "Willo", "Seris"]
-            team2_overall = [0, 0, 0, 0]  # num, level, win rate, kda
-
-            """
-            for player in players:
-                try:
-                    name = int(player.playerId)
-                    # console numbers match
-                    if str(player.playerId) == str(player_name):  # ToDo --> gets console player's name ???
-                        player_name = player.playerName
-                except TypeError:
-                    print("***Player ID error: " + str(type(player.playerId)))
-                    name = "-1"
-                except BaseException as e:
-                    print("***Player ID error: " + str(type(player.playerId)) + "Error: " + str(e))
-                    name = "-1"
-                if int(player.taskForce) == 1:
-                    team1.append(name)
-                    team1_champs.append(player.godName)
-                    #if current_match_queue_id == 486 or current_match_queue_id == 428:
-                    #    team1_ranks.append(str(player.tier))
-                else:
-                    team2.append(name)
-                    team2_champs.append(player.godName)
-                    #if current_match_queue_id == 486 or current_match_queue_id == 428:
-                    #    team2_ranks.append(str(player.tier))
-            """
-
-            match_data = ""
-            # match_data += player_name + " is in a " + match_string + " match."  # Match Type
-            match_data += str('\n\n{:18}  {:7}  {:8}  {:6}\n\n').format("Player name", "Level", "Win Rate", "KDA")
-            player_champ_data = str('\n\n{:18}  {:7}  {:8}  {:6}\n\n').format("Champion name", "Level",
-                                                                              "Win Rate", "KDA")
-            start1 = time.time()
-
-            # Create a list of tasks to run in parallel
-            tasks = []
-            for player in team1:
-                tasks.append(self.get_global_kda2(player))
-
-            # Run the tasks
-            data1 = await asyncio.gather(*tasks)
-
-            for pl, champ in zip(data1, team1_champs):
-                ss = str('*{:18} Lv. {:3}  {:8}  {:6}\n')
-                ss = ss.format(pl[0], str(pl[1]), pl[2], pl[3])
-                """This Block of code adds color based on Win Rate"""
-                if "???" in pl[2]:
-                    pass
-                elif (float(pl[2].replace(" %", ""))) > 55.00:
-                    ss = ss.replace("*", "+")
-                elif (float(pl[2].replace(" %", ""))) <= 50.00:
-                    ss = ss.replace("*", "-")
-                """^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"""
-                match_data += ss
-
-                # For teams total win rate and kda
-                if pl[1] != "???" and float(pl[1]) > 50:
-                    team1_overall[0] += 1  # num
-                    team1_overall[1] += int(pl[1])  # level
-                    team1_overall[2] += float(pl[2])  # win rate
-                    team1_overall[3] += float(pl[3])  # kda
-
-                # Add in champ stats
-                #if option == "-a" and can_use:
-                #    player_champ_data += await self.get_champ_stats_api(player, champ, 1)
-                    # match_data += player_champ_data
-
-            end1 = time.time()
-            print("Team 1 stats:" + str(end1 - start1))
-
-            match_data += "\n"
-            player_champ_data += "\n"
-
-            start2 = time.time()
-
-            # Create a list of tasks to run in parallel
-            tasks2 = []
-            for player in team2:
-                tasks2.append(self.get_global_kda2(player))
-
-            # Run the tasks
-            data2 = await asyncio.gather(*tasks2)
-
-            for pl, champ in zip(data2, team2_champs):
-                ss = str('*{:18} Lv. {:3}  {:8}  {:6}\n')
-                ss = ss.format(pl[0], str(pl[1]), pl[2], pl[3])
-                """This Block of code adds color based on Win Rate"""
-                if "???" in pl[2]:
-                    pass
-                elif (float(pl[2].replace(" %", ""))) > 55.00:
-                    ss = ss.replace("*", "+")
-                elif (float(pl[2].replace(" %", ""))) < 49.00:
-                    ss = ss.replace("*", "-")
-                """^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"""
-                match_data += ss
-
-                # For teams total win rate and kda
-                if pl[1] != "???" and float(pl[1]) > 50:
-                    team2_overall[0] += 1  # num
-                    team2_overall[1] += int(pl[1])  # level
-                    team2_overall[2] += float(pl[2])  # win rate
-                    team2_overall[3] += float(pl[3])  # kda
-
-                # Add in champ stats
-                #if option == "-a" and can_use:
-                #    player_champ_data += await self.get_champ_stats_api(player, champ, 1)
-                    # match_data += player_champ_data
-            end2 = time.time()
-            print("Team 2 stats:" + str(end2 - start2))
-            # Adding team win rate's and kda's
-
-            match_data += "\n\nAverage stats\n"
-            ss1 = str('*{:18} Lv. {:3}  {:8}  {:6}\n')
-            ss2 = str('*{:18} Lv. {:3}  {:8}  {:6}')
-            team1_wr, team2_wr = 0, 0
-            if team1_overall[0] != 0:
-                team1_wr = round(team1_overall[2] / team1_overall[0], 2)
-            if team2_overall[0] != 0:
-                team2_wr = round(team2_overall[2] / team2_overall[0], 2)
-
-            # no need to cal this is one team is 0
-            if team1_wr != 0 and team2_wr != 0:
-                if abs(team1_wr - team2_wr) >= 5.0:
-                    if team1_wr > team2_wr:
-                        ss1 = ss1.replace("*", "+")
-                        ss2 = ss2.replace("*", "-")
-                    else:
-                        ss1 = ss1.replace("*", "-")
-                        ss2 = ss2.replace("*", "+")
-
-            if team1_overall[0] != 0:
-                ss1 = ss1.format("Team1", str(int(team1_overall[1] / team1_overall[0])), str(team1_wr),
-                                 str(round(team1_overall[3] / team1_overall[0], 2)))
-                match_data += ss1
-            if team2_overall[0] != 0:
-                ss2 = ss2.format("Team2", str(int(team2_overall[1] / team2_overall[0])), str(team2_wr),
-                                 str(round(team2_overall[3] / team2_overall[0], 2)))
-                match_data += ss2
-
-            start3 = time.time()
-            buffer = await helper.create_match_image(team1_champs, team2_champs, team1_ranks, team2_ranks)
-            end3 = time.time()
-            print("Create image: " + str(end3 - start3))
-            # start4 = time.time()
-            file = discord.File(filename="Team.png", fp=buffer)
-            # end4 = time.time()
-            # print("Read in image: " + str(end4 - start4))
-            start5 = time.time()
-            await ctx.send("```diff\n" + match_data + "```", file=file)
-            end5 = time.time()
-            print("Attach image: " + str(end5 - start5))
-            #if "\n" in player_champ_data:
-            #    await ctx.send("```diff\n" + player_champ_data + "```")
-            end = time.time()
-            print(end - start)
 
     # Returns simple stats based on the option they choose (champ_name, me, or elo)
     @commands.command(name='stats', aliases=['stat'], pass_context=True, ignore_extra=False)

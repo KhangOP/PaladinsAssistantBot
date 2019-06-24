@@ -782,7 +782,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         await ctx.send("```diff\n" + match_data2 + "```")
 
     # Returns an image of a match with player details
-    @commands.command(name='match', pass_context=True, ignore_extra=False)
+    @commands.command(name='match', pass_context=True, ignore_extra=False)  # ToDo Speed up
     @commands.cooldown(2, 30, commands.BucketType.user)
     async def match(self, ctx, player_name, match_id=None, colored="-b"):
         # Maybe convert the player name
@@ -879,10 +879,20 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
                     # print("team1: " + str(team1_parties), "team2: " + str(team2_parties))
                     color = True if colored == "-c" else False
+                    start = time.time()
+
                     buffer = await helper.create_history_image(team1_champs, team2_champs, team1_data, team2_data,
                                                                team1_parties, team2_parties, (match_info + temp), color)
+                    end = time.time()
+                    print(end - start)
+
                     file = discord.File(filename="TeamMatch.png", fp=buffer)
+
+                    start = time.time()
                     await ctx.send("```You are an amazing person!```", file=file)
+                    end = time.time()
+                    print(end - start)
+
                     return None
 
             # If the match id could not be found

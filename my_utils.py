@@ -493,6 +493,10 @@ async def create_history_image(team1, team2, t1_data, t2_data, p1, p2, match_dat
         player_panel = await create_player_stats_image(champ_image, t2_data[i], i+offset-1, p2, colored)
         history_image.paste(player_panel, (0, image_size_y * (i+offset) + 704))
 
+    # Base speed is 10 - seconds
+    history_image = history_image.resize((4608//2, 3048//2), Image.ANTIALIAS)           # 5 seconds
+    # history_image = history_image.resize((4608 // 4, 3048 // 4), Image.ANTIALIAS)     # 2.5 secs but bad looking
+
     # Creates a buffer to store the image in
     final_buffer = BytesIO()
 

@@ -880,20 +880,13 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
                     # print("team1: " + str(team1_parties), "team2: " + str(team2_parties))
                     color = True if colored == "-c" else False
-                    start = time.time()
 
                     buffer = await helper.create_history_image(team1_champs, team2_champs, team1_data, team2_data,
                                                                team1_parties, team2_parties, (match_info + temp), color)
-                    end = time.time()
-                    print(end - start)
 
                     file = discord.File(filename="TeamMatch.png", fp=buffer)
 
-                    start = time.time()
                     await ctx.send("```You are an amazing person!```", file=file)
-                    end = time.time()
-                    print(end - start)
-
                     return None
 
             # If the match id could not be found
@@ -968,7 +961,9 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
                 embed.set_thumbnail(url=await helper.get_champ_image(match.godName))
 
-                map_name = match.mapName.replace("LIVE ", "").lower().replace(" ", "_")
+                map_name = match.mapName.replace("LIVE ", "").replace("Ranked ", "").replace(" (TDM)", "")\
+                    .replace(" (Onslaught) ", "").replace(" (Siege)", "").replace("Practice ", "").lower()\
+                    .replace(" ", "_").replace("'", "")
                 map_url = "https://raw.githubusercontent.com/EthanHicks1/PaladinsAssistantBot/master/icons/maps/{}.png"\
                     .format(map_name)
                 embed.set_image(url=map_url)

@@ -84,6 +84,10 @@ async def on_command_error(ctx, error):
                                            "\n\n- where "
                                            "you just called the command:\n{}".format(ctx.channel, ctx.message.content))
             return None
+        elif isinstance(error.original, MemoryError):
+            await send_error(cont=ctx, msg="Your lucky... you caused the bot to run out of memory. Don't worry though"
+                                           "... the bot will recover.  Please try again.")
+            return None
 
     # Checks for discord command errors
     if isinstance(error, commands.MissingRequiredArgument):

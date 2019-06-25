@@ -114,7 +114,7 @@ class RandomCog(commands.Cog, name="Random Commands"):
         elif command in self.MAP_CMD:
             map_name = secure_random.choice(self.MAPS)
             embed.add_field(name=self.lang_dict["random_map"][lang], value=map_name)
-            map_name = map_name.lower().replace(" ", "_")
+            map_name = map_name.lower().replace(" ", "_").replace("'", "")
             map_url = "https://raw.githubusercontent.com/EthanHicks1/PaladinsAssistantBot/master/icons/maps/{}.png".\
                 format(map_name)
             embed.set_image(url=map_url)

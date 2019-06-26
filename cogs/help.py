@@ -146,9 +146,6 @@ class HelpCog(commands.Cog, name="Help Commands"):
         descriptions = ["Player's Paladins IGN"]
         await ctx.send(embed=create_embed(command_name, command_description, parameters, descriptions))
 
-    #embed.add_field(name='console', value='',
-    #                inline=False)
-
     @help.command()
     async def top(self, ctx):
         command_name = "top"

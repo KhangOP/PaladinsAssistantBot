@@ -1,6 +1,7 @@
 from discord.ext import commands
 import json
 import my_utils as helper
+from colorama import Fore
 
 
 def server_owner_only():
@@ -35,7 +36,7 @@ class SoloCommandCog(commands.Cog, name="Solo Commands"):
 
     def load_lang(self):
         with open(self.file_name) as json_f:
-            print("Loaded server languages")
+            print(Fore.CYAN + "Loaded server languages...")
             self.lan = json.load(json_f)
 
     @commands.command(name='prefix')

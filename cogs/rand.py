@@ -4,6 +4,7 @@ import random
 import json
 
 import my_utils as helper
+from colorama import Fore
 
 
 class RandomCog(commands.Cog, name="Random Commands"):
@@ -37,7 +38,8 @@ class RandomCog(commands.Cog, name="Random Commands"):
     def load_lang(self):
         # Loads in language dictionary (need encoding option so it does not mess up other languages)
         with open(self.file_name, encoding='utf-8') as json_f:
-            print("Loaded random command language dictionary.")
+            print(Fore.CYAN + "Loaded language dictionary for RandomCog...")
+
             self.lang_dict = json.load(json_f)
 
     async def pick_random_champion(self):

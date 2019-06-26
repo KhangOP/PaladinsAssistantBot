@@ -8,6 +8,7 @@ import textwrap
 import time
 import os
 import re
+from colorama import Fore
 import math
 
 from concurrent.futures import ThreadPoolExecutor
@@ -711,5 +712,5 @@ class Lang:
 
 
 with open(Lang.file_name) as json_lang:
-    print("Loaded server languages for lang class")
+    print(Fore.CYAN + "Loaded server languages for lang class...")
     Lang.lan = json.load(json_lang)

@@ -13,6 +13,8 @@ import aiohttp
 import asyncio
 import time
 
+from colorama import Fore
+
 file_name = "token"
 # Gets ID and KEY from a file
 with open(file_name, 'r') as f:
@@ -56,9 +58,8 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     def load_lang(self):
         # Loads in language dictionary (need encoding option so it does not mess up other languages)
         with open(self.file_name, encoding='utf-8') as json_f:
-            print("Loaded language dictionary for PaladinsAPICog...")
+            print(Fore.CYAN + "Loaded language dictionary for PaladinsAPICog...")
             self.lang_dict = json.load(json_f)
-            # print(self.lang_dict)
 
     # Returns a number for indexing in a list
     @classmethod
@@ -199,7 +200,12 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
                 split1 = soup.split("(Level ")
 
-                player_name = str(split1[0]).strip()  # Player Name
+                player_name = "???"
+                try:
+                    player_name = str(split1[0]).strip()  # Player Name
+                except BaseException:
+                    print(Fore.RED + str(soup))
+                    return ["Connection Error", "???", "???", "???"]
                 level = split1[1].split(")")[0]  # Level
                 kda = soup.split("- ")[1].split(" KDA")[0]  # KDA
                 win_rate = soup.split("Win rate: ")[1].split("%")[0]  # Win Rate

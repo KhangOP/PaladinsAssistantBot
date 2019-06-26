@@ -13,6 +13,9 @@ import requests
 import my_utils as helper
 from cogs import PaladinsAPI
 
+from colorama import Fore, init
+init(autoreset=True)
+
 
 # Discord Variables
 BOT_STATUS = ">>help"
@@ -56,13 +59,13 @@ async def send_error(cont, msg):
     error_msg = "```diff\n- {}```".format(msg)
     try:  # First lets try to send the message to the channel the command was called
         await cont.send(error_msg)
-        print("---" + str(msg))
+        print(Fore.RED + str(msg))
     except BaseException as e:
         print(e)
         try:  # Next lets try to DM the message to the user
             author = cont.message.author
             await author.send(error_msg)
-            print("---" + msg)
+            print(Fore.RED + str(msg))
         except BaseException:  # Bad sign if we end up here but is possible if the user blocks some DM's
             print("The bot can't message the user in their DM's or in the channel they called the function.")
 
@@ -110,7 +113,7 @@ async def on_command_error(ctx, error):
     else:
         global daily_error_count
         daily_error_count = daily_error_count + 1
-        print("An uncaught error occurred: ", error)  # More error checking
+        print(Fore.RED + "An uncaught error occurred: ", error)  # More error checking
         error_file = str(await helper.get_est_time()).replace("/", "-").replace(":", "-").split()
         error_file = "_".join(error_file[::-1])
         with open("error_logs/{}.csv".format(error_file), 'w+', encoding="utf-8") as error_log_file:
@@ -177,20 +180,23 @@ async def log_information():
             date = date.split(" ")[1]
 
             lines = r_log_file.read().splitlines()
-            servers, old_errors, num_cmd, old_api_calls, old_date = lines[-1].split(',')
+            servers, n1, old_errors, num_cmd, old_api_calls, old_date = lines[-1].split(',')
             api_calls = PaladinsAPI.paladinsAPI.getDataUsed()
             api_calls = api_calls.totalRequestsToday
 
+            ss_c = str(len(client.get_guild(554372822739189761).members))
+
             # Updates tracked information for the current day or the next day
             if old_date.strip() == date:
-                lines[-1] = "{}, {}, {}, {}, {}\n".format(len(client.guilds), int(daily_error_count) + int(old_errors),
-                                                          int(daily_command_count) + int(num_cmd), api_calls, date)
+                lines[-1] = "{}, {}, {}, {}, {}, {}\n".format(len(client.guilds), ss_c, int(daily_error_count) +
+                                                              int(old_errors), int(daily_command_count) + int(num_cmd),
+                                                              api_calls, date)
                 with open("log_file.csv", 'w') as w_log_file:
                     w_log_file.write("\n".join(lines))
             else:
                 with open("log_file.csv", '+a') as a_log_file:
-                    a_log_file.write("{}, {}, {}, {}, {}\n".format(len(client.guilds), int(daily_error_count),
-                                                                   daily_command_count, api_calls, date))
+                    a_log_file.write("{}, {}, {}, {}, {}, {}\n".format(len(client.guilds), ss_c, int(daily_error_count),
+                                                                       daily_command_count, api_calls, date))
         daily_command_count = 0
         daily_error_count = 0
         print("Logged commands and server count: {}".format(await helper.get_est_time()))
@@ -219,7 +225,9 @@ async def on_ready():
 async def count_servers():
     await client.wait_until_ready()
     if not client.is_closed():
-        print("Current servers:", len(client.guilds))
+        print(Fore.GREEN + "Current servers:", Fore.MAGENTA + str(len(client.guilds)))
+        print(Fore.GREEN + "Members in support server:", Fore.MAGENTA +
+              str(len(client.get_guild(554372822739189761).members)))
 
 
 # Changes bot presence every min
@@ -246,9 +254,10 @@ def load_cogs():
     for extension in initial_extensions:
         try:
             client.load_extension(extension)
-            print("loaded extension:", extension)
+            print(Fore.GREEN + "Loaded extension:", Fore.MAGENTA + extension)
         except BaseException as e:
-            print("failed to load: {} because of {}".format(extension, e))
+            print(Fore.RED + "Failed to load: {} because of {}".format(extension, e))
+    print("")
 
 
 load_cogs()

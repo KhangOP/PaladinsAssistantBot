@@ -994,6 +994,8 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     @commands.command(name='current', pass_context=True, aliases=["cur", 'c', "partida"], ignore_extra=False)
     @commands.cooldown(2, 30, commands.BucketType.user)
     async def current(self, ctx, player_name, option="-s"):
+        await ctx.send("Command disabled due to bot crashing problems")
+        return None
         # Maybe convert the player name
         if str(player_name) == "me":
             player_name = self.check_player_name(str(ctx.author.id))

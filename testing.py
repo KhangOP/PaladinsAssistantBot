@@ -22,6 +22,5 @@ except BaseException:
     print("could not find")
 """
 
-
-paladins_data = paladinsAPI.getMatchHistory(7241948)
-print(paladins_data)
+# paladins_data = paladinsAPI.getMatchHistory(7241948)
+# print(paladins_data)

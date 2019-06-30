@@ -20,6 +20,25 @@ class NotServerOwner(commands.CheckFailure):
     pass
 
 
+def enabled_function(enabled=True, message="Command disabled."):
+    async def predicate(ctx):
+        # If in dm's
+        if ctx.guild is None:
+            return True
+        #if not ctx.guild.owner == ctx.author:
+        #    raise NotServerOwner("Sorry you are not authorized to use this command. Only the server owner: " +
+        #                        str(ctx.guild.owner) + " can use this command")
+        if not enabled:
+            await ctx.send(message)
+            raise NoNo
+        return True
+    return commands.check(predicate)
+
+
+class NoNo(BaseException):
+    pass
+
+
 # Class of commands that are solo (a.k.a) are not used/related to other functions
 class SoloCommandCog(commands.Cog, name="Solo Commands"):
     """SoloCommandsCog"""
@@ -38,6 +57,11 @@ class SoloCommandCog(commands.Cog, name="Solo Commands"):
         with open(self.file_name) as json_f:
             print(Fore.CYAN + "Loaded server languages...")
             self.lan = json.load(json_f)
+
+    @enabled_function(False)
+    @commands.command(name='decorators')
+    async def decorators(self, ctx):
+        await ctx.send("Sup my dude.")
 
     @commands.command(name='prefix')
     @commands.guild_only()

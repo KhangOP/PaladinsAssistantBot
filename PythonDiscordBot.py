@@ -97,6 +97,9 @@ async def on_command_error(ctx, error):
         await send_error(cont=ctx, msg="A required argument to the command you called is missing.")
     elif isinstance(error, commands.BadArgument):
         await send_error(cont=ctx, msg="Make sure the command is in the correct format.")
+    elif isinstance(error, commands.errors.UnexpectedQuoteError):
+        await send_error(cont=ctx, msg="If you are trying to type the name Mal`Damba please type his name as one "
+                                       "word without any kinda of quote marks.")
     elif isinstance(error, commands.TooManyArguments):
         await send_error(cont=ctx, msg=error)
     elif isinstance(error, commands.CommandNotFound):

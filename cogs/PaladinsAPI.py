@@ -200,7 +200,6 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
                 split1 = soup.split("(Level ")
 
-                player_name = "???"
                 try:
                     player_name = str(split1[0]).strip()  # Player Name
                 except BaseException:
@@ -789,7 +788,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         await ctx.send("```diff\n" + match_data2 + "```")
 
     # Returns an image of a match with player details
-    @commands.command(name='match', pass_context=True, ignore_extra=False)  # ToDo Speed up
+    @commands.command(name='match', pass_context=True, ignore_extra=False)
     @commands.cooldown(2, 30, commands.BucketType.user)
     async def match(self, ctx, player_name, match_id=None, colored="-b"):
         # Maybe convert the player name

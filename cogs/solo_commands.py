@@ -2,6 +2,8 @@ from discord.ext import commands
 import json
 import my_utils as helper
 from colorama import Fore
+from psutil import Process
+from os import getpid
 
 
 def server_owner_only():
@@ -80,7 +82,7 @@ class SoloCommandCog(commands.Cog, name="Solo Commands"):
                     json.dump(server_ids, json_d)
                 await ctx.send("This bot is now set to use the prefix: `" + prefix + "` in this server")
 
-    @commands.command(name='language')
+    @commands.command(name='language', aliases=["język"])
     @commands.guild_only()
     @server_owner_only()
     async def set_server_language(self, ctx, language: str):
@@ -134,7 +136,7 @@ class SoloCommandCog(commands.Cog, name="Solo Commands"):
             return "English"
 
     # Print how many times a person has used each command
-    @commands.command(name='usage')
+    @commands.command(name='usage', aliases=["użycie"])
     async def usage(self, ctx):
         user_commands = await helper.get_store_commands(ctx.author.id)
         len(user_commands)
@@ -152,6 +154,11 @@ class SoloCommandCog(commands.Cog, name="Solo Commands"):
             i += 1
 
         await ctx.send('```md\n' + message + '```')
+
+    @commands.is_owner()
+    @commands.command()
+    async def memory_check(self, ctx):
+        await ctx.send(f'{round(Process(getpid()).memory_info().rss/1024/1024, 2)} MB')
 
 
 # Add this class to the cog list

@@ -12,6 +12,8 @@ import json
 import aiohttp
 import asyncio
 import time
+from psutil import Process
+from os import getpid
 
 from colorama import Fore
 
@@ -49,8 +51,6 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     SUPPORTS = ["Grohk", "Grover", "Ying", "Mal Damba", "Seris", "Jenos", "Furia", "Pip"]
 
     dashes = "----------------------------------------"
-    player_id_error = "Can't find the player: {} or their account is private. Please make sure the name is spelled " \
-                      "correctly (Capitalization does not matter)."
 
     lang_dict = {}
     file_name = "languages/paladins_api_lang_dict"
@@ -189,7 +189,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     @classmethod
     async def get_global_kda(cls, player_id):
         url = "http://nonsocial.herokuapp.com/api/kda?player=" + str(player_id)
-        async with aiohttp.ClientSession() as cs:
+        async with aiohttp.ClientSession(conn_timeout=5, read_timeout=5) as cs:
             async with cs.get(url) as r:
                 soup = await r.text()  # returns dict
 
@@ -218,11 +218,11 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         # Player level, played hours, etc
         player_id = self.get_player_id(player_name)
         if player_id == -1:
-            return self.player_id_error.format(player_name)
+            return self.lang_dict["general_error2"][lang].format(player_name)
         try:
             info = paladinsAPI.getPlayer(player_id)
         except PlayerNotFound:
-            return self.player_id_error.format(player_name)
+            return self.lang_dict["general_error2"][lang].format(player_name)
 
         # Overall Info
         ss = self.lang_dict["stats_s1"][lang]
@@ -297,7 +297,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
     # Gets stats for a champ using Paladins API
     @classmethod
-    async def get_champ_stats_api(cls, player_name, champ, simple):
+    async def get_champ_stats_api(cls, player_name, champ, simple, lang):
         # Gets player id and error checks
         player_id = cls.get_player_id(player_name)
         if player_id == -1:
@@ -305,7 +305,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 ss = str('*{:18} Lv. {:3}  {:7}   {:6}\n')
                 ss = ss.format(champ, "???", "???", "???")
                 return ss
-            match_data = cls.player_id_error.format(player_name)
+            match_data = cls.lang_dict["general_error2"][lang].format(player_name)
             embed = discord.Embed(
                 description=match_data,
                 colour=discord.colour.Color.dark_teal()
@@ -325,7 +325,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 ss = str('*{:18} Lv. {:3}  {:7}   {:6}\n')
                 ss = ss.format(champ, "???", "???", "???")
                 return ss
-            match_data = "Can't get stats for {} because their account is private.".format(player_name)
+            match_data = cls.lang_dict["general_error"][lang].format(player_name)
             embed = discord.Embed(
                 description=match_data,
                 colour=discord.colour.Color.dark_teal()
@@ -355,7 +355,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 if not last_played:  # Bought the champ but never played them
                     break
 
-                ss = str('Champion: {} (Lv {})\nKDA: {} ({}-{}-{}) \nWin Rate: {}% ({}-{}) \nLast Played: {}')
+                ss = cls.lang_dict["stats_champ"][lang]
 
                 ss = ss.format(champ, level, kda, stat.kills, stat.deaths, stat.assists,
                                win_rate, wins, losses, str(stat.lastPlayed).split()[0])
@@ -468,6 +468,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     @commands.cooldown(2, 30, commands.BucketType.user)
     # Gets stats for a champ using Paladins API
     async def top(self, ctx, player_name, option, order="False"):
+        lang = await helper.Lang.check_language(ctx=ctx)
         # Maybe convert the player name
         if str(player_name) == "me":
             player_name = self.check_player_name(str(ctx.author.id))
@@ -486,7 +487,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         # Gets player id and error checks
         player_id = self.get_player_id(player_name)
         if player_id == -1:
-            match_data = self.player_id_error.format(player_name)
+            match_data = self.lang_dict["general_error2"][lang].format(player_name)
             embed = discord.Embed(
                 description=match_data,
                 colour=discord.colour.Color.dark_teal()
@@ -495,14 +496,14 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         try:
             stats = paladinsAPI.getChampionRanks(player_id)
         except BaseException:
-            match_data = "Can't get stats for {} because their account is private.".format(player_name)
+            match_data = self.lang_dict["general_error"][lang].format(player_name)
             embed = discord.Embed(
                 description=match_data,
                 colour=discord.colour.Color.dark_teal()
             )
             return embed
         if stats is None:  # Private account
-            match_data = "Can't get stats for {} because their account is private.".format(player_name)
+            match_data = self.lang_dict["general_error"][lang].format(player_name)
             embed = discord.Embed(
                 description=match_data,
                 colour=discord.colour.Color.dark_teal()
@@ -563,9 +564,10 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
         await ctx.send("```md\n" + message + "```")
 
-    @commands.command(name='deck', pass_context=True, aliases=["decks"], ignore_extra=False)
+    @commands.command(name='deck', pass_context=True, aliases=["decks", "talia"], ignore_extra=False)
     @commands.cooldown(2, 30, commands.BucketType.user)
     async def deck(self, ctx, player_name, champ_name, deck_index=None):
+        lang = await helper.Lang.check_language(ctx=ctx)
         # Maybe convert the player name
         if str(player_name) == "me":
             player_name = self.check_player_name(str(ctx.author.id))
@@ -584,7 +586,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             player_id = self.get_player_id(player_name)
 
             if player_id == -1:
-                match_data = self.player_id_error.format(player_name)
+                match_data = self.lang_dict["general_error2"][lang].format(player_name)
                 embed = discord.Embed(
                     description=match_data,
                     colour=discord.colour.Color.dark_teal()
@@ -639,9 +641,10 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 file = discord.File(filename="Deck.png", fp=buffer)
                 await ctx.send("```Enjoy the beautiful image below.```", file=file)
 
-    @commands.command(name='history', pass_context=True, ignore_extra=False)
+    @commands.command(name='history', pass_context=True, ignore_extra=False, aliases=["historia"])
     @commands.cooldown(2, 30, commands.BucketType.user)
     async def history(self, ctx, player_name, amount=10, champ_name=None):
+        lang = await helper.Lang.check_language(ctx=ctx)
         # Maybe convert the player name
         if str(player_name) == "me":
             player_name = self.check_player_name(str(ctx.author.id))
@@ -662,7 +665,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 return None
             player_id = self.get_player_id(player_name)
             if player_id == -1:
-                await ctx.send(self.player_id_error.format(player_name))
+                await ctx.send(self.lang_dict["general_error2"][lang].format(player_name))
                 return None
             if champ_name:  # Check in case they don't provide champ name
                 champ_name = await self.convert_champion_name(champ_name)
@@ -788,9 +791,10 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         await ctx.send("```diff\n" + match_data2 + "```")
 
     # Returns an image of a match with player details
-    @commands.command(name='match', pass_context=True, ignore_extra=False)
+    @commands.command(name='match', pass_context=True, ignore_extra=False, aliases=["mecz"])
     @commands.cooldown(2, 30, commands.BucketType.user)
     async def match(self, ctx, player_name, match_id=None, colored="-b"):
+        lang = await helper.Lang.check_language(ctx=ctx)
         # Maybe convert the player name
         if str(player_name) == "me":
             player_name = self.check_player_name(str(ctx.author.id))
@@ -807,7 +811,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         player_id = self.get_player_id(player_name)
 
         if player_id == -1:
-            match_data = self.player_id_error.format(player_name)
+            match_data = self.lang_dict["general_error2"][lang].format(player_name)
             embed = discord.Embed(
                 description=match_data,
                 colour=discord.colour.Color.dark_teal()
@@ -907,9 +911,10 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             await ctx.send(embed=embed)
 
     # Returns simple match history details
-    @commands.command(name='last', pass_context=True, ignore_extra=False)
+    @commands.command(name='last', pass_context=True, ignore_extra=False, aliases=["ostatni"])
     @commands.cooldown(2, 30, commands.BucketType.user)
     async def last(self, ctx, player_name, match_id=-1):
+        lang = await helper.Lang.check_language(ctx=ctx)
         # Maybe convert the player name
         if str(player_name) == "me":
             player_name = self.check_player_name(str(ctx.author.id))
@@ -927,7 +932,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         player_id = self.get_player_id(player_name)
 
         if player_id == -1:
-            match_data = self.player_id_error.format(player_name)
+            match_data = self.lang_dict["general_error2"][lang].format(player_name)
             embed = discord.Embed(
                 description=match_data,
                 colour=discord.colour.Color.dark_teal()
@@ -990,11 +995,13 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
     # Gets details about a player in a current match using the Paladins API
     # Get stats for a player's current match.
-    @commands.command(name='current', pass_context=True, aliases=["cur", 'c', "partida"], ignore_extra=False)
+    @commands.command(name='current', pass_context=True, aliases=["partida", "obecny"], ignore_extra=False)
     @commands.cooldown(2, 30, commands.BucketType.user)
     async def current(self, ctx, player_name, option="-s"):
-        await ctx.send("Command disabled due to bot crashing problems")
-        return None
+        print(Fore.MAGENTA + f'{round(Process(getpid()).memory_info().rss/1024/1024, 2)} MB')
+        lang = await helper.Lang.check_language(ctx=ctx)
+        #await ctx.send("Command disabled due to bot crashing problems")
+        #return None
         # Maybe convert the player name
         if str(player_name) == "me":
             player_name = self.check_player_name(str(ctx.author.id))
@@ -1020,7 +1027,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             # Gets player id and error checks
             player_id = self.get_player_id(player_name)
             if player_id == -1:
-                await ctx.send(self.player_id_error.format(player_name))
+                await ctx.send(self.lang_dict["general_error2"][lang].format(player_name))
                 return None
             data = paladinsAPI.getPlayerStatus(player_id)
 
@@ -1167,7 +1174,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
                 # Add in champ stats
                 if option == "-a" and can_use:
-                    player_champ_data += await self.get_champ_stats_api(pl[0], champ, 1)
+                    player_champ_data += await self.get_champ_stats_api(pl[0], champ, 1, lang=lang)
 
             match_data += "\n"
             player_champ_data += "\n"
@@ -1194,7 +1201,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
                 # Add in champ stats
                 if option == "-a" and can_use:
-                    player_champ_data += await self.get_champ_stats_api(pl[0], champ, 1)
+                    player_champ_data += await self.get_champ_stats_api(pl[0], champ, 1, lang=lang)
 
             # Adding team win rate's and kda's
 
@@ -1229,13 +1236,14 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             await ctx.send("```diff\n" + match_data + "```", file=file)
             if "\n" in player_champ_data and value != -1:
                 await ctx.send("```diff\n" + player_champ_data + "```")
+            print(Fore.MAGENTA + f'{round(Process(getpid()).memory_info().rss/1024/1024, 2)} MB')
 
     # Returns simple stats based on the option they choose (champ_name, me, or elo)
-    @commands.command(name='stats', aliases=['stat'], pass_context=True, ignore_extra=False)
+    @commands.command(name='stats', aliases=['Statystyki'], pass_context=True, ignore_extra=False)
     @commands.cooldown(3, 30, commands.BucketType.user)
     async def stats(self, ctx, player_name, option=None):
-        await helper.store_commands(ctx.author.id, "stats")
         lang = await helper.Lang.check_language(ctx=ctx)
+        await helper.store_commands(ctx.author.id, "stats")
 
         # Maybe convert the player name
         if str(player_name) == "me":
@@ -1253,15 +1261,9 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         if option is None:
             result = await self.get_player_stats_api(player_name, lang=lang)
             await ctx.send("```md\n" + result + "```")
-        elif option == "elo":
-            await ctx.send("```Guru's site is currently under(as of 4/4/2019) development and until they finish "
-                           "updating the site this bot can not get their elo data :(```")
-            return None
-            # result = await self.get_player_elo(player_name)
-            # await ctx.send("```" + result + "```")
         else:
             champ_name = await self.convert_champion_name(option)
-            result = await self.get_champ_stats_api(player_name, champ_name, simple=0)
+            result = await self.get_champ_stats_api(player_name, champ_name, simple=0, lang=lang)
             try:
                 await ctx.send(embed=result)
             except BaseException as e:
@@ -1269,7 +1271,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 print("***Stupid error: " + str(e) + "result")
 
     # Stores Player's IGN for the bot to use
-    @commands.command(name='store', pass_context=True, ignore_extra=False)
+    @commands.command(name='store', pass_context=True, ignore_extra=False, aliases=["zapisz"])
     @commands.cooldown(2, 30, commands.BucketType.user)
     async def store_player_name(self, ctx, player_ign):
         with open("player_discord_ids") as json_f:

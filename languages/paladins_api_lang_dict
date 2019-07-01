@@ -1,17 +1,32 @@
 {
+  "general_error": {
+    "en": "Can't get stats for {} because their account is private.",
+    "pl": "Nie mogę uzyskać statystyk gracza {}, ponieważ jego konto jest prywatne.",
+    "pt": ""
+  },
+  "general_error2": {
+    "en": "Can't find the player: {} or their account is private. Please make sure the name is spelled correctly (Capitalization does not matter).",
+    "pl": "Nie mogę znaleźć gracza: {} lub jego konto jest prywatne. Upewnij się, że poprawnie wpisujesz nazwę. (Wielkość liter nie ma znaczenia).",
+    "pt": ""
+  },
   "stats_s1": {
     "en": "Casual stats: \n{}\nName: {}\nAccount Level: {}\nWin Rate: {}% out of {} matches.\nTimes Deserted: {}\n\n",
-    "pl": "Polish Translation",
+    "pl": "Statystyki szybkich gier: \n{}\nNazwa: {}\nPoziom konta: {}\nProcent wygranych gier: {}%, po zagraniu {} meczy.\nOpuszczone mecze: {}\n\n",
     "pt": "Casual stats: \n{}\nNome: {}\nLevel: {}\nWin Rate: {}% de {} partidas.\nDesertor: {}\n\n"
   },
   "stats_s2": {
     "en": "Ranked stats for Season {}:\n{}\nRank: {}\nTP: {} (position: {})\nWin Rate: {}% ({}-{})\nTimes Deserted: {}\n\n",
-    "pl": "Polish Translation",
+    "pl": "Statystyki gier rankingowych w sezonie {}:\n{}\nRanga: {}\nTP: {} (pozycja: {})\nProcent wygranych gier: {}% ({}-{})\nOpuszczone mecze: {}\n\n",
     "pt": "Ranked stats - Temporada {}:\n{}\nRank: {}\nTP: {} ({}° no rank)\nWin Rate: {}% ({}-{})\nTDesertor: {}\n\n"
   },
   "stats_s3": {
     "en": "Extra details:\n{}\nAccount created on: {}\nLast login on: {}\nPlatform: {}\nMasteryLevel: {}\nSteam Achievements completed: {}/58",
-    "pl": "Polish Translation",
+    "pl": "Dodatkowe informacje:\n{}\nKonto stworzone: {}\nOstatnie logowanie: {}\nPlatforma: {}\nLiczba posiadanych czempionów: {}\nLiczba ukończonych osiągnięć na Steamie: {}/58",
     "pt": "Extra details:\n{}\nCriado em: {}\nÚltimo login: {}\nPlatforma: {}\nMasteryLevel: {}\nSteam Achievements: {}/58"
+  },
+  "stats_champ": {
+    "en": "Champion: {} (Lv {})\nKDA: {} ({}-{}-{}) \nWin Rate: {}% ({}-{}) \nLast Played: {}",
+    "pl": "Czempion: {} (Poziom {})\nKDA: {} ({}-{}-{}) \nProvent wygranych gier: {}% ({}-{}) \nOstatnia gra: {}",
+    "pt": ""
   }
 }

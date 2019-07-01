@@ -296,16 +296,15 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         return stats
 
     # Gets stats for a champ using Paladins API
-    @classmethod
-    async def get_champ_stats_api(cls, player_name, champ, simple, lang):
+    async def get_champ_stats_api(self, player_name, champ, simple, lang):
         # Gets player id and error checks
-        player_id = cls.get_player_id(player_name)
+        player_id = self.get_player_id(player_name)
         if player_id == -1:
             if simple == 1:
                 ss = str('*{:18} Lv. {:3}  {:7}   {:6}\n')
                 ss = ss.format(champ, "???", "???", "???")
                 return ss
-            match_data = cls.lang_dict["general_error2"][lang].format(player_name)
+            match_data = self.lang_dict["general_error2"][lang].format(player_name)
             embed = discord.Embed(
                 description=match_data,
                 colour=discord.colour.Color.dark_teal()
@@ -325,7 +324,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 ss = str('*{:18} Lv. {:3}  {:7}   {:6}\n')
                 ss = ss.format(champ, "???", "???", "???")
                 return ss
-            match_data = cls.lang_dict["general_error"][lang].format(player_name)
+            match_data = self.lang_dict["general_error"][lang].format(player_name)
             embed = discord.Embed(
                 description=match_data,
                 colour=discord.colour.Color.dark_teal()
@@ -345,17 +344,17 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             count += 1
             wins = stat.wins
             losses = stat.losses
-            kda = await cls.calc_kda(stat.kills, stat.deaths, stat.assists)
+            kda = await self.calc_kda(stat.kills, stat.deaths, stat.assists)
             # champ we want to get the stats on
             if stat.godName == champ:
-                win_rate = await cls.calc_win_rate(wins, wins + losses)
+                win_rate = await self.calc_win_rate(wins, wins + losses)
                 level = stat.godLevel
 
                 last_played = str(stat.lastPlayed)
                 if not last_played:  # Bought the champ but never played them
                     break
 
-                ss = cls.lang_dict["stats_champ"][lang]
+                ss = self.lang_dict["stats_champ"][lang]
 
                 ss = ss.format(champ, level, kda, stat.kills, stat.deaths, stat.assists,
                                win_rate, wins, losses, str(stat.lastPlayed).split()[0])
@@ -391,7 +390,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
         # Global win rate and kda
         global_ss = str("\n\nGlobal KDA: {}\nGlobal Win Rate: {}% ({}-{})")
-        win_rate = await cls.calc_win_rate(t_wins, t_wins + t_loses)
+        win_rate = await self.calc_win_rate(t_wins, t_wins + t_loses)
         t_kda = str('{0:.2f}').format(t_kda / count)
         global_ss = global_ss.format(t_kda, win_rate, t_wins, t_loses)
         ss += global_ss

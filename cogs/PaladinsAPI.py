@@ -254,6 +254,68 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                         str(info.platform), str(info.playedGods), str(info.totalAchievements))
         return ss
 
+    # Uses Paladins API to get overall stats for a player (Mobile version)
+    async def get_player_stats_api_mobile(self, player_name, lang):
+        # Player level, played hours, etc
+        player_id = self.get_player_id(player_name)
+        if player_id == -1:
+            return self.lang_dict["general_error2"][lang].format(player_name)
+        try:
+            info = paladinsAPI.getPlayer(player_id)
+        except PlayerNotFound:
+            return self.lang_dict["general_error2"][lang].format(player_name)
+
+        embed = discord.Embed(
+            title="`Casual stats:`",
+            colour=discord.colour.Color.dark_teal(),
+        )
+
+        total = int(info.wins) + int(info.losses)
+        wr = await self.calc_win_rate(int(info.wins), total)
+        # embed.add_field(name='Casual stats:', value="```-----```", inline=False)
+        embed.add_field(name='Name:', value=info.playerName, inline=False)
+        embed.add_field(name='Account Level:', value=info.accountLevel, inline=False)
+        embed.add_field(name='Win Rate:', value="{}% out of {} matches".format(wr, total), inline=False)
+        embed.add_field(name='Times Deserted:', value=str(info.leaves), inline=False)
+
+        # Get the platform's ranked stats
+        platform = str(info.platform).lower()
+        if platform == "steam" or platform == "hirez":
+            ranked = info.rankedKeyboard
+        else:
+            ranked = info.rankedController
+
+        win = int(ranked.wins)
+        lose = int(ranked.losses)
+        wr = await self.calc_win_rate(win, win + lose)
+
+        embed2 = discord.Embed(
+            title="`Ranked stats for Season {}:`".format(ranked.currentSeason),
+            colour=discord.colour.Color.dark_magenta(),
+        )
+        # embed2.add_field(name='Ranked stats for Season {}:'.format(ranked.currentSeason), value="```-----```",
+        #                 inline=False)
+        embed2.add_field(name='Rank:', value=ranked.currentRank.getName(), inline=False)
+        embed2.add_field(name='TP:', value="{} (position: {})".format(ranked.currentTrumpPoints,
+                                                                      ranked.leaderboardIndex), inline=False)
+        embed2.add_field(name='Win Rate:', value="{}% ({}-{})".format(wr, win, lose), inline=False)
+        embed2.add_field(name='Times Deserted:', value=str(ranked.leaves), inline=False)
+
+        embed3 = discord.Embed(
+            title="`Extra details:`",
+            colour=discord.colour.Color.dark_teal(),
+        )
+        # embed3.add_field(name='Extra details:', value="```-----```", inline=False)
+        embed3.add_field(name='Account created on:', value=str(info.createdDatetime).split()[0], inline=False)
+        embed3.add_field(name='Last login on:', value=str(info.lastLoginDatetime).split()[0], inline=False)
+        embed3.add_field(name='Platform:', value=str(info.platform), inline=False)
+        embed3.add_field(name='MasteryLevel:', value=str(info.playedGods), inline=False)
+        embed3.add_field(name='Steam Achievements completed:', value="{}/{}".format(info.totalAchievements, 58),
+                         inline=False)
+
+        embeds = [embed, embed2, embed3]
+        return embeds
+
     @classmethod
     # Gets elo's for a player from the Paladins Guru site?
     async def get_player_elo(cls, player_name):
@@ -1021,8 +1083,6 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     async def current(self, ctx, player_name, option="-s"):
         print(Fore.MAGENTA + f'{round(Process(getpid()).memory_info().rss/1024/1024, 2)} MB')
         lang = await helper.Lang.check_language(ctx=ctx)
-        #await ctx.send("Command disabled due to bot crashing problems")
-        #return None
         # Maybe convert the player name
         if str(player_name) == "me":
             player_name = self.check_player_name(str(ctx.author.id))
@@ -1280,8 +1340,13 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             return None
 
         if option is None:
-            result = await self.get_player_stats_api(player_name, lang=lang)
-            await ctx.send("```md\n" + result + "```")
+            if not ctx.author.is_on_mobile():
+                result = await self.get_player_stats_api(player_name, lang=lang)
+                await ctx.send("```md\n" + result + "```")
+            else:
+                embeds = await self.get_player_stats_api_mobile(player_name, lang=lang)
+                for embed in embeds:
+                    await ctx.send(embed=embed)
         else:
             champ_name = await self.convert_champion_name(option)
             result = await self.get_champ_stats_api(player_name, champ_name, simple=0, lang=lang)

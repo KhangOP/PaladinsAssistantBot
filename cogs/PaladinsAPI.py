@@ -1129,16 +1129,8 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             for player in team1:
                 tasks.append(self.get_global_kda(player))
 
-            # Fill in the missing team mates with a function that returns nothing
-            while len(team1) != 5:
-                tasks.append(self.do_nothing())
-
             for player in team2:
                 tasks.append(self.get_global_kda(player))
-
-            # Fill in the missing team mates with a function that returns nothing
-            while len(team2) != 5:
-                tasks.append(self.do_nothing())
 
             # Add in image creation task
             tasks.append(helper.create_match_image(team1_champs, team2_champs, team1_ranks, team2_ranks))
@@ -1148,8 +1140,8 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
             # Image
             buffer = data.pop()
-            data1 = data[:5]
-            data2 = data[5:]
+            data1 = data[:len(team1)]
+            data2 = data[len(team1):]
 
             for pl, champ in zip(data1, team1_champs):
                 ss = str('*{:18} Lv. {:3}  {:8}  {:6}\n')

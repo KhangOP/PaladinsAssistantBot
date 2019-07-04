@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 import requests
 import my_utils as helper
 from datetime import datetime; datetime.now
+from datetime import date
 
 from pyrez.api import PaladinsAPI
 from pyrez.exceptions import PlayerNotFound
@@ -409,8 +410,8 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
     '''Commands below ############################################################'''
     @commands.command(name='console', pass_context=True, ignore_extra=False)
-    @commands.cooldown(2, 30, commands.BucketType.user)
-    async def console(self, ctx, player_name, platform: str, player_level=-1):
+    @commands.cooldown(6, 30, commands.BucketType.user)
+    async def console(self, ctx, player_name, platform: str):
         async with ctx.channel.typing():
             platform = platform.lower()
             if platform == "xbox":
@@ -426,42 +427,63 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             # players = paladinsAPI.getPlayerId(player_name, "steam")
             # players = paladinsAPI.getPlayerId(player_name, platform)
 
-            """
             players = paladinsAPI.searchPlayers(player_name)
-            players = [player for player in players if player.playerName.lower() == player_name.lower()]
-            ss = ""
-            for player in players:
-                if player['portal_id'] == platform:
-                    ss += str(player) + "\n"
-                    print(player)
-            # await ctx.send(ss)
-            """
 
-            # Use Guru's DataBase
-            url = "https://api.paladins.guru/v3/search?term={}&type=Player".format(str(player_name))
-            json_player_data = requests.get(url).json()
-            ss = ("    {:20} {:5}  {:20}\n{}\n".format("Player ID", "Level", "Region", self.dashes))
-            index = 1
-            for player in json_player_data:
-                # {'platform': 0, 'id': 704783272, 'name': 'KingDusk', 'seen': '2019-06-11T02:12:34.691Z', 'level': 386,
-                #  'region': 'NA', 'playtime': 32492}
-                # print(player)
-                for names in player['names']:
-                    # print(names['portal'], names['name'])
-                    if names['portal'] == platform:
-                        if player_level == -1 or player['level'] in range(player_level-50, player_level+50):
-                            if index >= 10:
-                                ss += ("{}{:20} {:5}  {:20}\n".format((str(index) + '. '), str(player['id']),
-                                                                      str(player['level']), player['region']))
-                            else:
-                                ss += ("{} {:20} {:5}  {:20}\n".format((str(index) + '. '), str(player['id']),
-                                                                       str(player['level']), player['region']))
-                            index += 1
-                    if index >= 25:
-                        ss += url
-                        await ctx.send("```md\n{}```".format(ss))
-                        return None
-            await ctx.send("```md\n{}```".format(ss))
+            players = [player for player in players if player.playerName.lower() == player_name.lower() and
+                       player['portal_id'] == platform]
+            num_players = len(players)
+            if num_players > 20:  # Too many players...we must match case exactly
+                await ctx.send("Found `{}` players with the name `{}`. Switching to case sensitive mode..."
+                               .format(num_players, player_name))
+                players = [player for player in players if player.playerName == player_name and
+                           player['portal_id'] == platform]
+                num_players = len(players)
+                await ctx.send("Found `{}` players with the name `{}`."
+                               .format(num_players, player_name))
+                if num_players > 20:
+                    await ctx.send("```There are too many players with the name {}:\n\nPlease look on PaladinsGuru to "
+                                   "find the Player ID```https://paladins.guru/search?term={}&type=Player"
+                                   .format(player_name, player_name))
+                    return None
+
+            ss = ""
+            recent_player = []
+            for player in players:
+                ss += str(player) + "\n"
+                player = paladinsAPI.getPlayer(player=player.playerId)
+
+                current_date = date.today()
+                current_time = datetime.min.time()
+                today = datetime.combine(current_date, current_time)
+                last_seen = player.lastLoginDatetime
+                last_seen = (today - last_seen).days
+
+                if last_seen <= 90:
+                    recent_player.append(player)
+
+            await ctx.send("Found `{}` recent player(s) `(seen in the last 90 days)`".format(len(recent_player)))
+            for player in recent_player:
+                current_date = date.today()
+                current_time = datetime.min.time()
+                today = datetime.combine(current_date, current_time)
+                last_seen = player.lastLoginDatetime
+                last_seen = (today - last_seen).days
+
+                if last_seen <= 0:
+                    last_seen = "Today"
+                else:
+                    last_seen = "{} days ago".format(last_seen)
+
+                embed = discord.Embed(
+                    title=player.playerName,
+                    description="↓↓↓  Player ID  ↓↓↓```fix\n{}```".format(player.playerId),
+                    colour=discord.colour.Color.dark_teal(),
+                )
+                embed.add_field(name='Last Seen:', value=last_seen, inline=True)
+                embed.add_field(name='Account Level:', value=player.accountLevel, inline=True)
+                embed.add_field(name='Hours Played:', value=player.hoursPlayed, inline=True)
+                embed.add_field(name='Account Created:', value=player.createdDatetime, inline=True)
+                await ctx.send(embed=embed)
 
     @commands.command(name='top', pass_context=True, ignore_extra=False)
     @commands.cooldown(2, 30, commands.BucketType.user)

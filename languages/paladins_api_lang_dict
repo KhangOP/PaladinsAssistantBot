@@ -26,7 +26,7 @@
   },
   "stats_champ": {
     "en": "Champion: {} (Lv {})\nKDA: {} ({}-{}-{}) \nWin Rate: {}% ({}-{}) \nLast Played: {}",
-    "pl": "Czempion: {} (Poziom {})\nKDA: {} ({}-{}-{}) \nProvent wygranych gier: {}% ({}-{}) \nOstatnia gra: {}",
+    "pl": "Czempion: {} (Poziom {})\nKDA: {} ({}-{}-{}) \nProcent wygranych gier: {}% ({}-{}) \nOstatnia gra: {}",
     "pt": ""
   }
 }

@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 import requests
 import my_utils as helper
 from datetime import datetime; datetime.now
+from datetime import date
 
 from pyrez.api import PaladinsAPI
 from pyrez.exceptions import PlayerNotFound
@@ -253,6 +254,68 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                         str(info.platform), str(info.playedGods), str(info.totalAchievements))
         return ss
 
+    # Uses Paladins API to get overall stats for a player (Mobile version)
+    async def get_player_stats_api_mobile(self, player_name, lang):
+        # Player level, played hours, etc
+        player_id = self.get_player_id(player_name)
+        if player_id == -1:
+            return self.lang_dict["general_error2"][lang].format(player_name)
+        try:
+            info = paladinsAPI.getPlayer(player_id)
+        except PlayerNotFound:
+            return self.lang_dict["general_error2"][lang].format(player_name)
+
+        embed = discord.Embed(
+            title="`Casual stats:`",
+            colour=discord.colour.Color.dark_teal(),
+        )
+
+        total = int(info.wins) + int(info.losses)
+        wr = await self.calc_win_rate(int(info.wins), total)
+        # embed.add_field(name='Casual stats:', value="```-----```", inline=False)
+        embed.add_field(name='Name:', value=info.playerName, inline=False)
+        embed.add_field(name='Account Level:', value=info.accountLevel, inline=False)
+        embed.add_field(name='Win Rate:', value="{}% out of {} matches".format(wr, total), inline=False)
+        embed.add_field(name='Times Deserted:', value=str(info.leaves), inline=False)
+
+        # Get the platform's ranked stats
+        platform = str(info.platform).lower()
+        if platform == "steam" or platform == "hirez":
+            ranked = info.rankedKeyboard
+        else:
+            ranked = info.rankedController
+
+        win = int(ranked.wins)
+        lose = int(ranked.losses)
+        wr = await self.calc_win_rate(win, win + lose)
+
+        embed2 = discord.Embed(
+            title="`Ranked stats for Season {}:`".format(ranked.currentSeason),
+            colour=discord.colour.Color.dark_magenta(),
+        )
+        # embed2.add_field(name='Ranked stats for Season {}:'.format(ranked.currentSeason), value="```-----```",
+        #                 inline=False)
+        embed2.add_field(name='Rank:', value=ranked.currentRank.getName(), inline=False)
+        embed2.add_field(name='TP:', value="{} (position: {})".format(ranked.currentTrumpPoints,
+                                                                      ranked.leaderboardIndex), inline=False)
+        embed2.add_field(name='Win Rate:', value="{}% ({}-{})".format(wr, win, lose), inline=False)
+        embed2.add_field(name='Times Deserted:', value=str(ranked.leaves), inline=False)
+
+        embed3 = discord.Embed(
+            title="`Extra details:`",
+            colour=discord.colour.Color.dark_teal(),
+        )
+        # embed3.add_field(name='Extra details:', value="```-----```", inline=False)
+        embed3.add_field(name='Account created on:', value=str(info.createdDatetime).split()[0], inline=False)
+        embed3.add_field(name='Last login on:', value=str(info.lastLoginDatetime).split()[0], inline=False)
+        embed3.add_field(name='Platform:', value=str(info.platform), inline=False)
+        embed3.add_field(name='MasteryLevel:', value=str(info.playedGods), inline=False)
+        embed3.add_field(name='Steam Achievements completed:', value="{}/{}".format(info.totalAchievements, 58),
+                         inline=False)
+
+        embeds = [embed, embed2, embed3]
+        return embeds
+
     @classmethod
     # Gets elo's for a player from the Paladins Guru site?
     async def get_player_elo(cls, player_name):
@@ -409,8 +472,8 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
     '''Commands below ############################################################'''
     @commands.command(name='console', pass_context=True, ignore_extra=False)
-    @commands.cooldown(2, 30, commands.BucketType.user)
-    async def console(self, ctx, player_name, platform: str, player_level=-1):
+    @commands.cooldown(6, 30, commands.BucketType.user)
+    async def console(self, ctx, player_name, platform: str):
         async with ctx.channel.typing():
             platform = platform.lower()
             if platform == "xbox":
@@ -426,42 +489,63 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             # players = paladinsAPI.getPlayerId(player_name, "steam")
             # players = paladinsAPI.getPlayerId(player_name, platform)
 
-            """
             players = paladinsAPI.searchPlayers(player_name)
-            players = [player for player in players if player.playerName.lower() == player_name.lower()]
-            ss = ""
-            for player in players:
-                if player['portal_id'] == platform:
-                    ss += str(player) + "\n"
-                    print(player)
-            # await ctx.send(ss)
-            """
 
-            # Use Guru's DataBase
-            url = "https://api.paladins.guru/v3/search?term={}&type=Player".format(str(player_name))
-            json_player_data = requests.get(url).json()
-            ss = ("    {:20} {:5}  {:20}\n{}\n".format("Player ID", "Level", "Region", self.dashes))
-            index = 1
-            for player in json_player_data:
-                # {'platform': 0, 'id': 704783272, 'name': 'KingDusk', 'seen': '2019-06-11T02:12:34.691Z', 'level': 386,
-                #  'region': 'NA', 'playtime': 32492}
-                # print(player)
-                for names in player['names']:
-                    # print(names['portal'], names['name'])
-                    if names['portal'] == platform:
-                        if player_level == -1 or player['level'] in range(player_level-50, player_level+50):
-                            if index >= 10:
-                                ss += ("{}{:20} {:5}  {:20}\n".format((str(index) + '. '), str(player['id']),
-                                                                      str(player['level']), player['region']))
-                            else:
-                                ss += ("{} {:20} {:5}  {:20}\n".format((str(index) + '. '), str(player['id']),
-                                                                       str(player['level']), player['region']))
-                            index += 1
-                    if index >= 25:
-                        ss += url
-                        await ctx.send("```md\n{}```".format(ss))
-                        return None
-            await ctx.send("```md\n{}```".format(ss))
+            players = [player for player in players if player.playerName.lower() == player_name.lower() and
+                       player['portal_id'] == platform]
+            num_players = len(players)
+            if num_players > 20:  # Too many players...we must match case exactly
+                await ctx.send("Found `{}` players with the name `{}`. Switching to case sensitive mode..."
+                               .format(num_players, player_name))
+                players = [player for player in players if player.playerName == player_name and
+                           player['portal_id'] == platform]
+                num_players = len(players)
+                await ctx.send("Found `{}` players with the name `{}`."
+                               .format(num_players, player_name))
+                if num_players > 20:
+                    await ctx.send("```There are too many players with the name {}:\n\nPlease look on PaladinsGuru to "
+                                   "find the Player ID```https://paladins.guru/search?term={}&type=Player"
+                                   .format(player_name, player_name))
+                    return None
+
+            ss = ""
+            recent_player = []
+            for player in players:
+                ss += str(player) + "\n"
+                player = paladinsAPI.getPlayer(player=player.playerId)
+
+                current_date = date.today()
+                current_time = datetime.min.time()
+                today = datetime.combine(current_date, current_time)
+                last_seen = player.lastLoginDatetime
+                last_seen = (today - last_seen).days
+
+                if last_seen <= 90:
+                    recent_player.append(player)
+
+            await ctx.send("Found `{}` recent player(s) `(seen in the last 90 days)`".format(len(recent_player)))
+            for player in recent_player:
+                current_date = date.today()
+                current_time = datetime.min.time()
+                today = datetime.combine(current_date, current_time)
+                last_seen = player.lastLoginDatetime
+                last_seen = (today - last_seen).days
+
+                if last_seen <= 0:
+                    last_seen = "Today"
+                else:
+                    last_seen = "{} days ago".format(last_seen)
+
+                embed = discord.Embed(
+                    title=player.playerName,
+                    description="↓↓↓  Player ID  ↓↓↓```fix\n{}```".format(player.playerId),
+                    colour=discord.colour.Color.dark_teal(),
+                )
+                embed.add_field(name='Last Seen:', value=last_seen, inline=True)
+                embed.add_field(name='Account Level:', value=player.accountLevel, inline=True)
+                embed.add_field(name='Hours Played:', value=player.hoursPlayed, inline=True)
+                embed.add_field(name='Account Created:', value=player.createdDatetime, inline=True)
+                await ctx.send(embed=embed)
 
     @commands.command(name='top', pass_context=True, ignore_extra=False)
     @commands.cooldown(2, 30, commands.BucketType.user)
@@ -999,8 +1083,6 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     async def current(self, ctx, player_name, option="-s"):
         print(Fore.MAGENTA + f'{round(Process(getpid()).memory_info().rss/1024/1024, 2)} MB')
         lang = await helper.Lang.check_language(ctx=ctx)
-        #await ctx.send("Command disabled due to bot crashing problems")
-        #return None
         # Maybe convert the player name
         if str(player_name) == "me":
             player_name = self.check_player_name(str(ctx.author.id))
@@ -1250,8 +1332,13 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             return None
 
         if option is None:
-            result = await self.get_player_stats_api(player_name, lang=lang)
-            await ctx.send("```md\n" + result + "```")
+            if not ctx.author.is_on_mobile():
+                result = await self.get_player_stats_api(player_name, lang=lang)
+                await ctx.send("```md\n" + result + "```")
+            else:
+                embeds = await self.get_player_stats_api_mobile(player_name, lang=lang)
+                for embed in embeds:
+                    await ctx.send(embed=embed)
         else:
             champ_name = await self.convert_champion_name(option)
             result = await self.get_champ_stats_api(player_name, champ_name, simple=0, lang=lang)

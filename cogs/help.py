@@ -172,11 +172,7 @@ class HelpCog(commands.Cog, name="Help Commands"):
                              "1. <Xbox>\n" \
                              "2. <PS4>\n" \
                              "3. <Switch>\n"
-        player_level = "Can be the account level or a guess of the account level of a player. If a level is " \
-                       "provided then it will look plus and minus 50 levels of the level provided\n" \
-                       "[Optional parameter]: if not provide, returns all active players with the other " \
-                       "provided parameters"
-        descriptions = ["Player's Paladins IGN", option_description, player_level]
+        descriptions = ["Player's Paladins IGN", option_description]
         await ctx.send(embed=create_embed(command_name, command_description, parameters, descriptions))
 
     @help.command()
@@ -187,7 +183,6 @@ class HelpCog(commands.Cog, name="Help Commands"):
         long_string = "can be one of the following: \n\n" \
                       "1. <me>: will return the player's overall stats. \n" \
                       "2. <champion_name>: will return the player's stats on the name of the champion entered."
-        # "3. <elo>: will return the player's Guru elo.\n" \
         descriptions = ["Player's Paladins IGN", long_string]
         await ctx.send(embed=create_embed(command_name, command_description, parameters, descriptions))
 

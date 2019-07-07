@@ -491,6 +491,10 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
             players = paladinsAPI.searchPlayers(player_name)
 
+            if not players:
+                await ctx.send("Found `0` players with the name `{}`.".format(player_name))
+                return None
+
             players = [player for player in players if player.playerName.lower() == player_name.lower() and
                        player['portal_id'] == platform]
             num_players = len(players)
@@ -1332,7 +1336,19 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             return None
 
         if option is None:
-            if not ctx.author.is_on_mobile():
+
+            # Checking for is_on_mobile() status
+            mobile_status = False
+            if ctx.guild is None:  # In DM's
+                guilds = self.bot.guilds
+                for guild in guilds:
+                    member = guild.get_member(ctx.author.id)
+                    if member is not None:
+                        mobile_status = member.is_on_mobile()
+            else:
+                mobile_status = ctx.author.is_on_mobile()
+
+            if not mobile_status:
                 result = await self.get_player_stats_api(player_name, lang=lang)
                 await ctx.send("```md\n" + result + "```")
             else:

@@ -89,11 +89,11 @@ class HelpCog(commands.Cog, name="Help Commands"):
             # Try to first dm the user the help commands, then try to post it the channel where it was called
             try:
                 await author.send(my_message, embed=embed)
-            except None:
+            except discord.Forbidden:
                 print("Could not dm the help command to the person who called the command.")
                 try:
                     await ctx.send(my_message, embed=embed)
-                except None:
+                except discord.Forbidden:
                     print("We have failed to message the help commands to the person.")
 
     @help.command()

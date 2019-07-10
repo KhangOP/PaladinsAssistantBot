@@ -1353,8 +1353,12 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 await ctx.send("```md\n" + result + "```")
             else:
                 embeds = await self.get_player_stats_api_mobile(player_name, lang=lang)
-                for embed in embeds:
-                    await ctx.send(embed=embed)
+                try:
+                    for embed in embeds:
+                        await ctx.send(embed=embed)
+                except BaseException as e:
+                    await ctx.send(embeds)
+                    print("***Stupid error: " + str(e) + "result")
         else:
             champ_name = await self.convert_champion_name(option)
             result = await self.get_champ_stats_api(player_name, champ_name, simple=0, lang=lang)

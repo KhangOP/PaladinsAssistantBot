@@ -172,20 +172,6 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         # else return the name passed in since its already correct
         return champ_name
 
-    @classmethod
-    # Helper function to the get_player_elo(player_name) function
-    async def return_mode(cls, name):
-        mode = ""
-        if name == "Siege":
-            mode += "Siege rating: \n"
-        elif name == "Survival":
-            mode += "Onslaught rating: \n"  # Rename to onslaught
-        elif name == "Deathmatch":
-            mode += "Team Deathmatch rating: \n"
-        else:
-            mode += "Overall Guru Score: \n"
-        return mode
-
     # Gets KDA and Win Rate for a player from Guru
     @classmethod
     async def get_global_kda(cls, player_id):
@@ -316,48 +302,6 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         embeds = [embed, embed2, embed3]
         return embeds
 
-    @classmethod
-    # Gets elo's for a player from the Paladins Guru site?
-    async def get_player_elo(cls, player_name):
-        url = "http://paladins.guru/profile/pc/" + str(player_name) + "/casual"
-        soup = BeautifulSoup(requests.get(url, headers={'Connection': 'close'}).text, 'html.parser')
-        soup = str(soup.get_text()).split(" ")
-        data = list(filter(None, soup))
-
-        stats = ""
-        mode = ""
-
-        # Gets elo information below
-        for i, row in enumerate(data):
-            if data[i] == "Siege" or data[i] == "Survival" or data[i] == "Deathmatch" or data[i] == "Score":
-                if data[i + 1] == "Rank":
-                    mode = await cls.return_mode(data[i])
-                    mode += str("Rank: " + data[i + 2])  # Rank
-                    mode += str(" (Top " + data[i + 5] + ")\n")  # Rank %
-                    mode += str("Elo: " + data[i + 6] + "\n")  # Elo
-                    mode += str("Win Rate: " + data[i + 8])  # Win Rate
-                    mode += str(" (" + data[i + 10] + "-")  # Wins
-                    mode += data[i + 11] + ")"  # Loses
-                    stats += mode + "\n\n"
-                elif data[i + 1] == "-":
-                    mode = await cls.return_mode(data[i])
-                    mode += str("Rank: ???")  # Rank
-                    mode += str(" (Top " + "???" + ")\n")  # Rank %
-                    mode += str("Elo: " + data[i + 2] + "\n")  # Elo
-                    mode += str("Win Rate: " + data[i + 4])  # Win Rate
-                    mode += str(" (" + data[i + 6] + "-")  # Wins
-                    mode += data[i + 7] + ")"  # Loses
-                    stats += mode + "\n\n"
-            if data[i] == "Siege":
-                if data[i + 1] == "Normal:":
-                    break
-
-        # Checking if the player has any data for this season
-        if mode == "":
-            return "The player: " + player_name + " does not have any matches this season."
-
-        return stats
-
     # Gets stats for a champ using Paladins API
     async def get_champ_stats_api(self, player_name, champ, simple, lang):
         # Gets player id and error checks
@@ -468,7 +412,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
     '''Commands below ############################################################'''
     @commands.command(name='console', pass_context=True, ignore_extra=False)
-    @commands.cooldown(6, 30, commands.BucketType.user)
+    @commands.cooldown(3, 30, commands.BucketType.user)
     async def console(self, ctx, player_name, platform: str):
         async with ctx.channel.typing():
             platform = platform.lower()
@@ -1334,7 +1278,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 await ctx.send("```diff\n" + player_champ_data + "```")
             print(Fore.MAGENTA + f'{round(Process(getpid()).memory_info().rss/1024/1024, 2)} MB')
 
-    # Returns simple stats based on the option they choose (champ_name, me, or elo)
+    # Returns simple stats based on the option they choose (champ_name, or me)
     @commands.command(name='stats', aliases=['Statystyki'], pass_context=True, ignore_extra=False)
     @commands.cooldown(3, 30, commands.BucketType.user)
     async def stats(self, ctx, player_name, option=None):

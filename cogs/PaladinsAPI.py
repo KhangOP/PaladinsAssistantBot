@@ -466,10 +466,6 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         embed.set_thumbnail(url=await helper.get_champ_image(champ))
         return embed
 
-    @classmethod
-    async def do_nothing(cls):
-        return -1
-
     '''Commands below ############################################################'''
     @commands.command(name='console', pass_context=True, ignore_extra=False)
     @commands.cooldown(6, 30, commands.BucketType.user)
@@ -756,7 +752,18 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 return None
             if champ_name:  # Check in case they don't provide champ name
                 champ_name = await self.convert_champion_name(champ_name)
-            paladins_data = paladinsAPI.getMatchHistory(player_id)
+
+            try:
+                paladins_data = paladinsAPI.getMatchHistory(player_id)
+                # Endpoint down
+                if paladins_data is None:
+                    await ctx.send("```fix\nPaladins Endpoint down (no data returned). Please try again later and "
+                                   "hopefully by then Evil Mojo will have it working again.```")
+                    return None
+            except NotFound:
+                await ctx.send("Player does not have recent match data or their account is private. Make sure the first"
+                               " parameter is a player name and not the Match Id.")
+                return None
 
             count = 0
             total_matches = 0
@@ -910,6 +917,11 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         async with ctx.channel.typing():
             try:
                 paladins_data = paladinsAPI.getMatchHistory(player_id)
+                # Endpoint down
+                if paladins_data is None:
+                    await ctx.send("```fix\nPaladins Endpoint down (no data returned). Please try again later and "
+                                   "hopefully by then Evil Mojo will have it working again.```")
+                    return None
             except NotFound:
                 await ctx.send("Player does not have recent match data or their account is private. Make sure the first"
                                " parameter is a player name and not the Match Id.")
@@ -1029,10 +1041,17 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
         try:
             paladins_data = paladinsAPI.getMatchHistory(player_id)
+
+            # Endpoint down
+            if paladins_data is None:
+                await ctx.send("```fix\nPaladins Endpoint down (no data returned). Please try again later and "
+                               "hopefully by then Evil Mojo will have it working again.```")
+                return None
         except NotFound:
             await ctx.send("Player does not have recent match data or their account is private. Make sure the first"
                            " parameter is a player name and not the Match Id.")
             return None
+
         for match in paladins_data:
             # Check to see if this player does have match history
             if match.playerName is None:

@@ -4,6 +4,7 @@ from discord.ext.commands import Bot
 
 import asyncio
 import aiohttp.client_exceptions as aiohttp_client_exceptions
+import concurrent.futures
 import random
 import json
 import traceback
@@ -79,7 +80,8 @@ async def on_command_error(ctx, error):
         # Catches connection related exceptions
         if isinstance(error.original, aiohttp_client_exceptions.ClientError) or isinstance(error.original, gaierror) or\
                 isinstance(error.original, ConnectionError) or isinstance(error.original, TimeoutError) or \
-                isinstance(error.original, requests.exceptions.RequestException):
+                isinstance(error.original, requests.exceptions.RequestException) or \
+                isinstance(error.original, concurrent.futures.TimeoutError):
             await send_error(cont=ctx, msg="Connection error. Please try again.")
             return None
         elif isinstance(error.original, discord.Forbidden):

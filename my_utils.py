@@ -346,6 +346,7 @@ async def create_card_image(card_image, champ_info):
     json_data = requests.get("https://cms.paladins.com/wp-json/wp/v2/champions?slug={}&lang_id={}"
                              .format(await convert_champion_name(champ_name, True), english_code))
     json_data = json_data.json()[0].get("cards")
+    # print(json_data)
 
     cool_down = 0
     desc = "???"

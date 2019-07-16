@@ -3,10 +3,21 @@ import os
 from PIL import Image
 from io import BytesIO
 
-champs = [ "androxus", "atlas", "ash", "barik", "bomb king", "buck", "cassie", "dredge", "drogoz", "evie", "fernando",
-           "furia", "grohk", "grover", "imani", "inara", "jenos", "khan", "kinessa", "koga", "lex", "lian", "maeve",
-           "makoa", "maldamba", "moji", "pip", "ruckus", "seris", "sha lin", "skye", "strix", "talus", "terminus",
-           "torvald", "tyra", "viktor", "vivian", "willo", "ying", "zhin" ]
+from pyrez.api import PaladinsAPI
+
+file_name = "token"
+# Gets ID and KEY from a file
+with open(file_name, 'r') as f:
+    TOKEN = f.readline().strip()    # Does nothing
+    PREFIX = f.readline()           # Does nothing
+    ID = int(f.readline())
+    KEY = f.readline()
+f.close()
+
+champs = ["androxus", "atlas", "ash", "barik", "bomb king", "buck", "cassie", "dredge", "drogoz", "evie", "fernando",
+          "furia", "grohk", "grover", "imani", "inara", "jenos", "khan", "kinessa", "koga", "lex", "lian", "maeve",
+          "makoa", "maldamba", "moji", "pip", "ruckus", "seris", "sha lin", "skye", "strix", "talus", "terminus",
+          "torvald", "tyra", "viktor", "vivian", "willo", "ying", "zhin"]
 
 
 # Saves image from URL into a folder
@@ -45,9 +56,17 @@ def save_champ_cards(name):
         print("Fetched champion cards for: {}: {}".format(name, card_name))
 
 
+def save_card_descriptions(name):
+    paladinsAPI = PaladinsAPI(devId=ID, authKey=KEY)
+    card_description = paladinsAPI.getChampionCards(name, "1")
+    print(card_description)
+
+
 for champ in champs:
     champ_name = champ.replace(' ', '-')
 
     # save_champ_icons(champ_name)
     # save_champ_headers(champ_name)
     # save_champ_cards(champ_name)
+
+print(save_champ_cards("Makoa"))

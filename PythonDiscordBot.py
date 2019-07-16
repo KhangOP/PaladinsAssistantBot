@@ -91,8 +91,14 @@ async def on_command_error(ctx, error):
             return None
         elif isinstance(error.original, MemoryError):
             await send_error(cont=ctx, msg="Your lucky... you caused the bot to run out of memory. Don't worry though"
-                                           "... the bot will recover.  Please try again.")
-            return None
+                                           "... the bot will recover. Please try again.")
+
+        # Checking different types of ValueError (only closed file for now)
+        elif isinstance(error.original, ValueError):
+            if str(error.original) == "I/O operation on closed file.":
+                await send_error(cont=ctx, msg="The bot tried to send you a file/image but it has been taken away from"
+                                               "the bot...probably because of an internet fluke. Please try again.")
+                return None
 
     # Checks for discord command errors
     if isinstance(error, commands.MissingRequiredArgument):

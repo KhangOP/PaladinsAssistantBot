@@ -6,6 +6,8 @@ import my_utils as helper
 from datetime import datetime; datetime.now
 from datetime import date
 
+from pathlib import Path
+
 from pyrez.api import PaladinsAPI
 from pyrez.exceptions import PlayerNotFound
 from pyrez.exceptions import NotFound
@@ -410,6 +412,67 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         embed.set_thumbnail(url=await helper.get_champ_image(champ))
         return embed
 
+    # Helper function to track changes
+    async def update(self, paladins_data, discord_id):
+        """
+        player_id = self.get_player_id(player_name)
+        if player_id == -1:
+            await ctx.send(self.lang_dict["general_error2"][lang].format(player_name))
+            return None
+        try:
+            paladins_data = paladinsAPI.getMatchHistory(player_id)
+            # Endpoint down
+            if paladins_data is None:
+                await ctx.send("```fix\nPaladins Endpoint down (no data returned). Please try again later and "
+                               "hopefully by then Evil Mojo will have it working again.```")
+                return None
+        except NotFound:
+            await ctx.send("Player does not have recent match data or their account is private. Make sure the first"
+                           " parameter is a player name and not the Match Id.")
+            return None
+        """
+        directory = "user_data" + "/" + discord_id
+        print(directory)
+        with open(directory) as json_f:
+            all_data = json.load(json_f)
+
+        # update when the data was last updated
+        """
+        today = datetime.now()
+        last_tracked = datetime.datetime(all_data["last_updated"])
+        print(today, type(today))
+        print(last_tracked, type(last_tracked))
+        last_tracked = (today - last_tracked)
+        print(last_tracked)
+        """
+
+        all_data["last_updated"] = str(datetime.now())
+
+        for match in paladins_data:
+            # Check to see if this player does have match history
+            if match.playerName is None:
+                return None
+
+            date_key = str(match.matchTime.split()[0])
+
+            # Seeing if this date is already here, if not then make an empty dict.
+            if date_key not in all_data["player_data"]:
+                all_data["player_data"][date_key] = {}
+            # print(match.matchMinutes)
+            map_name = await self.convert_match_type(match.mapName)
+            match_data = [match.godName, match.winStatus, match.matchMinutes, map_name,
+                          match.kills, match.deaths, match.assists, match.damage, match.healing,
+                          match.damageMitigated, match.damageTaken, match.credits, match.healingPlayerSelf,
+                          match.matchQueueId]
+
+            # Seeing if a match id has been recorded
+            if str(match.matchId) not in all_data["player_data"][date_key]:
+                all_data["player_data"][date_key][str(match.matchId)] = match_data
+
+        # Save changes to the file
+        with open(directory, 'w') as json_f:
+            json.dump(all_data, json_f)
+
     '''Commands below ############################################################'''
     @commands.command(name='console', pass_context=True, ignore_extra=False)
     @commands.cooldown(3, 30, commands.BucketType.user)
@@ -668,12 +731,35 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 file = discord.File(filename="Deck.png", fp=buffer)
                 await ctx.send("```Enjoy the beautiful image below.```", file=file)
 
+    @commands.command(name='track', pass_context=True, ignore_extra=False)
+    @commands.cooldown(2, 30, commands.BucketType.user)
+    async def track(self, ctx, player_name):
+        # Maybe convert the player name
+        if str(player_name) == "me":
+            directory = "user_data" + "/" + str(ctx.author.id)
+            file_path = Path(directory)
+            if file_path.is_file():
+                await ctx.send("Stop. Don't try to erase all your data. "
+                               "You have already starting tracking your matches.")
+                return None
+
+            all_data = {"last_updated": str(datetime.now()), "player_data": {}}
+
+            # Save changes to the file
+            with open(file_path, 'w+') as json_d:
+                json.dump(all_data, json_d)
+        else:
+            await ctx.send("To use this command you must have stored your Paladins name by using the store command.")
+            return None
+
     @commands.command(name='history', pass_context=True, ignore_extra=False, aliases=["historia"])
     @commands.cooldown(2, 30, commands.BucketType.user)
     async def history(self, ctx, player_name, amount=10, champ_name=None):
         lang = await helper.Lang.check_language(ctx=ctx)
         # Maybe convert the player name
+        personal_update = False
         if str(player_name) == "me":
+            personal_update = True
             player_name = self.check_player_name(str(ctx.author.id))
         elif player_name[0] == "<" and player_name[1] == "@":  # 99% that someone has been mentioned
             player_name = player_name.replace("<", "").replace(">", "").replace("@", "").replace("!", "")
@@ -687,9 +773,10 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
         await helper.store_commands(ctx.author.id, "history")
         async with ctx.channel.typing():
-            if amount > 50 or amount <= 1:
-                await ctx.send("Please enter an amount between 2-50")
-                return None
+            if amount > 50 or amount < 10:
+                await ctx.send("Please enter an amount between 10-50.")
+                await ctx.send("```fix\nDefaulting to the default value of 10 matches.```")
+                amount = 10
             player_id = self.get_player_id(player_name)
             if player_id == -1:
                 await ctx.send(self.lang_dict["general_error2"][lang].format(player_name))
@@ -708,6 +795,10 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 await ctx.send("Player does not have recent match data or their account is private. Make sure the first"
                                " parameter is a player name and not the Match Id.")
                 return None
+
+            # Update player history
+            if personal_update:
+                await self.update(paladins_data, str(ctx.author.id))
 
             count = 0
             total_matches = 0
@@ -834,7 +925,9 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     async def match(self, ctx, player_name, match_id=None, colored="-b"):
         lang = await helper.Lang.check_language(ctx=ctx)
         # Maybe convert the player name
+        personal_update = False
         if str(player_name) == "me":
+            personal_update = True
             player_name = self.check_player_name(str(ctx.author.id))
         elif player_name[0] == "<" and player_name[1] == "@":  # 99% that someone has been mentioned
             player_name = player_name.replace("<", "").replace(">", "").replace("@", "").replace("!", "")
@@ -870,6 +963,10 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 await ctx.send("Player does not have recent match data or their account is private. Make sure the first"
                                " parameter is a player name and not the Match Id.")
                 return None
+
+            # Update player history
+            if personal_update:
+                await self.update(paladins_data, str(ctx.author.id))
 
             for match in paladins_data:
                 # Check to see if this player does have match history
@@ -959,7 +1056,9 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     async def last(self, ctx, player_name, match_id=-1):
         lang = await helper.Lang.check_language(ctx=ctx)
         # Maybe convert the player name
+        personal_update = False
         if str(player_name) == "me":
+            personal_update = True
             player_name = self.check_player_name(str(ctx.author.id))
         elif player_name[0] == "<" and player_name[1] == "@":  # 99% that someone has been mentioned
             player_name = player_name.replace("<", "").replace(">", "").replace("@", "").replace("!", "")
@@ -995,6 +1094,10 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             await ctx.send("Player does not have recent match data or their account is private. Make sure the first"
                            " parameter is a player name and not the Match Id.")
             return None
+
+        # Update player history
+        if personal_update:
+            await self.update(paladins_data, str(ctx.author.id))
 
         for match in paladins_data:
             # Check to see if this player does have match history

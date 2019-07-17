@@ -10,6 +10,7 @@ import json
 import traceback
 from socket import gaierror
 import requests
+import os
 
 import my_utils as helper
 from cogs import PaladinsAPI
@@ -170,10 +171,13 @@ async def on_message(message):
 @client.event
 async def reset_uses():
     await client.wait_until_ready()
-    sleep_time = await helper.get_seconds_until_reset()
-    await asyncio.sleep(sleep_time)
+    # sleep_time = await helper.get_seconds_until_reset()
+    # await asyncio.sleep(sleep_time)
     while not client.is_closed():
         await helper.reset_command_uses()
+        updater = PaladinsAPI.PaladinsAPICog(client)
+        for discord_id in os.listdir("user_data"):
+            await updater.auto_update(discord_id)
         await asyncio.sleep(60*60*24)  # day
 
 

@@ -114,8 +114,8 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 json.dump(player_ids, json_f)
             return new_id
 
-    @classmethod
-    def check_player_name(cls, player_discord_id):
+    @staticmethod
+    def check_player_name(player_discord_id):
         with open("player_discord_ids") as json_f:
             player_discord_ids = json.load(json_f)
 
@@ -412,27 +412,27 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         embed.set_thumbnail(url=await helper.get_champ_image(champ))
         return embed
 
-    # Helper function to track changes
-    async def update(self, paladins_data, discord_id):
-        """
+    async def auto_update(self, discord_id):
+        player_name = self.check_player_name(discord_id)
+        if player_name == "None":
+            return None
         player_id = self.get_player_id(player_name)
         if player_id == -1:
-            await ctx.send(self.lang_dict["general_error2"][lang].format(player_name))
             return None
         try:
             paladins_data = paladinsAPI.getMatchHistory(player_id)
             # Endpoint down
             if paladins_data is None:
-                await ctx.send("```fix\nPaladins Endpoint down (no data returned). Please try again later and "
-                               "hopefully by then Evil Mojo will have it working again.```")
                 return None
         except NotFound:
-            await ctx.send("Player does not have recent match data or their account is private. Make sure the first"
-                           " parameter is a player name and not the Match Id.")
             return None
-        """
+
+        # pass the data to the update function
+        await self.update(paladins_data, discord_id)
+
+    # Helper function to track changes
+    async def update(self, paladins_data, discord_id):
         directory = "user_data" + "/" + discord_id
-        print(directory)
 
         try:
             with open(directory) as json_f:
@@ -447,8 +447,6 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         # print(last_tracked, type(last_tracked))
         last_tracked = (today - last_tracked).seconds
         # print(last_tracked)
-
-        # return None
 
         all_data["last_updated"] = str(datetime.now().replace(microsecond=0))
 

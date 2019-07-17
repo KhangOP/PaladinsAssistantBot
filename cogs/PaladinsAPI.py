@@ -433,20 +433,24 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         """
         directory = "user_data" + "/" + discord_id
         print(directory)
-        with open(directory) as json_f:
-            all_data = json.load(json_f)
+
+        try:
+            with open(directory) as json_f:
+                all_data = json.load(json_f)
+        except FileNotFoundError:
+            return None
 
         # update when the data was last updated
-        """
-        today = datetime.now()
-        last_tracked = datetime.datetime(all_data["last_updated"])
-        print(today, type(today))
-        print(last_tracked, type(last_tracked))
-        last_tracked = (today - last_tracked)
-        print(last_tracked)
-        """
+        today = datetime.now().replace(microsecond=0)
+        # print(today, type(today))
+        last_tracked = datetime.strptime(all_data["last_updated"], "%Y-%m-%d %H:%M:%S")
+        # print(last_tracked, type(last_tracked))
+        last_tracked = (today - last_tracked).seconds
+        # print(last_tracked)
 
-        all_data["last_updated"] = str(datetime.now())
+        # return None
+
+        all_data["last_updated"] = str(datetime.now().replace(microsecond=0))
 
         for match in paladins_data:
             # Check to see if this player does have match history
@@ -460,14 +464,15 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 all_data["player_data"][date_key] = {}
             # print(match.matchMinutes)
             map_name = await self.convert_match_type(match.mapName)
-            match_data = [match.godName, match.winStatus, match.matchMinutes, map_name,
-                          match.kills, match.deaths, match.assists, match.damage, match.healing,
-                          match.damageMitigated, match.damageTaken, match.credits, match.healingPlayerSelf,
-                          match.matchQueueId]
+            if "Bot Match" not in map_name:
+                match_data = [match.godName, match.winStatus, match.matchMinutes, map_name,
+                              match.kills, match.deaths, match.assists, match.damage, match.healing,
+                              match.damageMitigated, match.damageTaken, match.credits, match.healingPlayerSelf,
+                              match.matchQueueId]
 
-            # Seeing if a match id has been recorded
-            if str(match.matchId) not in all_data["player_data"][date_key]:
-                all_data["player_data"][date_key][str(match.matchId)] = match_data
+                # Seeing if a match id has been recorded
+                if str(match.matchId) not in all_data["player_data"][date_key]:
+                    all_data["player_data"][date_key][str(match.matchId)] = match_data
 
         # Save changes to the file
         with open(directory, 'w') as json_f:
@@ -743,11 +748,13 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                                "You have already starting tracking your matches.")
                 return None
 
-            all_data = {"last_updated": str(datetime.now()), "player_data": {}}
+            # Must start with a date    ! ! ! ! ! ! "7/15/2019 00:00:00"
+            all_data = {"last_updated": str(datetime(2019, 7, 15, 0, 0, 0)), "player_data": {}}
 
             # Save changes to the file
             with open(file_path, 'w+') as json_d:
                 json.dump(all_data, json_d)
+            await ctx.send("Congrats, you are now set to have your matches recorded.")
         else:
             await ctx.send("To use this command you must have stored your Paladins name by using the store command.")
             return None

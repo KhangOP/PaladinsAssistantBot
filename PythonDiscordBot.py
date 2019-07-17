@@ -171,8 +171,8 @@ async def on_message(message):
 @client.event
 async def reset_uses():
     await client.wait_until_ready()
-    # sleep_time = await helper.get_seconds_until_reset()
-    # await asyncio.sleep(sleep_time)
+    sleep_time = await helper.get_seconds_until_reset()
+    await asyncio.sleep(sleep_time)
     while not client.is_closed():
         await helper.reset_command_uses()
         updater = PaladinsAPI.PaladinsAPICog(client)

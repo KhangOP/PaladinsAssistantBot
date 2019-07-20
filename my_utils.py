@@ -194,8 +194,11 @@ async def create_team_image(champ_list, ranks):
         champ_list.append("?")
 
     for champ in champ_list:
-        if champ != "?":  # and "Atlas" != champ:  # Temp fix
+        if champ != "?" and champ.lower() != "io":  # and "Atlas" != champ:  # Temp fix
+            # try:
             champion_images.append(Image.open("icons/champ_icons/{}.png".format(await convert_champion_name(champ))))
+            # except FileNotFoundError:
+            # champion_images.append(Image.open("icons/temp_card_art.png").resize((512,512)))
         else:
             image_size = 512
             base = Image.new('RGB', (image_size, image_size), "black")
@@ -345,8 +348,10 @@ async def create_card_image(card_image, champ_info):
     english_code = 1
     json_data = requests.get("https://cms.paladins.com/wp-json/wp/v2/champions?slug={}&lang_id={}"
                              .format(await convert_champion_name(champ_name, True), english_code))
-    json_data = json_data.json()[0].get("cards")
-    # print(json_data)
+    try:
+        json_data = json_data.json()[0].get("cards")
+    except (IndexError, json.decoder.JSONDecodeError):
+        json_data = {}
 
     cool_down = 0
     desc = "???"
@@ -422,7 +427,10 @@ async def create_deck_image(player_name, champ_name, deck):
     color = (0, 0, 0, 0)
     deck_image = Image.new('RGBA', (1570, 800), color=color)
 
-    champ_background = Image.open("icons/champ_headers/{}.png".format(await convert_champion_name(champ_name)))
+    try:
+        champ_background = Image.open("icons/champ_headers/{}.png".format(await convert_champion_name(champ_name)))
+    except FileNotFoundError:
+        champ_background = Image.open("icons/maps/test_maps.png")
     champ_background = champ_background.resize((1570, 800), Image.ANTIALIAS)
     deck_image.paste(champ_background, (0, 0))
 
@@ -480,7 +488,10 @@ async def create_history_image(team1, team2, t1_data, t2_data, p1, p2, match_dat
 
     # Adding in player data
     for i, (champ, champ2) in enumerate(zip(team1, team2)):
-        champ_image = Image.open("icons/champ_icons/{}.png".format(await convert_champion_name(champ)))
+        try:
+            champ_image = Image.open("icons/champ_icons/{}.png".format(await convert_champion_name(champ)))
+        except FileNotFoundError:
+            champ_image = Image.open("icons/temp_card_art.png")
         border = (0, shrink, 0, shrink)  # left, up, right, bottom
         champ_image = ImageOps.crop(champ_image, border)
         # history_image.paste(champ_image, (0, image_size*i, image_size, image_size*(i+1)))
@@ -488,7 +499,10 @@ async def create_history_image(team1, team2, t1_data, t2_data, p1, p2, match_dat
         history_image.paste(player_panel, (0, (image_size_y+10)*i+132))
 
         # Second team
-        champ_image = Image.open("icons/champ_icons/{}.png".format(await convert_champion_name(champ2)))
+        try:
+            champ_image = Image.open("icons/champ_icons/{}.png".format(await convert_champion_name(champ2)))
+        except FileNotFoundError:
+            champ_image = Image.open("icons/temp_card_art.png")
         border = (0, shrink, 0, shrink)  # left, up, right, bottom
         champ_image = ImageOps.crop(champ_image, border)
 

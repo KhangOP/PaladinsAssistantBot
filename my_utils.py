@@ -427,10 +427,18 @@ async def create_deck_image(player_name, champ_name, deck):
     color = (0, 0, 0, 0)
     deck_image = Image.new('RGBA', (1570, 800), color=color)
 
+    # ToDo Update to auto try to find image
+    champ_name = await convert_champion_name(champ_name)
     try:
-        champ_background = Image.open("icons/champ_headers/{}.png".format(await convert_champion_name(champ_name)))
+        champ_background = Image.open("icons/champ_headers/{}.png".format(champ_name))
     except FileNotFoundError:
-        champ_background = Image.open("icons/maps/test_maps.png")
+        try:
+            response = requests.get("https://web2.hirez.com/paladins/champion-headers/{}.png".format(champ_name))
+            champ_background = Image.open(BytesIO(response.content))
+            path = "{}/{}.png".format("icons/champ_headers", champ_name)
+            champ_background.save(path, "PNG")
+        except BaseException:
+            champ_background = Image.open("icons/maps/test_maps.png")
     champ_background = champ_background.resize((1570, 800), Image.ANTIALIAS)
     deck_image.paste(champ_background, (0, 0))
 
@@ -442,7 +450,7 @@ async def create_deck_image(player_name, champ_name, deck):
 
         try:
             card_icon_image = Image.open("icons/champ_cards/{}.png".format(card_m[0].strip().lower().replace(" ", "-")))
-        except OSError:
+        except FileNotFoundError:
             card_icon_image = Image.open("icons/temp_card_art.png")
 
         card_icon = await create_card_image(card_icon_image, info)
@@ -455,7 +463,7 @@ async def create_deck_image(player_name, champ_name, deck):
     # Adding in other text on image
     draw = ImageDraw.Draw(deck_image)
     draw.text((0, 0), str(player_name), color, font=ImageFont.truetype("arial", 64))
-    draw.text((0, 64), str(champ_name), color, font=ImageFont.truetype("arial", 64))
+    draw.text((0, 64), str(champ_name.upper()), color, font=ImageFont.truetype("arial", 64))
     draw.text((0, 128), str(deck.deckName), color, font=ImageFont.truetype("arial", 64))
 
     # Creates a buffer to store the image in

@@ -344,35 +344,32 @@ async def create_card_image(card_image, champ_info):
     draw = ImageDraw.Draw(image_base)
     draw.text((30, frame_y-56), champ_card_level, font=ImageFont.truetype("arialbd", 44))
 
-    # Get card data
-    english_code = 1
-    json_data = requests.get("https://cms.paladins.com/wp-json/wp/v2/champions?slug={}&lang_id={}"
-                             .format(await convert_champion_name(champ_name, True), english_code))
     try:
-        json_data = json_data.json()[0].get("cards")
+        file_name = "icons/champ_card_desc/{}.json".format(champ_name)
+        with open(file_name, encoding='utf-8') as json_f:
+            json_data = json.load(json_f)
     except (IndexError, json.decoder.JSONDecodeError):
         json_data = {}
 
-    cool_down = 0
-    desc = "???"
-    for card in json_data:
-        # print(card.get("card_name_english"), champ_card_name)
-        if card.get("card_name_english") == champ_card_name:
-            desc = card.get("card_description")
+    try:
+        desc = json_data[champ_card_name]["card_desc"]
+        cool_down = json_data[champ_card_name]["card_cd"]
 
-            # Scale of the card
-            scale = re.search('=(.+?)\|', desc)
-            scale = float(scale.group(1)) * int(champ_card_level)
-            # Text area of the card we are going to replace
-            replacement = re.search('{(.*?)}', desc)
+        # Scale of the card
+        scale = re.search('=(.+?)\|', desc)
+        scale = float(scale.group(1)) * int(champ_card_level)
+        # Text area of the card we are going to replace
+        replacement = re.search('{(.*?)}', desc)
 
-            # Replacing the scaling text with the correct number
-            # desc = desc.replace('{'+str(replacement.group(1))+'}', str(float(scale.group(1)) * int(champ_card_level)))
-            desc = desc.replace('{' + str(replacement.group(1)) + '}', str(round(scale, 1)))
+        # Replacing the scaling text with the correct number
+        # desc = desc.replace('{'+str(replacement.group(1))+'}', str(float(scale.group(1)) * int(champ_card_level)))
+        desc = desc.replace('{' + str(replacement.group(1)) + '}', str(round(scale, 1)))
 
-            # Removes the extra text at the start in-between [****]
-            desc = re.sub("[\[].*?[\]]", '', desc)
-            cool_down = card.get("recharge_seconds")
+        # Removes the extra text at the start in-between [****]
+        desc = re.sub("[\[].*?[\]]", '', desc)
+    except KeyError:
+        desc = "Card information missing from bot data."
+        cool_down = 0
 
     # Add card name
     draw = ImageDraw.Draw(image_base)
@@ -432,13 +429,7 @@ async def create_deck_image(player_name, champ_name, deck):
     try:
         champ_background = Image.open("icons/champ_headers/{}.png".format(champ_name))
     except FileNotFoundError:
-        try:
-            response = requests.get("https://web2.hirez.com/paladins/champion-headers/{}.png".format(champ_name))
-            champ_background = Image.open(BytesIO(response.content))
-            path = "{}/{}.png".format("icons/champ_headers", champ_name)
-            champ_background.save(path, "PNG")
-        except BaseException:
-            champ_background = Image.open("icons/maps/test_maps.png")
+        champ_background = Image.open("icons/maps/test_maps.png")
     champ_background = champ_background.resize((1570, 800), Image.ANTIALIAS)
     deck_image.paste(champ_background, (0, 0))
 

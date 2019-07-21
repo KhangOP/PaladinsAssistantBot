@@ -409,7 +409,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             colour=discord.colour.Color.dark_teal()
         )
         embed.add_field(name=player_name + "'s stats: ", value='`' + ss + '`', inline=False)
-        embed.set_thumbnail(url=await helper.get_champ_image(champ))
+        embed.set_thumbnail(url=await helper.get_champ_image(champ + "1"))
         return embed
 
     async def auto_update(self, discord_id):
@@ -1127,7 +1127,10 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                     colour=discord.colour.Color.dark_teal(),
                 )
 
-                embed.set_thumbnail(url=await helper.get_champ_image(match.godName))
+                try:
+                    embed.set_thumbnail(url=await helper.get_champ_image(match.godName+"1"))
+                except BaseException:
+                    print("oops")
 
                 map_name = match.mapName.replace("LIVE ", "").replace("Ranked ", "").replace(" (TDM)", "")\
                     .replace(" (Onslaught) ", "").replace(" (Siege)", "").replace("Practice ", "").lower()\
@@ -1428,7 +1431,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                     for embed in embeds:
                         await ctx.send(embed=embed)
                 except BaseException as e:
-                    await ctx.send(embeds)
+                    await ctx.send("```fix\nUnfortunately something malfunctioned, please try again.")
                     print("***Stupid error: " + str(e) + "result")
         else:
             champ_name = await self.convert_champion_name(option)
@@ -1436,7 +1439,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             try:
                 await ctx.send(embed=result)
             except BaseException as e:
-                await ctx.send(result)
+                await ctx.send("```fix\nUnfortunately something malfunctioned, please try again.")
                 print("***Stupid error: " + str(e) + "result")
 
     # Stores Player's IGN for the bot to use

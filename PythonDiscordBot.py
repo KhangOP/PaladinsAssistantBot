@@ -230,7 +230,8 @@ async def on_ready():
     daily_error_count = 0
     client.loop.create_task(reset_uses())
     client.loop.create_task(change_bot_presence())
-    client.loop.create_task(log_information())
+    if PREFIX != '??':
+        client.loop.create_task(log_information())
     await count_servers()
     print("Client is fully online and ready to go...")
 

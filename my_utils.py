@@ -171,18 +171,17 @@ async def convert_champion_name(champ_name, special=False):
     # else return the name passed in since its already correct
     return champ_name
 
-
+# ToDo fix...remove this
 # Gets a url to the image of champion's name passed in
 async def get_champ_image(champ_name):
     champ_name = await convert_champion_name(champ_name)
-    url = "https://web2.hirez.com/paladins/champion-icons/" + str(champ_name) + ".jpg"
-    return url
-
-
-# Gets a url to the image of a champion's name passed in
-async def get_deck_cards_url(card_name: str):
-    card_name = card_name.lower().replace(" ", "-")
-    url = "https://web2.hirez.com/paladins/champion-cards/" + card_name + ".jpg"
+    # url = "https://web2.hirez.com/paladins/champion-icons/" + str(champ_name) + ".jpg"
+    print("using github image")
+    url = "https://raw.githubusercontent.com/EthanHicks1/PaladinsAssistantBot/master/icons/champ_icons/{}.png"\
+        .format(champ_name)
+    request = requests.get(url)
+    if request.status_code != 200:
+        url = "https://raw.githubusercontent.com/EthanHicks1/PaladinsAssistantBot/master/icons/unknown.png"
     return url
 
 
@@ -194,7 +193,7 @@ async def create_team_image(champ_list, ranks):
         champ_list.append("?")
 
     for champ in champ_list:
-        if champ != "?" and champ.lower() != "io":  # and "Atlas" != champ:  # Temp fix
+        if champ != "?":
             # try:
             champion_images.append(Image.open("icons/champ_icons/{}.png".format(await convert_champion_name(champ))))
             # except FileNotFoundError:

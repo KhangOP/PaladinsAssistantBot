@@ -175,8 +175,6 @@ async def convert_champion_name(champ_name, special=False):
 # Gets a url to the image of champion's name passed in
 async def get_champ_image(champ_name):
     champ_name = await convert_champion_name(champ_name)
-    # url = "https://web2.hirez.com/paladins/champion-icons/" + str(champ_name) + ".jpg"
-    print("using github image")
     url = "https://raw.githubusercontent.com/EthanHicks1/PaladinsAssistantBot/master/icons/champ_icons/{}.png"\
         .format(champ_name)
     # request = requests.get(url)
@@ -427,7 +425,6 @@ async def create_deck_image(player_name, champ_name, deck):
     color = (0, 0, 0, 0)
     deck_image = Image.new('RGBA', (1570, 800), color=color)
 
-    # ToDo Update to auto try to find image
     champ_name = await convert_champion_name(champ_name)
     try:
         champ_background = Image.open("icons/champ_headers/{}.png".format(champ_name))

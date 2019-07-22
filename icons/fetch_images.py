@@ -31,6 +31,10 @@ def save_image(image_url, folder, name):
     response = requests.get(image_url)
     try:
         image = Image.open(BytesIO(response.content))
+        # x, y = image.size
+        # if x != 512 and y != 512:
+        #    print("Had to resize image for {}.".format(name))
+        #    image = image.resize((512, 512), Image.ANTIALIAS)
         path = "{}/{}.png".format(folder, name)
         exists = os.path.isfile(path)
         if not exists:
@@ -108,3 +112,14 @@ new_champ = "io"
 save_champ_cards(new_champ)
 # save_champ_icons(new_champ)
 # save_champ_headers(new_champ)
+
+# response = requests.get("https://c-3sux78kvnkay76x24mgskvkjogx2eiax78ykijtx2eius.g00.gamepedia.com/g00/3_"
+#                                "c-3vgrgjoty.mgskvkjog.ius_/c-3SUXKVNKAY76x24nzzvyx3ax2fx2fmgskvkjog.iax78ykijt."
+#                                "iusx2fvgrgjoty_mgskvkjogx2flx2fl1x2fIuurjuct_Oiut."
+#                                "vtmx3fbkx78youtx3d53lijk999h1kll086lg16j7kjh186821x26o76i.sgx78qx3dosgmk_$/$/$/$/$")
+# cool_down_icon = Image.open(BytesIO(response.content)).convert("RGBA")
+# cool_down_icon.save("cool_down_icon.png", "PNG")
+
+# for i in range(1, 6):
+#    url = "https://web2.hirez.com/paladins/cards/frame-{}.png".format(i)
+#    save_image(url, "card_frames", i)

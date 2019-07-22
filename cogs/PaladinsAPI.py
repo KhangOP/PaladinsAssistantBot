@@ -409,7 +409,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             colour=discord.colour.Color.dark_teal()
         )
         embed.add_field(name=player_name + "'s stats: ", value='`' + ss + '`', inline=False)
-        embed.set_thumbnail(url=await helper.get_champ_image(champ + "1"))
+        embed.set_thumbnail(url=await helper.get_champ_image(champ ))
         return embed
 
     async def auto_update(self, discord_id):
@@ -1128,7 +1128,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 )
 
                 try:
-                    embed.set_thumbnail(url=await helper.get_champ_image(match.godName+"1"))
+                    embed.set_thumbnail(url=await helper.get_champ_image(match.godName))
                 except BaseException:
                     print("oops")
 
@@ -1457,6 +1457,15 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             json.dump(player_discord_ids, json_f)
         await ctx.send("Your Paladins In-Game-name is now stored as `" + player_ign +
                        "`. You can now use the keyword `me` instead of typing out your name")
+
+    @commands.is_owner()
+    @commands.command()
+    async def testing(self, ctx):
+        # team1 = ["Ash", "Makoa", "Willo", "Seris"]
+        team1 = ["Ash", "Makoa", "Willo", "Seris", "Io"]
+        buffer = await helper.create_team_image(team1, [])
+        file = discord.File(filename="Team.png", fp=buffer)
+        await ctx.send("```diff\n" + "bruh" + "```", file=file)
 
 
 # Add this class to the cog list

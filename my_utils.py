@@ -171,7 +171,7 @@ async def convert_champion_name(champ_name, special=False):
     # else return the name passed in since its already correct
     return champ_name
 
-# ToDo fix...remove this
+
 # Gets a url to the image of champion's name passed in
 async def get_champ_image(champ_name):
     champ_name = await convert_champion_name(champ_name)
@@ -179,9 +179,9 @@ async def get_champ_image(champ_name):
     print("using github image")
     url = "https://raw.githubusercontent.com/EthanHicks1/PaladinsAssistantBot/master/icons/champ_icons/{}.png"\
         .format(champ_name)
-    request = requests.get(url)
-    if request.status_code != 200:
-        url = "https://raw.githubusercontent.com/EthanHicks1/PaladinsAssistantBot/master/icons/unknown.png"
+    # request = requests.get(url)
+    # if request.status_code == 404:
+    #    url = "https://raw.githubusercontent.com/EthanHicks1/PaladinsAssistantBot/master/icons/unknown.png"
     return url
 
 
@@ -194,17 +194,25 @@ async def create_team_image(champ_list, ranks):
 
     for champ in champ_list:
         if champ != "?":
-            # try:
-            champion_images.append(Image.open("icons/champ_icons/{}.png".format(await convert_champion_name(champ))))
-            # except FileNotFoundError:
-            # champion_images.append(Image.open("icons/temp_card_art.png").resize((512,512)))
+            try:
+                champion_images.append(Image.open("icons/champ_icons/{}.png".format(await convert_champion_name(champ))))
+            except FileNotFoundError:
+                image_size = 512
+                base = Image.new('RGB', (image_size, image_size), "black")
+                icon = Image.open("icons/unknown.png")
+                icon = icon.resize((512, 352), Image.ANTIALIAS)
+                base.paste(icon, (0, 80))
+                champion_images.append(base)
         else:
             image_size = 512
             base = Image.new('RGB', (image_size, image_size), "black")
+            icon = Image.open("icons/unknown.png")
+            icon = icon.resize((512, 352), Image.ANTIALIAS)
+            base.paste(icon, (0, 160))
 
             # put text on image
             base_draw = ImageDraw.Draw(base)
-            base_draw.text((128, 56), "?", font=ImageFont.truetype("arial", 400))
+            base_draw.text((140, 10), "Bot", font=ImageFont.truetype("arial", 140))
             champion_images.append(base)
 
     # Original Image size # print(width, height)
@@ -324,8 +332,9 @@ async def create_card_image(card_image, champ_info):
     champ_card_level = champ_info[2]
 
     # Load in the Frame image from the web
-    response = requests.get("https://web2.hirez.com/paladins/cards/frame-{}.png".format(champ_card_level))
-    card_frame = Image.open(BytesIO(response.content))
+    # response = requests.get("https://web2.hirez.com/paladins/cards/frame-{}.png".format(champ_card_level))
+    # card_frame = Image.open(BytesIO(response.content))
+    card_frame = Image.open("icons/card_frames/{}.png".format(champ_card_level))
     frame_x, frame_y = card_frame.size
 
     # Create the image without any text (just frame and card image)
@@ -393,12 +402,7 @@ async def create_card_image(card_image, champ_info):
         draw.text((int(frame_x/2)+2, frame_y - 66), str(cool_down), font=ImageFont.truetype("arial", 30),
                   fill=(64, 64, 64))
 
-        # add in cool down icon
-        response = requests.get("https://c-3sux78kvnkay76x24mgskvkjogx2eiax78ykijtx2eius.g00.gamepedia.com/g00/3_"
-                                "c-3vgrgjoty.mgskvkjog.ius_/c-3SUXKVNKAY76x24nzzvyx3ax2fx2fmgskvkjog.iax78ykijt."
-                                "iusx2fvgrgjoty_mgskvkjogx2flx2fl1x2fIuurjuct_Oiut."
-                                "vtmx3fbkx78youtx3d53lijk999h1kll086lg16j7kjh186821x26o76i.sgx78qx3dosgmk_$/$/$/$/$")
-        cool_down_icon = Image.open(BytesIO(response.content)).convert("RGBA")
+        cool_down_icon = Image.open("icons/cool_down_icon.png")
         image_base.paste(cool_down_icon, (int(frame_x/2)-20, frame_y - 60), mask=cool_down_icon)
 
     # Final image saving steps

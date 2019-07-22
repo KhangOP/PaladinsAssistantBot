@@ -230,7 +230,7 @@ async def on_ready():
     daily_error_count = 0
     client.loop.create_task(reset_uses())
     client.loop.create_task(change_bot_presence())
-    if PREFIX != '??':
+    if PREFIX != '&&':  # Prevents test bot from messing up bot stats log
         client.loop.create_task(log_information())
     await count_servers()
     print("Client is fully online and ready to go...")

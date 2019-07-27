@@ -350,11 +350,14 @@ async def create_card_image(card_image, champ_info):
     draw = ImageDraw.Draw(image_base)
     draw.text((30, frame_y-56), champ_card_level, font=ImageFont.truetype("arialbd", 44))
 
+    if "mal" in champ_name.lower():
+        champ_name = "mal-damba"
+
     try:
         file_name = "icons/champ_card_desc/{}.json".format(champ_name)
         with open(file_name, encoding='utf-8') as json_f:
             json_data = json.load(json_f)
-    except (IndexError, json.decoder.JSONDecodeError):
+    except (IndexError, json.decoder.JSONDecodeError, FileNotFoundError):
         json_data = {}
 
     try:
@@ -440,7 +443,10 @@ async def create_deck_image(player_name, champ_name, deck):
         info = [champ_name, card_m[0].strip(), number]
 
         try:
-            card_icon_image = Image.open("icons/champ_cards/{}.png".format(card_m[0].strip().lower().replace(" ", "-")))
+            card_name = card_m[0].strip().lower().replace(" ", "-").replace("'", "")
+            if 'mal' in champ_name:
+                champ_name = "Mal'Damba"
+            card_icon_image = Image.open("icons/champ_cards/{}/{}.png".format(champ_name, card_name))
         except FileNotFoundError:
             card_icon_image = Image.open("icons/temp_card_art.png")
 
@@ -451,10 +457,15 @@ async def create_deck_image(player_name, champ_name, deck):
 
     color = (255, 255, 255)
 
+    if "mal" in champ_name:
+        champ_name = "Mal'Damba"
+    else:
+        champ_name = champ_name.upper()
+
     # Adding in other text on image
     draw = ImageDraw.Draw(deck_image)
     draw.text((0, 0), str(player_name), color, font=ImageFont.truetype("arial", 64))
-    draw.text((0, 64), str(champ_name.upper()), color, font=ImageFont.truetype("arial", 64))
+    draw.text((0, 64), str(champ_name), color, font=ImageFont.truetype("arial", 64))
     draw.text((0, 128), str(deck.deckName), color, font=ImageFont.truetype("arial", 64))
 
     # Creates a buffer to store the image in

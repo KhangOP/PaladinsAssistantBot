@@ -1,9 +1,13 @@
+from bs4 import BeautifulSoup, SoupStrainer
 import requests
 import os
 from PIL import Image
 from io import BytesIO
 
 import json
+
+from colorama import Fore, init
+init(autoreset=True)
 
 from pyrez.api import PaladinsAPI
 
@@ -21,9 +25,35 @@ DAMAGES = ["Cassie", "Kinessa", "Drogoz", "Bomb King", "Viktor", "Sha Lin", "Tyr
            "Vivian", "Dredge", "Imani"]
 FLANKS = ["Skye", "Buck", "Evie", "Androxus", "Maeve", "Lex", "Zhin", "Talus", "Moji", "Koga"]
 TANKS = ["Barik", "Fernando", "Ruckus", "Makoa", "Torvald", "Inara", "Ash", "Terminus", "Khan", "Atlas"]
-SUPPORTS = ["Grohk", "Grover", "Ying", "Mal Damba", "Seris", "Jenos", "Furia", "Pip", "Io"]
+SUPPORTS = ["Grohk", "Grover", "Ying", "Mal'Damba", "Seris", "Jenos", "Furia", "Pip", "Io"]
 
 all_champs = DAMAGES + FLANKS + TANKS + SUPPORTS
+
+
+def get_image_paladins_wiki(champion_name, card_image_name):
+    url = "https://paladins.gamepedia.com/" + champion_name
+
+    # Print the whole page
+    # getpage = requests.get(url=url)
+    # getpage_soup = BeautifulSoup(getpage.text, 'html.parser')
+    # print(getpage_soup)
+
+    r = requests.get(url)
+    c = r.content
+    soup = BeautifulSoup(c, 'html.parser')
+    # tags = soup.findAll('img')
+    card_image_name = card_image_name.replace("-", " ").title()
+    card_image_name = "Card {}.png".format(card_image_name)
+    print(card_image_name)
+    image_data = soup.find('img', alt=card_image_name)
+    try:
+        image_url = image_data['src']
+        image_url = image_url.split(".png")[0].replace("/thumb", "") + ".png"
+    except TypeError:
+        print(card_image_name)
+        image_url = ""
+
+    return image_url
 
 
 # Saves image from URL into a folder
@@ -35,12 +65,22 @@ def save_image(image_url, folder, name):
         # if x != 512 and y != 512:
         #    print("Had to resize image for {}.".format(name))
         #    image = image.resize((512, 512), Image.ANTIALIAS)
+
+        # Create a folder for the champion
+        if not os.path.exists(folder):
+            os.makedirs(folder)
+
         path = "{}/{}.png".format(folder, name)
         exists = os.path.isfile(path)
         if not exists:
             image.save(path, "PNG")
+            print(Fore.MAGENTA + "Saved {} as an image.".format(name))
+        else:
+            print(Fore.YELLOW + "Already have an image saved for {}.".format(name))
+        return True
     except OSError:
-        print("Could not save {} as an image.".format(name))
+        print(Fore.RED + "Could not save {} as an image: {}".format(name, image_url))
+        return False
 
 
 def save_champ_icons(name):
@@ -60,11 +100,18 @@ def save_champ_cards(name):
                              .format(name.replace(' ', '-')))
 
     for card in json_data.json()[0].get("cards"):
-        card_name = card.get("card_name_english").lower().replace(' ', '-')
+        card_name = card.get("card_name_english").lower().replace(' ', '-').replace("'", "")
         champ_card = "https://web2.hirez.com/paladins/champion-cards/{}.jpg".format(card_name)
-        print(champ_card)
-        save_image(champ_card, "champ_cards", card_name)
-        print("Fetched champion cards for: {}: {}".format(name, card_name))
+        # print(champ_card)
+        champion_name = name.title()
+        status = save_image(champ_card, "champ_cards/{}".format(champion_name), card_name)
+        if status:
+            print("Fetched champion cards for: {}: {}".format(name, card_name))
+        else:
+            print("Trying to get image from gamepedia.")
+            new_url = get_image_paladins_wiki(champion_name, card_name)
+            if new_url != "":
+                save_image(new_url, "champ_cards/{}".format(champion_name), card_name)
 
 
 def save_card_descriptions(name):
@@ -99,6 +146,13 @@ def save_card_descriptions(name):
         print("Fetched champion card descriptions for:", name)
 
 
+# get_image_paladins_wiki("Io", "broken-deity")
+
+new_champ = "IO"
+save_champ_cards(new_champ)
+
+# save_image("https://gamepedia.cursecdn.com/paladins_gamepedia/b/be/Card_Celestial_Body.png", "testing", "io-asd")
+
 for champ in all_champs:
     champ_name = champ.replace(' ', '-')
 
@@ -107,9 +161,8 @@ for champ in all_champs:
     # save_champ_cards(champ_name)
     # save_card_descriptions(name=champ_name)
 
-
-new_champ = "io"
-save_champ_cards(new_champ)
+# new_champ = "Mal'Damba"
+# save_champ_cards(new_champ)
 # save_champ_icons(new_champ)
 # save_champ_headers(new_champ)
 

@@ -247,11 +247,19 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         # Player level, played hours, etc
         player_id = self.get_player_id(player_name)
         if player_id == -1:
-            return self.lang_dict["general_error2"][lang].format(player_name)
+            embed = discord.Embed(
+                description=self.lang_dict["general_error2"][lang].format(player_name),
+                colour=discord.colour.Color.red()
+            )
+            return embed
         try:
             info = paladinsAPI.getPlayer(player_id)
         except PlayerNotFound:
-            return self.lang_dict["general_error2"][lang].format(player_name)
+            embed = discord.Embed(
+                description=self.lang_dict["general_error2"][lang].format(player_name),
+                colour=discord.colour.Color.red()
+            )
+            return embed
 
         embed = discord.Embed(
             title="`Casual stats:`",
@@ -325,9 +333,16 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             # "Losses": 125, "MinionKills": 253, "Minutes": 3527, "Rank": 58, "Wins": 144, "Worshippers": 33582898,
             # "champion": "Makoa", "champion_id": "2288", "player_id": "704972387", "ret_msg": null}
         except BaseException:
-            ss = str('*   {:15} Lv. {:3}  {:7}   {:6}\n')
-            ss = ss.format(champ, "???", "???", "???")
-            return ss
+            if simple == 1:
+                ss = str('*   {:15} Lv. {:3}  {:7}   {:6}\n')
+                ss = ss.format(champ, "???", "???", "???")
+                return ss
+            match_data = self.lang_dict["general_error2"][lang].format(player_name)
+            embed = discord.Embed(
+                description=match_data,
+                colour=discord.colour.Color.dark_teal()
+            )
+            return embed
         if stats is None:  # Private account
             if simple == 1:
                 ss = str('*{:18} Lv. {:3}  {:7}   {:6}\n')
@@ -396,6 +411,11 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 ss = str('*{:18} Lv. {:3}  {:7}   {:6}\n')
                 ss = ss.format(champ, "???", "???", "???")
                 return ss
+            embed = discord.Embed(
+                description=ss,
+                colour=discord.colour.Color.orange()
+            )
+            return embed
 
         # Global win rate and kda
         global_ss = str("\n\nGlobal KDA: {}\nGlobal Win Rate: {}% ({}-{})")
@@ -1430,16 +1450,16 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 try:
                     for embed in embeds:
                         await ctx.send(embed=embed)
-                except BaseException as e:
-                    await ctx.send("```fix\nUnfortunately something malfunctioned, please try again.")
+                except BaseException as e:  # ToDo should be fixed now
+                    await ctx.send("```fix\nUnfortunately something malfunctioned, please try again.```")
                     print("***Stupid error: " + str(e) + "result")
         else:
             champ_name = await self.convert_champion_name(option)
             result = await self.get_champ_stats_api(player_name, champ_name, simple=0, lang=lang)
             try:
                 await ctx.send(embed=result)
-            except BaseException as e:
-                await ctx.send("```fix\nUnfortunately something malfunctioned, please try again.")
+            except BaseException as e:      # ToDo should be fixed now
+                await ctx.send("```fix\nUnfortunately something malfunctioned, please try again.```")
                 print("***Stupid error: " + str(e) + "result")
 
     # Stores Player's IGN for the bot to use

@@ -1,0 +1,19 @@
+>>current me
+
+Traceback (most recent call last):
+  File "C:\Users\Ethan\Anaconda3\envs\Rewrite\lib\site-packages\discord\ext\commands\core.py", line 63, in wrapped
+    ret = await coro(*args, **kwargs)
+  File "F:\PaladinsAssistantBot\cogs\PaladinsAPI.py", line 1351, in current
+    team2_overall[3] += float(pl[3])  # kda
+ValueError: could not convert string to float: '(Level 112): 255 Wins, 276 Losses (Kills: 3,833 / Deaths: 5,461 / Assists: 3,464 '
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\Ethan\Anaconda3\envs\Rewrite\lib\site-packages\discord\ext\commands\bot.py", line 814, in invoke
+    await ctx.command.invoke(ctx)
+  File "C:\Users\Ethan\Anaconda3\envs\Rewrite\lib\site-packages\discord\ext\commands\core.py", line 683, in invoke
+    await injected(*ctx.args, **ctx.kwargs)
+  File "C:\Users\Ethan\Anaconda3\envs\Rewrite\lib\site-packages\discord\ext\commands\core.py", line 72, in wrapped
+    raise CommandInvokeError(exc) from exc
+discord.ext.commands.errors.CommandInvokeError: Command raised an exception: ValueError: could not convert string to float: '(Level 112): 255 Wins, 276 Losses (Kills: 3,833 / Deaths: 5,461 / Assists: 3,464 '

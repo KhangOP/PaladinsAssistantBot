@@ -195,19 +195,19 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                     return ["Connection Error", "???", "???", "???"]
                 try:
                     level = split1[1].split(")")[0]  # Level
-                    level = int(level)
+                    temp = int(level)
                 except ValueError:
                     level = "???"
                     print(Fore.LIGHTCYAN_EX + "???? what in the string nation is going on: " + Fore.YELLOW + soup)
                 try:
                     kda = soup.split("- ")[1].split(" KDA")[0]  # KDA
-                    kda = float(kda)
+                    temp = float(kda)
                 except ValueError:
                     kda = "???"
                     print(Fore.LIGHTCYAN_EX + "???? what in the string nation is going on: " + Fore.YELLOW + soup)
                 try:
                     win_rate = soup.split("Win rate: ")[1].split("%")[0]  # Win Rate
-                    win_rate = float(win_rate)
+                    temp = float(win_rate)
                 except ValueError:
                     win_rate = "???"
                     print(Fore.LIGHTCYAN_EX + "???? what in the string nation is going on: " + Fore.YELLOW + soup)

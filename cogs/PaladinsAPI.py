@@ -186,7 +186,6 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 if 'ERROR' in soup:
                     error = ["Private Account", "???", "???", "???"]
                     return error
-
                 split1 = soup.split("(Level ")
 
                 try:
@@ -194,9 +193,24 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 except BaseException:
                     print(Fore.RED + str(soup))
                     return ["Connection Error", "???", "???", "???"]
-                level = split1[1].split(")")[0]  # Level
-                kda = soup.split("- ")[1].split(" KDA")[0]  # KDA
-                win_rate = soup.split("Win rate: ")[1].split("%")[0]  # Win Rate
+                try:
+                    level = split1[1].split(")")[0]  # Level
+                    level = int(level)
+                except ValueError:
+                    level = "???"
+                    print(Fore.LIGHTCYAN_EX + "???? what in the string nation is going on: " + Fore.YELLOW + soup)
+                try:
+                    kda = soup.split("- ")[1].split(" KDA")[0]  # KDA
+                    kda = float(kda)
+                except ValueError:
+                    kda = "???"
+                    print(Fore.LIGHTCYAN_EX + "???? what in the string nation is going on: " + Fore.YELLOW + soup)
+                try:
+                    win_rate = soup.split("Win rate: ")[1].split("%")[0]  # Win Rate
+                    win_rate = float(win_rate)
+                except ValueError:
+                    win_rate = "???"
+                    print(Fore.LIGHTCYAN_EX + "???? what in the string nation is going on: " + Fore.YELLOW + soup)
 
                 stats = [player_name, level, win_rate, kda]
 
@@ -1447,7 +1461,6 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 await ctx.send("```md\n" + result + "```")
             else:
                 embeds = await self.get_player_stats_api_mobile(player_name, lang=lang)
-                print(embeds)
                 try:
                     for embed in embeds:
                         await ctx.send(embed=embed)
@@ -1483,10 +1496,11 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     @commands.command()
     async def testing(self, ctx):
         # team1 = ["Ash", "Makoa", "Willo", "Seris"]
-        team1 = ["Ash", "Makoa", "Willo", "Seris", "Io"]
-        buffer = await helper.create_team_image(team1, [])
-        file = discord.File(filename="Team.png", fp=buffer)
-        await ctx.send("```diff\n" + "bruh" + "```", file=file)
+        # team1 = ["Ash", "Makoa", "Willo", "Seris", "Io"]
+        # buffer = await helper.create_team_image(team1, [])
+        # file = discord.File(filename="Team.png", fp=buffer)
+        # await ctx.send("```diff\n" + "bruh" + "```", file=file)
+        print(await self.get_global_kda("FeistyJalapeno"))
 
 
 # Add this class to the cog list

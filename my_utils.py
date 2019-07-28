@@ -430,9 +430,9 @@ async def create_deck_image(player_name, champ_name, deck):
 
     champ_name = await convert_champion_name(champ_name)
     try:
-        champ_background = Image.open("icons/champ_headers/{}.png".format(champ_name))
+        champ_background = Image.open("icons/champ_headers/{}.png".format(champ_name)).convert('RGBA')
     except FileNotFoundError:
-        champ_background = Image.open("icons/maps/test_maps.png")
+        champ_background = Image.open("icons/maps/test_maps.png").convert('RGBA')
     champ_background = champ_background.resize((1570, 800), Image.ANTIALIAS)
     deck_image.paste(champ_background, (0, 0))
 

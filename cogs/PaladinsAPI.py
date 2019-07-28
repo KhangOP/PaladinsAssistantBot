@@ -128,11 +128,11 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     # Calculates kda
     @classmethod
     async def calc_kda(cls, kills, deaths, assists):
-        if assists == 0:  # Could happen
-            assists = 1
+        if assists != 0:
+            assists = assists / 2
         if deaths == 0:  # Prefect KDA
-            return str(kills + (assists / 2))
-        return str('{0:.2f}'.format(float(kills + (assists / 2)) / deaths))
+            deaths = 1
+        return str('{0:.2f}'.format(float(kills + assists) / deaths))
 
     # Calculates win rate
     # n1 = wins and n2 = total matches
@@ -251,7 +251,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 description=self.lang_dict["general_error2"][lang].format(player_name),
                 colour=discord.colour.Color.red()
             )
-            return embed
+            return [embed]
         try:
             info = paladinsAPI.getPlayer(player_id)
         except PlayerNotFound:
@@ -259,7 +259,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 description=self.lang_dict["general_error2"][lang].format(player_name),
                 colour=discord.colour.Color.red()
             )
-            return embed
+            return [embed]
 
         embed = discord.Embed(
             title="`Casual stats:`",
@@ -1447,6 +1447,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 await ctx.send("```md\n" + result + "```")
             else:
                 embeds = await self.get_player_stats_api_mobile(player_name, lang=lang)
+                print(embeds)
                 try:
                     for embed in embeds:
                         await ctx.send(embed=embed)

@@ -511,7 +511,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             json.dump(all_data, json_f)
 
     '''Commands below ############################################################'''
-    @commands.command(name='console', pass_context=True, ignore_extra=False)
+    @commands.command(name='console', pass_context=True, ignore_extra=False,  aliases=["Console"])
     @commands.cooldown(3, 30, commands.BucketType.user)
     async def console(self, ctx, player_name, platform: str):
         async with ctx.channel.typing():
@@ -591,8 +591,8 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 embed.add_field(name='Account Created:', value=player.createdDatetime, inline=True)
                 await ctx.send(embed=embed)
 
-    @commands.command(name='top', pass_context=True, ignore_extra=False)
-    @commands.cooldown(2, 30, commands.BucketType.user)
+    @commands.command(name='top', pass_context=True, ignore_extra=False,  aliases=["Top"])
+    @commands.cooldown(3, 30, commands.BucketType.user)
     # Gets stats for a champ using Paladins API
     async def top(self, ctx, player_name, option, order="False"):
         lang = await helper.Lang.check_language(ctx=ctx)
@@ -691,8 +691,9 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
         await ctx.send("```md\n" + message + "```")
 
-    @commands.command(name='deck', pass_context=True, aliases=["decks", "talia"], ignore_extra=False)
-    @commands.cooldown(2, 30, commands.BucketType.user)
+    @commands.command(name='deck', pass_context=True, aliases=["Deck", "decks", "Decks", "talia", "Talia"],
+                      ignore_extra=False)
+    @commands.cooldown(4, 30, commands.BucketType.user)
     async def deck(self, ctx, player_name, champ_name, deck_index=None):
         lang = await helper.Lang.check_language(ctx=ctx)
         # Maybe convert the player name
@@ -768,7 +769,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 file = discord.File(filename="Deck.png", fp=buffer)
                 await ctx.send("```Enjoy the beautiful image below.```", file=file)
 
-    @commands.command(name='track', pass_context=True, ignore_extra=False)
+    @commands.command(name='track', pass_context=True, ignore_extra=False, aliases=["Track"])
     @commands.cooldown(2, 30, commands.BucketType.user)
     async def track(self, ctx, player_name):
         # Maybe convert the player name
@@ -791,8 +792,9 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             await ctx.send("To use this command you must have stored your Paladins name by using the store command.")
             return None
 
-    @commands.command(name='history', pass_context=True, ignore_extra=False, aliases=["historia"])
-    @commands.cooldown(2, 30, commands.BucketType.user)
+    @commands.command(name='history', pass_context=True, ignore_extra=False, aliases=["History", "historia",
+                                                                                      "Historia"])
+    @commands.cooldown(3, 40, commands.BucketType.user)
     async def history(self, ctx, player_name, amount=10, champ_name=None):
         lang = await helper.Lang.check_language(ctx=ctx)
         # Maybe convert the player name
@@ -959,7 +961,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         await ctx.send("```diff\n" + match_data2 + "```")
 
     # Returns an image of a match with player details
-    @commands.command(name='match', pass_context=True, ignore_extra=False, aliases=["mecz"])
+    @commands.command(name='match', pass_context=True, ignore_extra=False, aliases=["Match", "mecz", "Mecz"])
     @commands.cooldown(2, 30, commands.BucketType.user)
     async def match(self, ctx, player_name, match_id=None, colored="-b"):
         lang = await helper.Lang.check_language(ctx=ctx)
@@ -1090,7 +1092,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             await ctx.send(embed=embed)
 
     # Returns simple match history details
-    @commands.command(name='last', pass_context=True, ignore_extra=False, aliases=["ostatni"])
+    @commands.command(name='last', pass_context=True, ignore_extra=False, aliases=["Last", "ostatni", "Ostatni"])
     @commands.cooldown(2, 30, commands.BucketType.user)
     async def last(self, ctx, player_name, match_id=-1):
         lang = await helper.Lang.check_language(ctx=ctx)
@@ -1190,7 +1192,8 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
     # Gets details about a player in a current match using the Paladins API
     # Get stats for a player's current match.
-    @commands.command(name='current', pass_context=True, aliases=["partida", "obecny"], ignore_extra=False)
+    @commands.command(name='current', pass_context=True, aliases=["Current", "partida", "Partida", "obecny", "Obecny"],
+                      ignore_extra=False)
     @commands.cooldown(2, 30, commands.BucketType.user)
     async def current(self, ctx, player_name, option="-s"):
         print(Fore.MAGENTA + f'{round(Process(getpid()).memory_info().rss/1024/1024, 2)} MB')
@@ -1354,9 +1357,11 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 if pl[1] != "???" and float(pl[1]) > 50:
                     team1_overall[0] += 1               # num
                     team1_overall[1] += int(pl[1])      # level
-                    team1_overall[2] += float(pl[2])    # win rate
-                    team1_overall[3] += float(pl[3])    # kda
-
+                    try:
+                        team1_overall[2] += float(pl[2])    # win rate
+                        team1_overall[3] += float(pl[3])    # kda
+                    except ValueError:
+                        pass
                 # Add in champ stats
                 if option == "-a" and can_use:
                     player_champ_data += await self.get_champ_stats_api(pl[0], champ, 1, lang=lang)
@@ -1424,7 +1429,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             print(Fore.MAGENTA + f'{round(Process(getpid()).memory_info().rss/1024/1024, 2)} MB')
 
     # Returns simple stats based on the option they choose (champ_name, or me)
-    @commands.command(name='stats', aliases=['Statystyki'], pass_context=True, ignore_extra=False)
+    @commands.command(name='stats', aliases=['Statystyki', 'Stats'], pass_context=True, ignore_extra=False)
     @commands.cooldown(3, 30, commands.BucketType.user)
     async def stats(self, ctx, player_name, option=None):
         lang = await helper.Lang.check_language(ctx=ctx)
@@ -1477,7 +1482,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 print("***Stupid error: " + str(e) + "result")
 
     # Stores Player's IGN for the bot to use
-    @commands.command(name='store', pass_context=True, ignore_extra=False, aliases=["zapisz"])
+    @commands.command(name='store', pass_context=True, ignore_extra=False, aliases=["zapisz", "Zapisz", "Store"])
     @commands.cooldown(2, 30, commands.BucketType.user)
     async def store_player_name(self, ctx, player_ign):
         with open("player_discord_ids") as json_f:

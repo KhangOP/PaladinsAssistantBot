@@ -439,11 +439,14 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         ss += global_ss
 
         # Create an embed
+        my_title = player_name + "'s stats: "
+        desc = "`{}`".format(ss)
         embed = discord.Embed(
+            title=my_title,
+            description=desc,
             colour=discord.colour.Color.dark_teal()
         )
-        embed.add_field(name=player_name + "'s stats: ", value='`' + ss + '`', inline=False)
-        embed.set_thumbnail(url=await helper.get_champ_image(champ ))
+        embed.set_thumbnail(url=await helper.get_champ_image(champ))
         return embed
 
     async def auto_update(self, discord_id):

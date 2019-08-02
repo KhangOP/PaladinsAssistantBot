@@ -1391,10 +1391,13 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
                 # For teams total win rate and kda
                 if pl[1] != "???" and float(pl[1]) > 50:
-                    team2_overall[0] += 1  # num
-                    team2_overall[1] += int(pl[1])    # level
-                    team2_overall[2] += float(pl[2])  # win rate
-                    team2_overall[3] += float(pl[3])  # kda
+                    team1_overall[0] += 1  # num
+                    team1_overall[1] += int(pl[1])  # level
+                    try:
+                        team1_overall[2] += float(pl[2])  # win rate
+                        team1_overall[3] += float(pl[3])  # kda
+                    except ValueError:
+                        pass
 
                 # Add in champ stats
                 if option == "-a" and can_use:

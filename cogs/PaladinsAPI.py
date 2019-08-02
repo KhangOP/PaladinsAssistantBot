@@ -174,7 +174,8 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         # else return the name passed in since its already correct
         return champ_name
 
-    # Gets KDA and Win Rate for a player from Guru
+    # Gets KDA and Win Rate for a player from Nonsocial's herokuapp
+    # todo fix this for some accounts
     @classmethod
     async def get_global_kda(cls, player_id):
         url = "http://nonsocial.herokuapp.com/api/kda?player=" + str(player_id)
@@ -186,6 +187,9 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 if 'ERROR' in soup:
                     error = ["Private Account", "???", "???", "???"]
                     return error
+
+                # FeistyJalapeno (Level 710): 5740 Wins, 3475 Losses (Kills: 114,019 / Deaths: 63,976 / Assists: 108,076 - 2.63 KDA) - Win rate: 62.29%
+
                 split1 = soup.split("(Level ")
 
                 try:
@@ -200,7 +204,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                     level = "???"
                     print(Fore.LIGHTCYAN_EX + "???? what in the string nation is going on: " + Fore.YELLOW + soup)
                 try:
-                    kda = soup.split("- ")[1].split(" KDA")[0]  # KDA
+                    kda = split1[1].split("- ")[1].split(" KDA")[0]  # KDA
                     temp = float(kda)
                 except ValueError:
                     kda = "???"

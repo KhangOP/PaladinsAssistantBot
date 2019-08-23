@@ -175,7 +175,6 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         return champ_name
 
     # Gets KDA and Win Rate for a player from Nonsocial's herokuapp
-    # todo fix this for some accounts
     @classmethod
     async def get_global_kda(cls, player_id):
         url = "http://nonsocial.herokuapp.com/api/kda?player=" + str(player_id)
@@ -598,10 +597,10 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 embed.add_field(name='Account Created:', value=player.createdDatetime, inline=True)
                 await ctx.send(embed=embed)
 
-    @commands.command(name='top', pass_context=True, ignore_extra=False,  aliases=["Top"])
+    @commands.command(name='top', pass_context=True, ignore_extra=False,  aliases=["Top", "bottom", "Bottom"])
     @commands.cooldown(3, 30, commands.BucketType.user)
     # Gets stats for a champ using Paladins API
-    async def top(self, ctx, player_name, option, order="False"):
+    async def top(self, ctx, player_name, option, amount="limit"):
         lang = await helper.Lang.check_language(ctx=ctx)
         # Maybe convert the player name
         if str(player_name) == "me":
@@ -664,7 +663,10 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             player_champion_data.append([stat.godName, level, kda, win_rate, wins + losses, stat.json['Minutes']])
 
         # Convert option
-        ordering = False if order == "low" else True
+        ordering = False if ctx.invoked_with in ["Bottom", "bottom"] else True
+
+        # amount converting
+        limit = -1 if amount == "all" else 10
 
         # Converts key word to index in list
         index = {
@@ -683,20 +685,26 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         message = "{:15}    {:7} {:6} {:10} {:9} {:6}\n{}\n"\
             .format("Champion", "Level", "KDA", "Win Rate", "Matches", "Time(mins.)",
                     "------------------------------------------------------------------")
+        message2 = ""
 
         for i, champ in enumerate(player_champion_data, start=0):
-            if i == 10:
+            if i == limit:
                 break
             champ = [str(j) for j in champ]  # convert all elements to string to make formatting easier
             hours = int(int(champ[5]) / 60)
             minutes = int(champ[5]) % 60
             champ[5] = "{}h {}m".format(hours, minutes)
-            if i == 9:
-                message += "{}. {:15}{:7} {:6} {:10} {:9} {:6}\n".format(i + 1, *champ)
+            if i >= 9:
+                if i < 20:
+                    message += "{}. {:15}{:7} {:6} {:10} {:9} {:6}\n".format(i + 1, *champ)
+                else:
+                    message2 += "{}. {:15}{:7} {:6} {:10} {:9} {:6}\n".format(i + 1, *champ)
             else:
                 message += "{}.  {:15}{:7} {:6} {:10} {:9} {:6}\n".format(i + 1, *champ)
 
         await ctx.send("```md\n" + message + "```")
+        if message2 != "":
+            await ctx.send("```md\n" + message2 + "```")
 
     @commands.command(name='deck', pass_context=True, aliases=["Deck", "decks", "Decks", "talia", "Talia"],
                       ignore_extra=False)
@@ -1510,12 +1518,16 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     @commands.is_owner()
     @commands.command()
     async def testing(self, ctx):
+        start = time.time()
         # team1 = ["Ash", "Makoa", "Willo", "Seris"]
-        # team1 = ["Ash", "Makoa", "Willo", "Seris", "Io"]
-        # buffer = await helper.create_team_image(team1, [])
-        # file = discord.File(filename="Team.png", fp=buffer)
-        # await ctx.send("```diff\n" + "bruh" + "```", file=file)
-        print(await self.get_global_kda("FeistyJalapeno"))
+
+        team1 = ["Ash", "Makoa", "Willo", "Seris", "Io"]
+        buffer = await helper.create_team_image(team1, [])
+        file = discord.File(filename="Team.png", fp=buffer)
+        await ctx.send("```diff\n" + "bruh" + "```", file=file)
+        end = time.time()
+        print(end - start)
+        # print(await self.get_global_kda("FeistyJalapeno"))
 
 
 # Add this class to the cog list

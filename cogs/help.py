@@ -81,6 +81,8 @@ class HelpCog(commands.Cog, name="Help Commands"):
                             inline=False)
             embed.add_field(name='usage', value='Returns how many times you have used commands for this bot.',
                             inline=False)
+            embed.add_field(name='track', value='Starts recording matches played by a player.',
+                            inline=False)
             embed.add_field(name='prefix', value='Lets the server owner change the prefix of the bot.',
                             inline=False)
             embed.add_field(name='language', value='Lets the server owner change the language the bot uses.',
@@ -222,6 +224,15 @@ class HelpCog(commands.Cog, name="Help Commands"):
         command_description = "Returns how many times you have used commands for this bot."
         parameters = ["None"]
         descriptions = ["Parameterless command"]
+        await ctx.send(embed=create_embed(command_name, command_description, parameters, descriptions))
+
+    @help.command()
+    async def track(self, ctx):
+        command_name = "track"
+        command_description = "Starts recording matches played by a player."
+        parameters = ["me"]
+        descriptions = ["Players must have stored their name in the bot using the store command first before "
+                        "using this command."]
         await ctx.send(embed=create_embed(command_name, command_description, parameters, descriptions))
 
     @help.command()

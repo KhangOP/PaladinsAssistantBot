@@ -1067,7 +1067,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                             else:
                                 if team1_parties[pd.partyId] == "":
                                     new_party_id += 1
-                                team1_parties[pd.partyId] = "" + str(new_party_id)
+                                    team1_parties[pd.partyId] = "" + str(new_party_id)
                         else:
                             kda = "{}/{}/{}".format(pd.killsPlayer, pd.deaths, pd.assists)
                             # account = "{}({})".format(pd.playerName, pd.accountLevel)
@@ -1081,7 +1081,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                             else:
                                 if team2_parties[pd.partyId] == "":
                                     new_party_id += 1
-                                team2_parties[pd.partyId] = str(new_party_id)
+                                    team2_parties[pd.partyId] = str(new_party_id)
 
                     # print("team1: " + str(team1_parties), "team2: " + str(team2_parties))
                     color = True if colored == "-c" else False

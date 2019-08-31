@@ -23,6 +23,7 @@ class PaladinsAssistant(discord.Client):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        self.client = Bot
         #
         self.load_bot_config()
         self.load_cogs()
@@ -126,14 +127,15 @@ class PaladinsAssistant(discord.Client):
         await self.wait_until_ready()
         while not self.is_closed():
             await self.change_presence(status=discord.Status.dnd,  # Online, idle, invisible, dnd
-                                         activity=discord.Game(name=secure_random.choice(self.GAME), type=0))
+                                       activity=discord.Game(name=secure_random.choice(self.GAME), type=0))
             await asyncio.sleep(60)  # Ever min
 
     # Here we load our extensions(cogs) listed above in [initial_extensions].
     def load_cogs(self):
         for extension in self.INITIAL_EXTENSIONS:
             try:
-                super().load_extension(extension)
+                self.load_extension()
+                # super().load_extension(extension)
                 print(Fore.GREEN + "Loaded extension:", Fore.MAGENTA + extension)
             except BaseException as e:
                 print(Fore.RED + "Failed to load: {} because of {}".format(extension, e))

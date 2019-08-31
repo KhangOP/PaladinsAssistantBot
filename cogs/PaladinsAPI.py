@@ -452,6 +452,106 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         embed.set_thumbnail(url=await helper.get_champ_image(champ))
         return embed
 
+    # Gets stats for a champ using Paladins API
+    async def get_champ_stats_api_mobile(self, player_name, champ, lang):
+        # Gets player id and error checks
+        player_id = self.get_player_id(player_name)
+        if player_id == -1:
+            match_data = self.lang_dict["general_error2"][lang].format(player_name)
+            embed = discord.Embed(
+                description=match_data,
+                colour=discord.colour.Color.dark_teal()
+            )
+            return embed
+        try:
+            stats = paladinsAPI.getChampionRanks(player_id)
+        except BaseException:
+            match_data = self.lang_dict["general_error2"][lang].format(player_name)
+            embed = discord.Embed(
+                description=match_data,
+                colour=discord.colour.Color.dark_teal()
+            )
+            return embed
+        if stats is None:  # Private account
+            match_data = self.lang_dict["general_error"][lang].format(player_name)
+            embed = discord.Embed(
+                description=match_data,
+                colour=discord.colour.Color.dark_teal()
+            )
+            return embed
+
+        if "Mal" in champ:
+            champ = "Mal'Damba"
+
+        ss = ""
+        t_wins = 0
+        t_loses = 0
+        t_kda = 0
+        count = 0
+
+        for stat in stats:
+            count += 1
+            wins = stat.wins
+            losses = stat.losses
+            kda = await self.calc_kda(stat.kills, stat.deaths, stat.assists)
+            # champ we want to get the stats on
+            if stat.godName == champ:
+                win_rate = await self.calc_win_rate(wins, wins + losses)
+                level = stat.godLevel
+
+                last_played = str(stat.lastPlayed)
+                if not last_played:  # Bought the champ but never played them
+                    break
+
+                ss = self.lang_dict["stats_champ"][lang + "_mobile"]
+
+                ss = ss.format(champ, level, kda, stat.kills, stat.deaths, stat.assists,
+                               win_rate, wins, losses, str(stat.lastPlayed).split()[0])
+
+            # Global win rate and kda
+            t_wins += wins
+            t_loses += losses
+            if wins + losses > 20:  # Player needs to have over 20 matches with a champ for it to affect kda
+                t_kda += float(kda) * (wins + losses)  # These two lines allow the kda to be weighted
+                count += 1 + (wins + losses)  # aka the more a champ is played the more it affects global kda
+
+        # They have not played this champion yet
+        if ss == "":
+            ss = "No data for champion: " + champ + "\n"
+            embed = discord.Embed(
+                description=ss,
+                colour=discord.colour.Color.orange()
+            )
+            return embed
+
+        # Global win rate and kda
+        t_kda = str('{0:.2f}').format(t_kda / count)
+        win_rate = await self.calc_win_rate(t_wins, t_wins + t_loses)
+        win_rate = '{}% ({}-{})'.format(win_rate, t_wins, t_loses)
+
+        # Create an embed
+        my_title = '`'+player_name + "'s stats: `"
+        embed = discord.Embed(
+            title=my_title,
+            colour=discord.colour.Color.dark_teal()
+        )
+        embed.set_thumbnail(url=await helper.get_champ_image(champ))
+        parts = ss.split("\n")
+        for part in parts:
+            p1, p2 = part.split("*")
+            embed.add_field(name=p1, value=p2, inline=True)
+
+        # Global stats
+        embed2 = discord.Embed(
+            title="`Global stats:`",
+            colour=discord.colour.Color.dark_magenta(),
+        )
+        embed2.add_field(name='KDA:', value=t_kda, inline=True)
+        embed2.add_field(name='Win Rate:', value=win_rate, inline=True)
+
+        embeds = [embed, embed2]
+        return embeds
+
     async def auto_update(self, discord_id):
         player_name = self.check_player_name(discord_id)
         if player_name == "None":
@@ -1466,38 +1566,43 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                            "`>>store Paladins_IGN`")
             return None
 
+        # Checking for is_on_mobile() status
+        mobile_status = False
+        if ctx.guild is None:  # In DM's
+            guilds = self.bot.guilds
+            for guild in guilds:
+                member = guild.get_member(ctx.author.id)
+                if member is not None:
+                    mobile_status = member.is_on_mobile()
+        else:
+            mobile_status = ctx.author.is_on_mobile()
+
+        # get basic player stats
         if option is None:
-
-            # Checking for is_on_mobile() status
-            mobile_status = False
-            if ctx.guild is None:  # In DM's
-                guilds = self.bot.guilds
-                for guild in guilds:
-                    member = guild.get_member(ctx.author.id)
-                    if member is not None:
-                        mobile_status = member.is_on_mobile()
-            else:
-                mobile_status = ctx.author.is_on_mobile()
-
             if not mobile_status:
                 result = await self.get_player_stats_api(player_name, lang=lang)
                 await ctx.send("```md\n" + result + "```")
             else:
                 embeds = await self.get_player_stats_api_mobile(player_name, lang=lang)
-                try:
-                    for embed in embeds:
-                        await ctx.send(embed=embed)
-                except BaseException as e:  # ToDo should be fixed now
-                    await ctx.send("```fix\nUnfortunately something malfunctioned, please try again.```")
-                    print("***Stupid error: " + str(e) + "result")
+                for embed in embeds:
+                    await ctx.send(embed=embed)
+        # get stats for a specific character
         else:
             champ_name = await self.convert_champion_name(option)
-            result = await self.get_champ_stats_api(player_name, champ_name, simple=0, lang=lang)
-            try:
-                await ctx.send(embed=result)
-            except BaseException as e:      # ToDo should be fixed now
-                await ctx.send("```fix\nUnfortunately something malfunctioned, please try again.```")
-                print("***Stupid error: " + str(e) + "result")
+            if not mobile_status:
+                result = await self.get_champ_stats_api(player_name, champ_name, simple=0, lang=lang)
+                try:
+                    await ctx.send(embed=result)
+                except BaseException as e:      # ToDo should be fixed now
+                    await ctx.send("```fix\nUnfortunately something malfunctioned, please try again.```")
+                    print("***Stupid error: " + str(e) + "result")
+                    with open("error_logs/{}.csv".format("dummy_error"), 'w+', encoding="utf-8") as error_log_file:
+                        error_log_file.write(str(result))
+            # mobile version
+            else:
+                embeds = await self.get_champ_stats_api_mobile(player_name, champ_name, lang=lang)
+                for embed in embeds:
+                    await ctx.send(embed=embed)
 
     # Stores Player's IGN for the bot to use
     @commands.command(name='store', pass_context=True, ignore_extra=False, aliases=["zapisz", "Zapisz", "Store"])

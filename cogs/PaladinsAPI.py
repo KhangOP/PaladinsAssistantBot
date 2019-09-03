@@ -278,18 +278,23 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             )
             return [embed]
 
-        embed = discord.Embed(
-            title="`Casual stats:`",
-            colour=discord.colour.Color.dark_teal(),
-        )
-
+        # Overall Info
+        ss = self.lang_dict["stats_s1"][lang+"_mobile"]
         total = int(info.wins) + int(info.losses)
         wr = await self.calc_win_rate(int(info.wins), total)
-        # embed.add_field(name='Casual stats:', value="```-----```", inline=False)
-        embed.add_field(name='Name:', value=info.playerName, inline=False)
-        embed.add_field(name='Account Level:', value=info.accountLevel, inline=False)
-        embed.add_field(name='Win Rate:', value="{}% out of {} matches".format(wr, total), inline=False)
-        embed.add_field(name='Times Deserted:', value=str(info.leaves), inline=False)
+        ss = ss.format(str(info.playerName), str(info.accountLevel), wr, str(total), str(info.leaves))
+
+        parts = ss.split("\n")
+        embed = discord.Embed(
+            title="`{}  ------------`".format(parts.pop(0)),
+            colour=discord.colour.Color.dark_teal(),
+        )
+        for part in parts:
+            p1, p2 = part.split("*")
+            embed.add_field(name=p1, value=p2, inline=False)
+
+        # Ranked Info
+        s2 = self.lang_dict["stats_s2"][lang+"_mobile"]
 
         # Get the platform's ranked stats
         platform = str(info.platform).lower()
@@ -301,30 +306,36 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         win = int(ranked.wins)
         lose = int(ranked.losses)
         wr = await self.calc_win_rate(win, win + lose)
+        s2 = s2.format(str(ranked.currentRank.getName()),
+                       str(ranked.currentTrumpPoints), str(ranked.leaderboardIndex), wr, win, lose, str(ranked.leaves))
 
+        parts = s2.split("\n")
         embed2 = discord.Embed(
-            title="`Ranked stats for Season {}:`".format(ranked.currentSeason),
+            title="`{} {}`".format(parts.pop(0), ranked.currentSeason),
             colour=discord.colour.Color.dark_magenta(),
         )
-        # embed2.add_field(name='Ranked stats for Season {}:'.format(ranked.currentSeason), value="```-----```",
-        #                 inline=False)
-        embed2.add_field(name='Rank:', value=ranked.currentRank.getName(), inline=False)
-        embed2.add_field(name='TP:', value="{} (position: {})".format(ranked.currentTrumpPoints,
-                                                                      ranked.leaderboardIndex), inline=False)
-        embed2.add_field(name='Win Rate:', value="{}% ({}-{})".format(wr, win, lose), inline=False)
-        embed2.add_field(name='Times Deserted:', value=str(ranked.leaves), inline=False)
+        for part in parts:
+            p1, p2 = part.split("*")
+            embed2.add_field(name=p1, value=p2, inline=False)
 
+        # Extra info
+        s3 = self.lang_dict["stats_s3"][lang+"_mobile"]
+        s3 = s3.format(str(info.createdDatetime).split()[0], str(info.lastLoginDatetime).split()[0],
+                       str(info.totalAchievements), str(info.platform), str(info.playedGods))
+
+        parts = s3.split("\n")
         embed3 = discord.Embed(
-            title="`Extra details:`",
+            title="`{}  -------------`".format(parts.pop(0)),
             colour=discord.colour.Color.dark_teal(),
         )
-        # embed3.add_field(name='Extra details:', value="```-----```", inline=False)
-        embed3.add_field(name='Account created on:', value=str(info.createdDatetime).split()[0], inline=False)
-        embed3.add_field(name='Last login on:', value=str(info.lastLoginDatetime).split()[0], inline=False)
-        embed3.add_field(name='Platform:', value=str(info.platform), inline=False)
-        embed3.add_field(name='MasteryLevel:', value=str(info.playedGods), inline=False)
-        embed3.add_field(name='Steam Achievements completed:', value="{}/{}".format(info.totalAchievements, 58),
-                         inline=False)
+        i = 0
+        for part in parts:
+            p1, p2 = part.split("*")
+            if i != 2 and lang == "en":
+                embed3.add_field(name=p1, value=p2, inline=True)
+            else:
+                embed3.add_field(name=p1, value=p2, inline=False)
+            i += 1
 
         embeds = [embed, embed2, embed3]
         return embeds
@@ -395,7 +406,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 if not last_played:  # Bought the champ but never played them
                     break
 
-                ss = self.lang_dict["stats_champ"][lang]
+                ss = self.lang_dict["stats_champ"][lang].replace("*", "")
 
                 ss = ss.format(champ, level, kda, stat.kills, stat.deaths, stat.assists,
                                win_rate, wins, losses, str(stat.lastPlayed).split()[0])
@@ -462,7 +473,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 description=match_data,
                 colour=discord.colour.Color.dark_teal()
             )
-            return embed
+            return [embed]
         try:
             stats = paladinsAPI.getChampionRanks(player_id)
         except BaseException:
@@ -471,14 +482,14 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 description=match_data,
                 colour=discord.colour.Color.dark_teal()
             )
-            return embed
+            return [embed]
         if stats is None:  # Private account
             match_data = self.lang_dict["general_error"][lang].format(player_name)
             embed = discord.Embed(
                 description=match_data,
                 colour=discord.colour.Color.dark_teal()
             )
-            return embed
+            return [embed]
 
         if "Mal" in champ:
             champ = "Mal'Damba"
@@ -503,7 +514,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 if not last_played:  # Bought the champ but never played them
                     break
 
-                ss = self.lang_dict["stats_champ"][lang + "_mobile"]
+                ss = self.lang_dict["stats_champ"][lang]
 
                 ss = ss.format(champ, level, kda, stat.kills, stat.deaths, stat.assists,
                                win_rate, wins, losses, str(stat.lastPlayed).split()[0])
@@ -522,7 +533,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 description=ss,
                 colour=discord.colour.Color.orange()
             )
-            return embed
+            return [embed]
 
         # Global win rate and kda
         t_kda = str('{0:.2f}').format(t_kda / count)

@@ -625,11 +625,38 @@ async def create_player_stats_image(champ_icon, champ_stats, index, party, color
     image_size_y = 512 - shrink * 2
     img_x = 512
     middle = image_size_y/2 - 50
-    im_color = (175, 238, 238) if index % 2 == 0 else (196, 242, 242)
+    im_color = (175, 238, 238, 0) if index % 2 == 0 else (196, 242, 242, 0)
     # color = (175, 238, 238)   # light blue
     # color = (196, 242, 242)     # lighter blue
-    champ_stats_image = Image.new('RGB', (img_x*9, image_size_y+offset*2), color=im_color)
+    champ_stats_image = Image.new('RGBA', (img_x*9, image_size_y+offset*2), color=im_color)
+
     champ_stats_image.paste(champ_icon, (offset, offset))
+
+    platform = champ_stats[10]
+    platform_logo = None
+    if platform == "XboxLive":
+        platform_logo = Image.open("icons/xbox_logo.png").resize((100, 100), Image.ANTIALIAS)
+        platform_logo = platform_logo.convert("RGBA")
+        champ_stats_image.paste(platform_logo, (img_x + 175, int(middle) + 60), platform_logo)
+    elif platform == "Nintendo Switch":
+        platform_logo = Image.open("icons/switch_logo.png")
+        width, height = platform_logo.size
+        scale = .15
+        platform_logo = platform_logo.resize((int(width * scale), int(height * scale)), Image.ANTIALIAS)
+        platform_logo = platform_logo.convert("RGBA")
+        champ_stats_image.paste(platform_logo, (img_x + 135, int(middle) + 45), platform_logo)
+    elif platform == "PSN":
+        platform_logo = Image.open("icons/ps4_logo.png").resize((100, 100), Image.ANTIALIAS)
+        platform_logo = platform_logo.convert("RGBA")
+        champ_stats_image.paste(platform_logo, (img_x + 175, int(middle) + 60), platform_logo)
+    # For future if I want to add a PC icon
+    # else:
+    #    print("PC")
+
+    # if platform_logo:
+    #    platform_logo = platform_logo.convert("RGBA")
+    #    champ_stats_image.paste(platform_logo, (img_x + 175, int(middle)+60), platform_logo)
+    #    # champ_stats_image.show()
 
     base_draw = ImageDraw.Draw(champ_stats_image)
 

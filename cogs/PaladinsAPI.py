@@ -1167,11 +1167,10 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                         temp = [pd.banName1, pd.banName2, pd.banName3, pd.banName4]
                         if pd.taskForce == 1:
                             kda = "{}/{}/{}".format(pd.killsPlayer, pd.deaths, pd.assists)
-                            # account = "{}({})".format(pd.playerName, pd.accountLevel)
                             team1_data.append([pd.playerName, pd.accountLevel, "{:,}".format(pd.goldEarned), kda,
                                                "{:,}".format(pd.damagePlayer), "{:,}".format(pd.damageTaken),
                                                pd.objectiveAssists, "{:,}".format(pd.damageMitigated),
-                                               "{:,}".format(pd.healing), pd.partyId])
+                                               "{:,}".format(pd.healing), pd.partyId, pd.platform])
                             team1_champs.append(pd.referenceName)
                             if pd.partyId not in team1_parties or pd.partyId == 0:
                                 team1_parties[pd.partyId] = ""
@@ -1181,11 +1180,10 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                                     team1_parties[pd.partyId] = "" + str(new_party_id)
                         else:
                             kda = "{}/{}/{}".format(pd.killsPlayer, pd.deaths, pd.assists)
-                            # account = "{}({})".format(pd.playerName, pd.accountLevel)
                             team2_data.append([pd.playerName, pd.accountLevel, "{:,}".format(pd.goldEarned), kda,
                                                "{:,}".format(pd.damagePlayer), "{:,}".format(pd.damageTaken),
                                                pd.objectiveAssists, "{:,}".format(pd.damageMitigated),
-                                               "{:,}".format(pd.healing), pd.partyId])
+                                               "{:,}".format(pd.healing), pd.partyId, pd.platform])
                             team2_champs.append(pd.referenceName)
                             if pd.partyId not in team2_parties or pd.partyId == 0:
                                 team2_parties[pd.partyId] = ""
@@ -1634,6 +1632,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     @commands.is_owner()
     @commands.command()
     async def testing(self, ctx):
+        """
         start = time.time()
         # team1 = ["Ash", "Makoa", "Willo", "Seris"]
 
@@ -1643,7 +1642,8 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         await ctx.send("```diff\n" + "bruh" + "```", file=file)
         end = time.time()
         print(end - start)
-        # print(await self.get_global_kda("FeistyJalapeno"))
+        """
+        print(await self.get_global_kda("FeistyJalapeno"))
 
 
 # Add this class to the cog list

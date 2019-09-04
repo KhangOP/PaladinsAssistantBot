@@ -79,13 +79,15 @@ async def on_command_error(ctx, error):
     # checks for non-discord command related errors
     if hasattr(error, "original"):
         # Catches connection related exceptions
+        # """
         if isinstance(error.original, aiohttp_client_exceptions.ClientError) or isinstance(error.original, gaierror) or\
                 isinstance(error.original, ConnectionError) or isinstance(error.original, TimeoutError) or \
                 isinstance(error.original, requests.exceptions.RequestException) or \
                 isinstance(error.original, concurrent.futures.TimeoutError):
             await send_error(cont=ctx, msg="Connection error. Please try again.")
             return None
-        elif isinstance(error.original, discord.Forbidden):
+        # """
+        if isinstance(error.original, discord.Forbidden):
             await send_error(cont=ctx, msg="The bot does not have permission to send messages in the channel:\n{}"
                                            "\n\n- where "
                                            "you just called the command:\n{}".format(ctx.channel, ctx.message.content))

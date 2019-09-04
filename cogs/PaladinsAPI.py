@@ -406,7 +406,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 if not last_played:  # Bought the champ but never played them
                     break
 
-                ss = self.lang_dict["stats_champ"][lang].replace("*", "")
+                ss = self.lang_dict["stats_champ"][lang].replace("*", " ")
 
                 ss = ss.format(champ, level, kda, stat.kills, stat.deaths, stat.assists,
                                win_rate, wins, losses, str(stat.lastPlayed).split()[0])

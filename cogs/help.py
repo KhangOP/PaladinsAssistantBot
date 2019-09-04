@@ -4,7 +4,7 @@ from discord.ext import commands
 
 # Creates an embed base for the help commands. This way if I every want to change the look of all my help commands
 # I can just change the look of all the help commands from this one function.
-def create_embed(name, info, pars, des):
+def create_embed(name, info, pars, des, examples):
     embed = discord.Embed(
         colour=discord.colour.Color.dark_teal()
     )
@@ -20,6 +20,14 @@ def create_embed(name, info, pars, des):
 
     embed.add_field(name='Format:', value='```md\n>>' + name + format_string + '```', inline=False)
     embed.add_field(name='Parameters:', value='```md\n' + description_string + '```', inline=False)
+
+    examples_string = ""
+    index = 0
+    for example in examples:
+        index += 1
+        examples_string += "{}. >>{}\n".format(index, example)
+    embed.add_field(name='Examples:', value='```md\n' + examples_string + '```', inline=False)
+
     embed.set_footer(text="Bot created by FeistyJalapeno#9045. If you have questions, suggestions, "
                           "found a bug, etc. feel free to DM me.")
 
@@ -27,7 +35,7 @@ def create_embed(name, info, pars, des):
 
 
 class HelpCog(commands.Cog, name="Help Commands"):
-    """SimpleCog"""
+    """Cog that creates help commands for the bot."""
 
     def __init__(self, bot):
         self.bot = bot
@@ -105,7 +113,8 @@ class HelpCog(commands.Cog, name="Help Commands"):
                               "player can type the word [me] instead of their name."
         parameters = ["player_name"]
         descriptions = ["Player's Paladins IGN"]
-        await ctx.send(embed=create_embed(command_name, command_description, parameters, descriptions))
+        examples = ["{} {}".format(command_name, "Your Paladins IGN (user name)")]
+        await ctx.send(embed=create_embed(command_name, command_description, parameters, descriptions, examples))
 
     @help.command()
     async def last(self, ctx):
@@ -115,7 +124,8 @@ class HelpCog(commands.Cog, name="Help Commands"):
         descriptions = ["Player's Paladins IGN", "The match id of the game. This can be found in game in Paladin's "
                                                  "History tab or in this bots >>history command.\n[Optional parameter]:"
                                                  " if not provide, defaults to most recent match"]
-        await ctx.send(embed=create_embed(command_name, command_description, parameters, descriptions))
+        examples = ["{} {}".format(command_name, "z1unknown"), "{} {}".format(command_name, "z1unknown 012345678")]
+        await ctx.send(embed=create_embed(command_name, command_description, parameters, descriptions, examples))
 
     @help.command()
     async def match(self, ctx):
@@ -127,66 +137,81 @@ class HelpCog(commands.Cog, name="Help Commands"):
                                                  " if not provide, defaults to most recent match",
                         "If someone wants the text to be colored in the image created by the command then they need to "
                         "type [-c].\n[Optional parameter]: if not provide, defaults to black text"]
-        await ctx.send(embed=create_embed(command_name, command_description, parameters, descriptions))
+        examples = ["{} {}".format(command_name, "z1unknown"), "{} {}".format(command_name, "z1unknown 012345678"),
+                    "{} {}".format(command_name, "z1unknown -c"),
+                    "{} {}".format(command_name, "z1unknown 012345678 -c")]
+        await ctx.send(embed=create_embed(command_name, command_description, parameters, descriptions, examples))
 
     @help.command()
     async def history(self, ctx):
         command_name = "history"
         command_description = "Returns simple stats for a player\'s last amount of matches."
         parameters = ["player_name", "amount", "champ_name"]
-        descriptions = ["Player's Paladins IGN", "Amount of matches you want to see (2-50 matches)\n"
+        descriptions = ["Player's Paladins IGN", "Amount of matches you want to see (10-50 matches)\n"
                                                  "[Optional parameter]: if not provide, defaults to 10",
                         "Champion's name that you want to look for in History\n"
-                        "[Optional parameter]: if not provide, defaults to 10"]
-        await ctx.send(embed=create_embed(command_name, command_description, parameters, descriptions))
+                        "[Optional parameter]: if not provide, defaults to all champions"]
+        examples = ["{} {}".format(command_name, "z1unknown"), "{} {}".format(command_name, "z1unknown 20"),
+                    "{} {}".format(command_name, "z1unknown 50"), "{} {}".format(command_name, "z1unknown 50 Androxus"),
+                    "{} {}".format(command_name, "z1unknown Evie")]
+        await ctx.send(embed=create_embed(command_name, command_description, parameters, descriptions, examples))
 
     @help.command()
     async def current(self, ctx):
         command_name = "current"
         command_description = "Get stats for a player's current match."
-        parameters = ["player_name"]
-        descriptions = ["Player's Paladins IGN"]
-        await ctx.send(embed=create_embed(command_name, command_description, parameters, descriptions))
+        parameters = ["player_name", "option"]
+        descriptions = ["Player's Paladins IGN", "Type -a if you want an advanced look for all the players. "
+                                                 "If -a is provided then the stats of the champion that each person "
+                                                 "plays will be returned as well.\n[Optional parameter]: if not "
+                                                 "provide, defaults to just returning every player's overall stats"]
+        examples = ["{} {}".format(command_name, "z1unknown"), "{} {}".format(command_name, "z1unknown -a")]
+        await ctx.send(embed=create_embed(command_name, command_description, parameters, descriptions, examples))
 
     @help.command()
     async def top(self, ctx):
-        command_name = "top"
+        command_name = "top/bottom"
         command_description = "Prints the top 10 highest or lowest stats of a player\'s champions."
-        parameters = ["player_name", "option", "low?"]
+        parameters = ["player_name", "option", "all?"]
         option_description = "can be one of the following: \n\n" \
                              "1. <Level>: Level of a champion.\n" \
                              "2. <KDA>: KDA of a champion.\n" \
                              "3. <WL>: Win Rate of with champion.\n" \
                              "4. <Matches>: total matches played with a champion.\n" \
                              "5. <Time>: play time of a champion.\n"
-        low_option = "If the word \"low\" is provide then the command returns the 10 lowest "\
-                     "stats for a player's champions.\n" \
-                     "[Optional parameter]: if not provide, the command defaults to returning the 10 highest stats. "
-        descriptions = ["Player's Paladins IGN", option_description, low_option]
-        await ctx.send(embed=create_embed(command_name, command_description, parameters, descriptions))
+        all_option = "If the word \"all\" is provide then the command returns "\
+                     "stats for all a player's champions.\n" \
+                     "[Optional parameter]: if not provide, the command defaults to returning the 10 highest or " \
+                     "lowest stats."
+        descriptions = ["Player's Paladins IGN", option_description, all_option]
+        examples = ["{} {}".format("top", "Level"), "{} {}".format("top", "KDA all"), "{} {}".format("bottom", "Time")]
+        await ctx.send(embed=create_embed(command_name, command_description, parameters, descriptions, examples))
 
     @help.command()
     async def console(self, ctx):
         command_name = "console"
         command_description = "Command console players can use to look up their player_id."
-        parameters = ["player_name", "console_type", "player_level"]
+        parameters = ["player_name", "console_type"]
         option_description = "can be one of the following: \n\n" \
                              "1. <Xbox>\n" \
                              "2. <PS4>\n" \
                              "3. <Switch>\n"
         descriptions = ["Player's Paladins IGN", option_description]
-        await ctx.send(embed=create_embed(command_name, command_description, parameters, descriptions))
+        examples = ["{} {}".format(command_name, "iAssassin03 PS4"),
+                    "{} {}".format(command_name, "\"Space in User Name\" Switch")]
+        await ctx.send(embed=create_embed(command_name, command_description, parameters, descriptions, examples))
 
     @help.command()
     async def stats(self, ctx):
         command_name = "stats"
         command_description = "Returns simple overall stats for a player."
-        parameters = ["player_name", "option"]
-        long_string = "can be one of the following: \n\n" \
-                      "1. <me>: will return the player's overall stats. \n" \
-                      "2. <champion_name>: will return the player's stats on the name of the champion entered."
+        parameters = ["player_name", "champ_name"]
+        long_string = "<champion_name>: will return the player's stats on the name of the champion typed.\n" \
+                      "[Optional parameter]: if not provide, the command defaults to returning the player's overall " \
+                      "stats"
         descriptions = ["Player's Paladins IGN", long_string]
-        await ctx.send(embed=create_embed(command_name, command_description, parameters, descriptions))
+        examples = ["{} {}".format(command_name, "z1unknown"), "{} {}".format(command_name, "z1unknown Viktor")]
+        await ctx.send(embed=create_embed(command_name, command_description, parameters, descriptions, examples))
 
     @help.command()
     async def random(self, ctx):
@@ -200,9 +225,11 @@ class HelpCog(commands.Cog, name="Help Commands"):
                       "4. <flank>: will return a flank champion.\n" \
                       "5. <tank>: will return a tank champion.\n" \
                       "6. <map>: will return a siege map.\n" \
-                      "7. <flank>: will return a flank champion.\n"
+                      "7. <team>: will return a team of champions.\n"
         descriptions = [long_string]
-        await ctx.send(embed=create_embed(command_name, command_description, parameters, descriptions))
+        examples = ["{} {}".format(command_name, "champ"), "{} {}".format(command_name, "flank"),
+                    "{} {}".format(command_name, "team")]
+        await ctx.send(embed=create_embed(command_name, command_description, parameters, descriptions, examples))
 
     @help.command()
     async def deck(self, ctx):
@@ -216,7 +243,9 @@ class HelpCog(commands.Cog, name="Help Commands"):
                                                                               "decks that the player has for that "
                                                                               "champion"
                         ]
-        await ctx.send(embed=create_embed(command_name, command_description, parameters, descriptions))
+        examples = ["{} {}".format(command_name, "z1unknown Androxus"),
+                    "{} {}".format(command_name, "z1unknown Androxus 1")]
+        await ctx.send(embed=create_embed(command_name, command_description, parameters, descriptions, examples))
 
     @help.command()
     async def usage(self, ctx):
@@ -224,7 +253,8 @@ class HelpCog(commands.Cog, name="Help Commands"):
         command_description = "Returns how many times you have used commands for this bot."
         parameters = ["None"]
         descriptions = ["Parameterless command"]
-        await ctx.send(embed=create_embed(command_name, command_description, parameters, descriptions))
+        examples = ["{} {}".format(command_name, "")]
+        await ctx.send(embed=create_embed(command_name, command_description, parameters, descriptions, examples))
 
     """
     @help.command()
@@ -243,15 +273,19 @@ class HelpCog(commands.Cog, name="Help Commands"):
         command_description = "Lets the server owner change the prefix of the bot."
         parameters = ["prefix"]
         descriptions = ["The prefix can be set to whatever you want."]
-        await ctx.send(embed=create_embed(command_name, command_description, parameters, descriptions))
+        examples = ["{} {}".format(command_name, "**")]
+        await ctx.send(embed=create_embed(command_name, command_description, parameters, descriptions, examples))
 
     @help.command()
     async def language(self, ctx):
         command_name = "language"
         command_description = "Lets the server owner change the language the bot uses."
         parameters = ["language"]
-        descriptions = ["This command is still being worked on..."]
-        await ctx.send(embed=create_embed(command_name, command_description, parameters, descriptions))
+        descriptions = ["This command is still being worked on... If you want to bot to use a certain language dm me "
+                        "about it. I rely on people translating text not online translators."]
+        examples = ["{} {}".format(command_name, "pl"), "{} {}".format(command_name, "pt"),
+                    "{} {}".format(command_name, "reset")]
+        await ctx.send(embed=create_embed(command_name, command_description, parameters, descriptions, examples))
 
 
 # Add this class to the cog list

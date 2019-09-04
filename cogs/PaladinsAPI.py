@@ -921,7 +921,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     @commands.command(name='history', pass_context=True, ignore_extra=False, aliases=["History", "historia",
                                                                                       "Historia"])
     @commands.cooldown(3, 40, commands.BucketType.user)
-    async def history(self, ctx, player_name, amount=10, champ_name=None):
+    async def history(self, ctx, player_name, amount=None, champ_name=None):
         lang = await helper.Lang.check_language(ctx=ctx)
         # Maybe convert the player name
         personal_update = False
@@ -940,6 +940,15 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
         await helper.store_commands(ctx.author.id, "history")
         async with ctx.channel.typing():
+            if amount:
+                try:
+                    amount = int(amount)
+                except ValueError:
+                    champ_name = amount
+                    amount = 50
+            else:
+                amount = 10
+
             if amount > 50 or amount < 10:
                 await ctx.send("Please enter an amount between 10-50.")
                 await ctx.send("```fix\nDefaulting to the default value of 10 matches.```")
@@ -949,7 +958,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 await ctx.send(self.lang_dict["general_error2"][lang].format(player_name))
                 return None
             if champ_name:  # Check in case they don't provide champ name
-                champ_name = await self.convert_champion_name(champ_name)
+                champ_name = await self.convert_champion_name(str(champ_name))
 
             try:
                 paladins_data = paladinsAPI.getMatchHistory(player_id)

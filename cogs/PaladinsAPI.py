@@ -1452,26 +1452,40 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             match_data += str('\n\n{:18}  {:7}  {:8}  {:6}\n\n').format("Player name", "Level", "Win Rate", "KDA")
             player_champ_data = str('\n\n{:18}  {:7}  {:8}  {:6}\n\n').format("Champion name", "Level",
                                                                               "Win Rate", "KDA")
+            # Slow version in case Hi-Rez slows down access to API again
+            """
+            data1 = []
+            data2 = []
+            start = time.time()
+            for player in team1:
+                d1 = await self.get_global_kda(player)
+                data1.append(d1)
 
-            # Create a list of tasks to run in parallel
+            for player in team2:
+                d2 = await self.get_global_kda(player)
+                data2.append(d2)
+            end = time.time()
+            print(end - start)
+            """
+
+            # start = time.time()
             # Create a list of tasks to run in parallel
             tasks = []
+            tasks2 = []
             for player in team1:
                 tasks.append(self.get_global_kda(player))
 
             for player in team2:
-                tasks.append(self.get_global_kda(player))
+                tasks2.append(self.get_global_kda(player))
 
+            data1 = await asyncio.gather(*tasks)
+            data2 = await asyncio.gather(*tasks2)
+            
+            # end = time.time()
+            # print(end - start)
+            
             # Add in image creation task
-            tasks.append(helper.create_match_image(team1_champs, team2_champs, team1_ranks, team2_ranks))
-
-            # Run the tasks
-            data = await asyncio.gather(*tasks)
-
-            # Image
-            buffer = data.pop()
-            data1 = data[:len(team1)]
-            data2 = data[len(team1):]
+            buffer = await helper.create_match_image(team1_champs, team2_champs, team1_ranks, team2_ranks)
 
             for pl, champ in zip(data1, team1_champs):
                 ss = str('*{:18} Lv. {:3}  {:8}  {:6}\n')
@@ -1638,6 +1652,10 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         await ctx.send("Your Paladins In-Game-name is now stored as `" + player_ign +
                        "`. You can now use the keyword `me` instead of typing out your name")
 
+    @staticmethod
+    async def testing_get_player(player_id):
+        return paladinsAPI.getPlayer(player_id)
+
     @commands.is_owner()
     @commands.command()
     async def testing(self, ctx):
@@ -1652,7 +1670,43 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         end = time.time()
         print(end - start)
         """
-        print(await self.get_global_kda("FeistyJalapeno"))
+        # print(await self.get_global_kda("FeistyJalapeno"))
+
+        start = time.time()
+        tasks = []
+        team1 = ["FeistyJalapeno", "z1unknown", "FeistyJalapeno", "z1unknown", "FeistyJalapeno", "FeistyJalapeno",
+                 "z1unknown", "FeistyJalapeno", "z1unknown", "FeistyJalapeno"]
+
+        for player in team1:
+            # tasks.append(self.get_global_kda(player))
+            player_id = self.get_player_id(player)
+            tasks.append(await self.testing_get_player(player_id))
+
+        # Run the tasks
+        data = await asyncio.gather(*tasks)
+        end = time.time()
+        print(end - start)
+
+        for info in data:
+            print(str(info.playerName), str(info.accountLevel))
+
+        """
+        start = time.time()
+        tasks = []
+        team1 = ["FeistyJalapeno", "z1unknown", "FeistyJalapeno", "z1unknown", "FeistyJalapeno", "FeistyJalapeno",
+                 "z1unknown", "FeistyJalapeno", "z1unknown", "FeistyJalapeno"]
+        for player in team1:
+            # player_id = self.get_player_id(player)
+            # data.append(await self.testing_get_player(player_id))
+            start = time.time()
+            tasks.append(await self.get_global_kda(player))
+            end = time.time()
+            print(end - start)
+        """
+
+        # for info in data:
+        #    print(str(info.playerName), str(info.accountLevel))
+        # return None
 
 
 # Add this class to the cog list

@@ -1652,10 +1652,6 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         await ctx.send("Your Paladins In-Game-name is now stored as `" + player_ign +
                        "`. You can now use the keyword `me` instead of typing out your name")
 
-    @staticmethod
-    async def testing_get_player(player_id):
-        return paladinsAPI.getPlayer(player_id)
-
     @commands.is_owner()
     @commands.command()
     async def testing(self, ctx):
@@ -1670,43 +1666,8 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         end = time.time()
         print(end - start)
         """
-        # print(await self.get_global_kda("FeistyJalapeno"))
-
-        start = time.time()
-        tasks = []
-        team1 = ["FeistyJalapeno", "z1unknown", "FeistyJalapeno", "z1unknown", "FeistyJalapeno", "FeistyJalapeno",
-                 "z1unknown", "FeistyJalapeno", "z1unknown", "FeistyJalapeno"]
-
-        for player in team1:
-            # tasks.append(self.get_global_kda(player))
-            player_id = self.get_player_id(player)
-            tasks.append(await self.testing_get_player(player_id))
-
-        # Run the tasks
-        data = await asyncio.gather(*tasks)
-        end = time.time()
-        print(end - start)
-
-        for info in data:
-            print(str(info.playerName), str(info.accountLevel))
-
-        """
-        start = time.time()
-        tasks = []
-        team1 = ["FeistyJalapeno", "z1unknown", "FeistyJalapeno", "z1unknown", "FeistyJalapeno", "FeistyJalapeno",
-                 "z1unknown", "FeistyJalapeno", "z1unknown", "FeistyJalapeno"]
-        for player in team1:
-            # player_id = self.get_player_id(player)
-            # data.append(await self.testing_get_player(player_id))
-            start = time.time()
-            tasks.append(await self.get_global_kda(player))
-            end = time.time()
-            print(end - start)
-        """
-
-        # for info in data:
-        #    print(str(info.playerName), str(info.accountLevel))
-        # return None
+        print(await self.get_global_kda("FeistyJalapeno"))
+        return None
 
 
 # Add this class to the cog list

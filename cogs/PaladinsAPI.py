@@ -187,7 +187,19 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                     error = ["Private Account", "???", "???", "???"]
                     return error
 
-                # FeistyJalapeno (Level 710): 5740 Wins, 3475 Losses (Kills: 114,019 / Deaths: 63,976 / Assists: 108,076 - 2.63 KDA) - Win rate: 62.29%
+                # Stop being an asshole. It was supposed to be free and unlimited, Y'all are paying nothing and it's
+                # online 24/7 almost 1 year (8/2018). But because some shitty viewers are spamming stupid invalid
+                # inputs such as !rank Nightbot, !rank SadMartini all endpoints are limited to 15 calls per minute.
+
+                # Checking to see if we have used up the 15 calls per min
+                if 'Stop being an asshole.' in soup:
+                    try:
+                        data = await cls.get_player_current_stats_api(player_id)
+                    except BaseException:
+                        data = ["Private Account", "???", "???", "???"]
+                    return data
+                # FeistyJalapeno (Level 710): 5740 Wins, 3475 Losses
+                #  (Kills: 114,019 / Deaths: 63,976 / Assists: 108,076 - 2.63 KDA) - Win rate: 62.29%
 
                 split1 = soup.split("(Level ")
 
@@ -218,6 +230,52 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 stats = [player_name, level, win_rate, kda]
 
                 return stats
+
+    # Current command helper function
+    @classmethod
+    async def get_player_current_stats_api(cls, player_name):
+        # Player level, Account level, Win Rate
+        player_id = cls.get_player_id(player_name)
+        if player_id == -1:
+            return ["Private Account", "???", "???", "???"]
+        try:
+            info = paladinsAPI.getPlayer(player_id)
+        except PlayerNotFound:
+            return ["Private Account", "???", "???", "???"]
+
+        # Overall Info
+        total = int(info.wins) + int(info.losses)
+        wr = await cls.calc_win_rate(int(info.wins), total)
+
+        # Get KDA
+        try:
+            stats = paladinsAPI.getChampionRanks(player_id)
+        except BaseException:
+            return ["Private Account", "???", "???", "???"]
+        if stats is None:  # Private account
+            return ["Private Account", "???", "???", "???"]
+
+        t_wins = 0
+        t_loses = 0
+        t_kda = 0
+        count = 0
+
+        for stat in stats:
+            count += 1
+            wins = stat.wins
+            losses = stat.losses
+            kda = await cls.calc_kda(stat.kills, stat.deaths, stat.assists)
+
+            # Global win rate and kda
+            t_wins += wins
+            t_loses += losses
+            if wins + losses > 20:  # Player needs to have over 20 matches with a champ for it to affect kda
+                t_kda += float(kda) * (wins + losses)  # These two lines allow the kda to be weighted
+                count += 1 + (wins + losses)  # aka the more a champ is played the more it affects global kda
+
+        kda = str('{0:.2f}').format(t_kda / count)
+
+        return [str(info.playerName), str(info.accountLevel), wr, kda]
 
     # Uses Paladins API to get overall stats for a player
     async def get_player_stats_api(self, player_name, lang):
@@ -1746,7 +1804,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
     @commands.is_owner()
     @commands.command()
-    async def testing(self):
+    async def testing(self, ctx):
         """
         start = time.time()
         # team1 = ["Ash", "Makoa", "Willo", "Seris"]
@@ -1759,37 +1817,16 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         print(end - start)
         """
 
-        td = await self.get_global_kda("FeistyJalapeno")
+        # info = await self.get_player_current_stats_api("FeistyJalapeno")
+        # await ctx.send(info)
+        # return None
 
-        # for i in range(0, 5):
-        embed = discord.Embed(
-            colour=discord.colour.Color.blue(),
-        )
-        embed.add_field(name="{} (Lv. {})".format(td[0], td[1]), value="{}% \u200b \u200b \u200b \u200b \u200b \u200b"
-                                                                       "{} KDA".format(td[2], td[3]), inline=False)
-        embed.add_field(name="{} (Lv. {})".format(td[0], td[1]),
-                        value="{}% \u200b \u200b \u200b \u200b \u200b \u200b"
-                              "{} KDA".format(td[2], td[3]), inline=False)
-        embed.add_field(name="{} (Lv. {})".format(td[0], td[1]),
-                        value="{}% \u200b \u200b \u200b \u200b \u200b \u200b"
-                              "{} KDA".format(td[2], td[3]), inline=False)
-        embed.add_field(name="{} (Lv. {})".format(td[0], td[1]),
-                        value="{}% \u200b \u200b \u200b \u200b \u200b \u200b"
-                              "{} KDA".format(td[2], td[3]), inline=False)
-        embed.add_field(name="{} (Lv. {})".format(td[0], td[1]),
-                        value="{}% \u200b \u200b \u200b \u200b \u200b \u200b"
-                              "{} KDA".format(td[2], td[3]), inline=False)
-        """
-        embed.add_field(name="\u200b", value="\u200b", inline=False)
-        embed.add_field(name="{} | {} | {} | {} ------".format(td[0], td[1], td[2], td[3]),
-                        value="{} | {} | {} | {} ------".format(td[0], td[1], td[2], td[3]), inline=False)
-        embed.add_field(name="{} | {} | {} | {} ------".format(td[0], td[1], td[2], td[3]),
-                        value="{} | {} | {} | {} ------".format(td[0], td[1], td[2], td[3]), inline=False)
-        embed.add_field(name="{} | {} | {} | {} ------".format(td[0], td[1], td[2], td[3]),
-                        value="\u200b", inline=False)
-        await ctx.send(embed=embed)
-        """
+        info = ""
+        for i in range(0, 20):
+            td = await self.get_global_kda("FeistyJalapeno")
+            info += str(td) + "\n"
 
+        await ctx.send(info)
         """
         for i in range(0, 10):
             embed = discord.Embed(

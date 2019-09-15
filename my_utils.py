@@ -147,14 +147,6 @@ async def get_seconds_until_reset():
     return (midnight - datetime.now()).seconds
 
 
-class MyException(Exception):
-    def __init__(self, error):
-        self.error = error
-
-    def __str__(self):
-        return repr(self.error)
-
-
 # Converts champion names so they can be used to fetch champion images in a url
 async def convert_champion_name(champ_name, special=False):
     champ_name = champ_name.lower()

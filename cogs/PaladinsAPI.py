@@ -1418,11 +1418,13 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             team1_ranks = []
             team1_champs = []
             team1_overall = [0, 0, 0, 0]  # num, level, win rate, kda
+            team1_embed = []
 
             team2 = []
             team2_ranks = []
             team2_champs = []
             team2_overall = [0, 0, 0, 0]  # num, level, win rate, kda
+            team2_embed = []
 
             for player in players:
                 try:
@@ -1447,8 +1449,20 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                     if current_match_queue_id == 486 or current_match_queue_id == 428:
                         team2_ranks.append(str(player.tier))
 
+            # Checking for is_on_mobile() status
+            mobile_status = False
+            if ctx.guild is None:  # In DM's
+                guilds = self.bot.guilds
+                for guild in guilds:
+                    member = guild.get_member(ctx.author.id)
+                    if member is not None:
+                        mobile_status = member.is_on_mobile()
+            else:
+                mobile_status = ctx.author.is_on_mobile()
+
             match_data = ""
             match_data += player_name + " is in a " + match_string + " match."  # Match Type
+            match_info_embed = match_data
             match_data += str('\n\n{:18}  {:7}  {:8}  {:6}\n\n').format("Player name", "Level", "Win Rate", "KDA")
             player_champ_data = str('\n\n{:18}  {:7}  {:8}  {:6}\n\n').format("Champion name", "Level",
                                                                               "Win Rate", "KDA")
@@ -1488,17 +1502,27 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             buffer = await helper.create_match_image(team1_champs, team2_champs, team1_ranks, team2_ranks)
 
             for pl, champ in zip(data1, team1_champs):
-                ss = str('*{:18} Lv. {:3}  {:8}  {:6}\n')
-                ss = ss.format(pl[0], str(pl[1]), pl[2], pl[3])
-                """This Block of code adds color based on Win Rate"""
-                if "???" in pl[2]:
-                    pass
-                elif (float(pl[2].replace(" %", ""))) > 55.00:
-                    ss = ss.replace("*", "+")
-                elif (float(pl[2].replace(" %", ""))) < 49.00:
-                    ss = ss.replace("*", "-")
-                """^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"""
-                match_data += ss
+                if not mobile_status:
+                    ss = str('*{:18} Lv. {:3}  {:8}  {:6}\n')
+                    ss = ss.format(pl[0], str(pl[1]), pl[2], pl[3])
+                    """This Block of code adds color based on Win Rate"""
+                    if "???" in pl[2]:
+                        pass
+                    elif (float(pl[2].replace(" %", ""))) > 55.00:
+                        ss = ss.replace("*", "+")
+                    elif (float(pl[2].replace(" %", ""))) < 49.00:
+                        ss = ss.replace("*", "-")
+                    """^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"""
+                    match_data += ss
+                else:
+                    p1 = "{} (Lv. {})".format(pl[0], pl[1])
+                    p2 = "{}% \u200b \u200b \u200b \u200b \u200b \u200b {} KDA".format(pl[2], pl[3])
+                    team1_embed.append([p1, p2])
+                    """
+                    embed.add_field(name="{} (Lv. {})".format(pl[0], pl[1]),
+                                    value="{}% \u200b \u200b \u200b \u200b \u200b \u200b"
+                                          "{} KDA".format(pl[2], pl[3]), inline=False)
+                    """
 
                 # For teams total win rate and kda
                 if pl[1] != "???" and float(pl[1]) > 50:
@@ -1517,17 +1541,27 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             player_champ_data += "\n"
 
             for pl, champ in zip(data2, team2_champs):
-                ss = str('*{:18} Lv. {:3}  {:8}  {:6}\n')
-                ss = ss.format(pl[0], str(pl[1]), pl[2], pl[3])
-                """This Block of code adds color based on Win Rate"""
-                if "???" in pl[2]:
-                    pass
-                elif (float(pl[2].replace(" %", ""))) > 55.00:
-                    ss = ss.replace("*", "+")
-                elif (float(pl[2].replace(" %", ""))) < 49.00:
-                    ss = ss.replace("*", "-")
-                """^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"""
-                match_data += ss
+                if not mobile_status:
+                    ss = str('*{:18} Lv. {:3}  {:8}  {:6}\n')
+                    ss = ss.format(pl[0], str(pl[1]), pl[2], pl[3])
+                    """This Block of code adds color based on Win Rate"""
+                    if "???" in pl[2]:
+                        pass
+                    elif (float(pl[2].replace(" %", ""))) > 55.00:
+                        ss = ss.replace("*", "+")
+                    elif (float(pl[2].replace(" %", ""))) < 49.00:
+                        ss = ss.replace("*", "-")
+                    """^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"""
+                    match_data += ss
+                else:
+                    p1 = "{} (Lv. {})".format(pl[0], pl[1])
+                    p2 = "{}% \u200b \u200b \u200b \u200b \u200b \u200b {} KDA".format(pl[2], pl[3])
+                    team2_embed.append([p1, p2])
+                    """
+                    embed2.add_field(name="{} (Lv. {})".format(pl[0], pl[1]),
+                                     value="{}% \u200b \u200b \u200b \u200b \u200b \u200b"
+                                          "{} KDA".format(pl[2], pl[3]), inline=False)
+                    """
 
                 # For teams total win rate and kda
                 if pl[1] != "???" and float(pl[1]) > 50:
@@ -1544,36 +1578,94 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                     player_champ_data += await self.get_champ_stats_api(pl[0], champ, 1, lang=lang)
 
             # Adding team win rate's and kda's
-
-            match_data += "\n\nAverage stats\n"
-            ss1 = str('*{:18} Lv. {:3}  {:8}  {:6}\n')
-            ss2 = str('*{:18} Lv. {:3}  {:8}  {:6}')
             team1_wr, team2_wr = 0, 0
             if team1_overall[0] != 0:
-                team1_wr = round(team1_overall[2]/team1_overall[0], 2)
+                team1_wr = round(team1_overall[2] / team1_overall[0], 2)
             if team2_overall[0] != 0:
-                team2_wr = round(team2_overall[2]/team2_overall[0], 2)
+                team2_wr = round(team2_overall[2] / team2_overall[0], 2)
 
-            # no need to cal this is one team is 0
-            if team1_wr != 0 and team2_wr != 0:
-                if abs(team1_wr - team2_wr) >= 5.0:
-                    if team1_wr > team2_wr:
-                        ss1 = ss1.replace("*", "+")
-                        ss2 = ss2.replace("*", "-")
-                    else:
-                        ss1 = ss1.replace("*", "-")
-                        ss2 = ss2.replace("*", "+")
+            team1_level = str(int(team1_overall[1] / team1_overall[0]))
+            team1_kda = str(round(team1_overall[3] / team1_overall[0], 2))
 
-            if team1_overall[0] != 0:
-                ss1 = ss1.format("Team1", str(int(team1_overall[1]/team1_overall[0])), str(team1_wr),
-                                 str(round(team1_overall[3]/team1_overall[0], 2)))
-                match_data += ss1
-            if team2_overall[0] != 0:
-                ss2 = ss2.format("Team2", str(int(team2_overall[1] / team2_overall[0])), str(team2_wr),
-                                 str(round(team2_overall[3]/team2_overall[0], 2)))
-                match_data += ss2
+            team2_level = str(int(team2_overall[1] / team2_overall[0]))
+            team2_kda = str(round(team2_overall[3] / team2_overall[0], 2))
+
+            if not mobile_status:
+                match_data += "\n\nAverage stats\n"
+                ss1 = str('*{:18} Lv. {:3}  {:8}  {:6}\n')
+                ss2 = str('*{:18} Lv. {:3}  {:8}  {:6}')
+
+                # no need to call this if one team is 0
+                if team1_wr != 0 and team2_wr != 0:
+                    if abs(team1_wr - team2_wr) >= 5.0:
+                        if team1_wr > team2_wr:
+                            ss1 = ss1.replace("*", "+")
+                            ss2 = ss2.replace("*", "-")
+                        else:
+                            ss1 = ss1.replace("*", "-")
+                            ss2 = ss2.replace("*", "+")
+
+                if team1_overall[0] != 0:
+                    ss1 = ss1.format("Team1", team1_level, str(team1_wr), team1_kda)
+                    match_data += ss1
+                if team2_overall[0] != 0:
+                    ss2 = ss2.format("Team2", team2_level, str(team2_wr), team2_kda)
+                    match_data += ss2
+            else:   # mobile version
+                p2 = "Lv. {} \u200b \u200b \u200b \u200b \u200b \u200b {}% " \
+                     "\u200b \u200b \u200b \u200b \u200b \u200b {} KDA".format(team1_level, team1_wr, team1_kda)
+                team1_embed.append(["Team one's averages: ", p2])
+                """
+                embed_title.add_field(name="Team one's averages: ",
+                                      value="Lv. {} \u200b \u200b \u200b \u200b \u200b \u200b {}% "
+                                            "\u200b \u200b \u200b \u200b \u200b \u200b {} KDA"
+                                      .format(team1_level, team1_wr, team1_kda),
+                                      inline=False)
+                """
+                p2 = "Lv. {} \u200b \u200b \u200b \u200b \u200b \u200b {}% " \
+                     "\u200b \u200b \u200b \u200b \u200b \u200b {} KDA".format(team2_level, team2_wr, team2_kda)
+                team2_embed.append(["Team two's averages: ", p2])
+                """
+                embed_title.add_field(name="Team two's averages: ",
+                                      value="Lv. {} \u200b \u200b \u200b \u200b \u200b \u200b {}% "
+                                            "\u200b \u200b \u200b \u200b \u200b \u200b {} KDA"
+                                      .format(team2_level, team2_wr, team2_kda),
+                                      inline=False)
+                """
+
             file = discord.File(filename="Team.png", fp=buffer)
-            await ctx.send("```diff\n" + match_data + "```", file=file)
+
+            if not mobile_status:
+                await ctx.send("```diff\n" + match_data + "```", file=file)
+            else:   # Mobile version
+                embed_title = discord.Embed(
+                    title=match_info_embed,
+                    colour=discord.colour.Color.dark_gold(),
+                )
+
+                p1, p2 = team1_embed.pop()
+                embed = discord.Embed(
+                    colour=discord.colour.Color.blue(),
+                    title=p1,
+                    description=p2
+                )
+                for info in team1_embed:
+                    embed.add_field(name=info[0], value=info[1], inline=False)
+
+                p1, p2 = team2_embed.pop()
+                embed2 = discord.Embed(
+                    colour=discord.colour.Color.red(),
+                    title=p1,
+                    description=p2
+                )
+                for info in team2_embed:
+                    embed2.add_field(name=info[0], value=info[1], inline=False)
+
+                await ctx.send(embed=embed_title)
+                await ctx.send(embed=embed)
+                await ctx.send(file=file)
+                await ctx.send(embed=embed2)
+
             if "\n" in player_champ_data and value != -1:
                 await ctx.send("```diff\n" + player_champ_data + "```")
             print(Fore.MAGENTA + f'{round(Process(getpid()).memory_info().rss/1024/1024, 2)} MB')
@@ -1654,7 +1746,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
     @commands.is_owner()
     @commands.command()
-    async def testing(self, ctx):
+    async def testing(self):
         """
         start = time.time()
         # team1 = ["Ash", "Makoa", "Willo", "Seris"]
@@ -1666,7 +1758,46 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         end = time.time()
         print(end - start)
         """
-        print(await self.get_global_kda("FeistyJalapeno"))
+
+        td = await self.get_global_kda("FeistyJalapeno")
+
+        # for i in range(0, 5):
+        embed = discord.Embed(
+            colour=discord.colour.Color.blue(),
+        )
+        embed.add_field(name="{} (Lv. {})".format(td[0], td[1]), value="{}% \u200b \u200b \u200b \u200b \u200b \u200b"
+                                                                       "{} KDA".format(td[2], td[3]), inline=False)
+        embed.add_field(name="{} (Lv. {})".format(td[0], td[1]),
+                        value="{}% \u200b \u200b \u200b \u200b \u200b \u200b"
+                              "{} KDA".format(td[2], td[3]), inline=False)
+        embed.add_field(name="{} (Lv. {})".format(td[0], td[1]),
+                        value="{}% \u200b \u200b \u200b \u200b \u200b \u200b"
+                              "{} KDA".format(td[2], td[3]), inline=False)
+        embed.add_field(name="{} (Lv. {})".format(td[0], td[1]),
+                        value="{}% \u200b \u200b \u200b \u200b \u200b \u200b"
+                              "{} KDA".format(td[2], td[3]), inline=False)
+        embed.add_field(name="{} (Lv. {})".format(td[0], td[1]),
+                        value="{}% \u200b \u200b \u200b \u200b \u200b \u200b"
+                              "{} KDA".format(td[2], td[3]), inline=False)
+        """
+        embed.add_field(name="\u200b", value="\u200b", inline=False)
+        embed.add_field(name="{} | {} | {} | {} ------".format(td[0], td[1], td[2], td[3]),
+                        value="{} | {} | {} | {} ------".format(td[0], td[1], td[2], td[3]), inline=False)
+        embed.add_field(name="{} | {} | {} | {} ------".format(td[0], td[1], td[2], td[3]),
+                        value="{} | {} | {} | {} ------".format(td[0], td[1], td[2], td[3]), inline=False)
+        embed.add_field(name="{} | {} | {} | {} ------".format(td[0], td[1], td[2], td[3]),
+                        value="\u200b", inline=False)
+        await ctx.send(embed=embed)
+        """
+
+        """
+        for i in range(0, 10):
+            embed = discord.Embed(
+                description="Test limit: " + str(i+1) + "\nplayer's stats. ",
+                colour=discord.colour.Color.dark_teal(),
+            )
+            await ctx.send(embed=embed)
+        """
         return None
 
 

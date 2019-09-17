@@ -102,11 +102,37 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             return player_ids[player_name]
         else:
             try:
-                player = paladinsAPI.getPlayer(player_name)
-            except BaseException:
+                original_name = player_name
+                if " " not in player_name:
+                    player = paladinsAPI.getPlayer(player_name)
+                else:  # Console name
+                    player_name, platform = player_name.rsplit(' ', 1)
+                    players = paladinsAPI.searchPlayers(player_name)
+
+                    platform = platform.lower()
+                    if platform == "xbox":
+                        platform = "10"
+                    elif platform == "ps4":
+                        platform = "9"
+                    elif platform == "switch":
+                        platform = "22"
+                    else:
+                        # ```md\nInvalid platform name. Valid platform names are:\n1. Xbox\n2. PS4\n3. Switch```
+                        return -2
+
+                    players = [player for player in players if player.playerName.lower() == player_name.lower() and
+                               player['portal_id'] == platform]
+                    num_players = len(players)
+                    if num_players > 1:
+                        return -3  # too many names (name overlap in switch)
+
+                    # The one player name
+                    player = players.pop()
+
+            except BufferError:
                 return -1  # invalid name
-            new_id = player.playerId
-            player_ids[player_name] = new_id  # store the new id in the dictionary
+            new_id = int(player.playerId)
+            player_ids[original_name] = new_id  # store the new id in the dictionary
 
             # need to update the file now
             print("Added a new player the dictionary: " + player_name)
@@ -283,6 +309,11 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         player_id = self.get_player_id(player_name)
         if player_id == -1:
             return self.lang_dict["general_error2"][lang].format(player_name)
+        elif player_id == -2:
+            return "```Invalid platform name. Valid platform names are:\n1. Xbox\n2. PS4\n3. Switch```"
+        elif player_id == -3:
+            return "Name overlap detected. Please look up your Paladins ID using the `>>console` command."
+
         try:
             info = paladinsAPI.getPlayer(player_id)
         except PlayerNotFound:
@@ -323,10 +354,23 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         player_id = self.get_player_id(player_name)
         if player_id == -1:
             embed = discord.Embed(
-                description=self.lang_dict["general_error2"][lang].format(player_name),
+                title=self.lang_dict["general_error2"][lang].format(player_name),
                 colour=discord.colour.Color.red()
             )
             return [embed]
+        elif player_id == -2:
+            embed = discord.Embed(
+                title="```Invalid platform name. Valid platform names are:\n1. Xbox\n2. PS4\n3. Switch```",
+                colour=discord.colour.Color.red()
+            )
+            return [embed]
+        elif player_id == -3:
+            embed = discord.Embed(
+                title="Name overlap detected. Please look up your Paladins ID using the `>>console` command.",
+                colour=discord.colour.Color.red()
+            )
+            return [embed]
+
         try:
             info = paladinsAPI.getPlayer(player_id)
         except PlayerNotFound:
@@ -409,8 +453,20 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 return ss
             match_data = self.lang_dict["general_error2"][lang].format(player_name)
             embed = discord.Embed(
-                description=match_data,
+                title=match_data,
                 colour=discord.colour.Color.dark_teal()
+            )
+            return embed
+        elif player_id == -2:
+            embed = discord.Embed(
+                title="```Invalid platform name. Valid platform names are:\n1. Xbox\n2. PS4\n3. Switch```",
+                colour=discord.colour.Color.red()
+            )
+            return embed
+        elif player_id == -3:
+            embed = discord.Embed(
+                title="Name overlap detected. Please look up your Paladins ID using the `>>console` command.",
+                colour=discord.colour.Color.red()
             )
             return embed
         try:
@@ -528,8 +584,20 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         if player_id == -1:
             match_data = self.lang_dict["general_error2"][lang].format(player_name)
             embed = discord.Embed(
-                description=match_data,
+                title=match_data,
                 colour=discord.colour.Color.dark_teal()
+            )
+            return [embed]
+        elif player_id == -2:
+            embed = discord.Embed(
+                title="```Invalid platform name. Valid platform names are:\n1. Xbox\n2. PS4\n3. Switch```",
+                colour=discord.colour.Color.red()
+            )
+            return [embed]
+        elif player_id == -3:
+            embed = discord.Embed(
+                title="Name overlap detected. Please look up your Paladins ID using the `>>console` command.",
+                colour=discord.colour.Color.red()
             )
             return [embed]
         try:
@@ -621,6 +689,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         embeds = [embed, embed2]
         return embeds
 
+    """
     async def auto_update(self, discord_id):
         player_name = self.check_player_name(discord_id)
         if player_name == "None":
@@ -638,6 +707,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
         # pass the data to the update function
         await self.update(paladins_data, discord_id)
+    """
 
     # Helper function to track changes
     async def update(self, paladins_data, discord_id):
@@ -698,7 +768,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             elif platform == "switch":
                 platform = "22"
             else:
-                await ctx.send("```md\nInvalid platform name. Valid platform names are:\n1. Xbox\n2. PS4\n3. Switch```")
+                await ctx.send("```Invalid platform name. Valid platform names are:\n1. Xbox\n2. PS4\n3. Switch```")
                 return None
 
             # players = paladinsAPI.getPlayerId(player_name, "steam")
@@ -791,8 +861,20 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         if player_id == -1:
             match_data = self.lang_dict["general_error2"][lang].format(player_name)
             embed = discord.Embed(
-                description=match_data,
+                title=match_data,
                 colour=discord.colour.Color.dark_teal()
+            )
+            return embed
+        elif player_id == -2:
+            embed = discord.Embed(
+                title="```Invalid platform name. Valid platform names are:\n1. Xbox\n2. PS4\n3. Switch```",
+                colour=discord.colour.Color.red()
+            )
+            return embed
+        elif player_id == -3:
+            embed = discord.Embed(
+                title="Name overlap detected. Please look up your Paladins ID using the `>>console` command.",
+                colour=discord.colour.Color.red()
             )
             return embed
         try:
@@ -900,8 +982,22 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             if player_id == -1:
                 match_data = self.lang_dict["general_error2"][lang].format(player_name)
                 embed = discord.Embed(
-                    description=match_data,
+                    title=match_data,
                     colour=discord.colour.Color.dark_teal()
+                )
+                await ctx.send(embed=embed)
+                return None
+            elif player_id == -2:
+                embed = discord.Embed(
+                    title="```Invalid platform name. Valid platform names are:\n1. Xbox\n2. PS4\n3. Switch```",
+                    colour=discord.colour.Color.red()
+                )
+                await ctx.send(embed=embed)
+                return None
+            elif player_id == -3:
+                embed = discord.Embed(
+                    title="Name overlap detected. Please look up your Paladins ID using the `>>console` command.",
+                    colour=discord.colour.Color.red()
                 )
                 await ctx.send(embed=embed)
                 return None
@@ -1015,6 +1111,13 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             if player_id == -1:
                 await ctx.send(self.lang_dict["general_error2"][lang].format(player_name))
                 return None
+            elif player_id == -2:
+                await ctx.send("```Invalid platform name. Valid platform names are:\n1. Xbox\n2. PS4\n3. Switch```")
+                return None
+            elif player_id == -3:
+                await ctx.send("Name overlap detected. Please look up your Paladins ID using the `>>console` command.")
+                return None
+
             if champ_name:  # Check in case they don't provide champ name
                 champ_name = await self.convert_champion_name(str(champ_name))
 
@@ -1178,8 +1281,22 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         if player_id == -1:
             match_data = self.lang_dict["general_error2"][lang].format(player_name)
             embed = discord.Embed(
-                description=match_data,
+                title=match_data,
                 colour=discord.colour.Color.dark_teal()
+            )
+            await ctx.send(embed=embed)
+            return None
+        elif player_id == -2:
+            embed = discord.Embed(
+                title="```Invalid platform name. Valid platform names are:\n1. Xbox\n2. PS4\n3. Switch```",
+                colour=discord.colour.Color.red()
+            )
+            await ctx.send(embed=embed)
+            return None
+        elif player_id == -3:
+            embed = discord.Embed(
+                title="Name overlap detected. Please look up your Paladins ID using the `>>console` command.",
+                colour=discord.colour.Color.red()
             )
             await ctx.send(embed=embed)
             return None
@@ -1308,8 +1425,22 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         if player_id == -1:
             match_data = self.lang_dict["general_error2"][lang].format(player_name)
             embed = discord.Embed(
-                description=match_data,
+                title=match_data,
                 colour=discord.colour.Color.dark_teal()
+            )
+            await ctx.send(embed=embed)
+            return None
+        elif player_id == -2:
+            embed = discord.Embed(
+                title="```Invalid platform name. Valid platform names are:\n1. Xbox\n2. PS4\n3. Switch```",
+                colour=discord.colour.Color.red()
+            )
+            await ctx.send(embed=embed)
+            return None
+        elif player_id == -3:
+            embed = discord.Embed(
+                title="Name overlap detected. Please look up your Paladins ID using the `>>console` command.",
+                colour=discord.colour.Color.red()
             )
             await ctx.send(embed=embed)
             return None
@@ -1415,6 +1546,12 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             player_id = self.get_player_id(player_name)
             if player_id == -1:
                 await ctx.send(self.lang_dict["general_error2"][lang].format(player_name))
+                return None
+            elif player_id == -2:
+                await ctx.send("```Invalid platform name. Valid platform names are:\n1. Xbox\n2. PS4\n3. Switch```")
+                return None
+            elif player_id == -3:
+                await ctx.send("Name overlap detected. Please look up your Paladins ID using the `>>console` command.")
                 return None
             data = paladinsAPI.getPlayerStatus(player_id)
 
@@ -1592,6 +1729,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                     except ValueError:
                         pass
                 # Add in champ stats
+                can_use = False
                 if option == "-a" and can_use:
                     player_champ_data += await self.get_champ_stats_api(pl[0], champ, 1, lang=lang)
 

@@ -237,21 +237,24 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 try:
                     level = split1[1].split(")")[0]  # Level
                     temp = int(level)
-                except ValueError:
+                except (ValueError, IndexError, BaseException) as e:
                     level = "???"
                     print(Fore.LIGHTCYAN_EX + "???? what in the string nation is going on: " + Fore.YELLOW + soup)
+                    print(e)
                 try:
                     kda = split1[1].split("- ")[1].split(" KDA")[0]  # KDA
                     temp = float(kda)
-                except ValueError:
+                except (ValueError, IndexError, BaseException) as e:
                     kda = "???"
                     print(Fore.LIGHTCYAN_EX + "???? what in the string nation is going on: " + Fore.YELLOW + soup)
+                    print(e)
                 try:
                     win_rate = soup.split("Win rate: ")[1].split("%")[0]  # Win Rate
                     temp = float(win_rate)
-                except ValueError:
+                except (ValueError, IndexError, BaseException) as e:
                     win_rate = "???"
                     print(Fore.LIGHTCYAN_EX + "???? what in the string nation is going on: " + Fore.YELLOW + soup)
+                    print(e)
 
                 stats = [player_name, level, win_rate, kda]
 
@@ -392,7 +395,13 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             colour=discord.colour.Color.dark_teal(),
         )
         for part in parts:
-            p1, p2 = part.split("*")
+            try:
+                p1, p2 = part.split("*")
+            except ValueError:
+                p1 = "Error"
+                p2 = "Error"
+                print(parts, part)
+                print(str(parts) + Fore.YELLOW, str(part) + Fore.YELLOW)
             embed.add_field(name=p1, value=p2, inline=False)
 
         # Ranked Info
@@ -1662,10 +1671,10 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             player_champ_data = str('\n\n{:18}  {:7}  {:8}  {:6}\n\n').format("Champion name", "Level",
                                                                               "Win Rate", "KDA")
             # Slow version in case Hi-Rez slows down access to API again
-            """
+            # """
             data1 = []
             data2 = []
-            start = time.time()
+            # start = time.time()
             for player in team1:
                 d1 = await self.get_global_kda(player)
                 data1.append(d1)
@@ -1673,10 +1682,11 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             for player in team2:
                 d2 = await self.get_global_kda(player)
                 data2.append(d2)
-            end = time.time()
-            print(end - start)
-            """
+            # end = time.time()
+            # print(end - start)
+            # """
 
+            """
             # start = time.time()
             # Create a list of tasks to run in parallel
             tasks = []
@@ -1689,7 +1699,8 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
             data1 = await asyncio.gather(*tasks)
             data2 = await asyncio.gather(*tasks2)
-            
+            """
+
             # end = time.time()
             # print(end - start)
             
@@ -1911,13 +1922,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             champ_name = await self.convert_champion_name(option)
             if not mobile_status:
                 result = await self.get_champ_stats_api(player_name, champ_name, simple=0, lang=lang)
-                try:
-                    await ctx.send(embed=result)
-                except BaseException as e:      # ToDo should be fixed now
-                    await ctx.send("```fix\nUnfortunately something malfunctioned, please try again.```")
-                    print("***Stupid error: " + str(e) + "result")
-                    with open("error_logs/{}.csv".format("dummy_error"), 'w+', encoding="utf-8") as error_log_file:
-                        error_log_file.write(str(result))
+                await ctx.send(embed=result)
             # mobile version
             else:
                 embeds = await self.get_champ_stats_api_mobile(player_name, champ_name, lang=lang)

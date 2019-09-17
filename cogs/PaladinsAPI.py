@@ -101,36 +101,38 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         if player_name in player_ids:
             return player_ids[player_name]
         else:
-            try:
-                original_name = player_name
-                if " " not in player_name:
+            original_name = player_name
+            if " " not in player_name:
+                try:
                     player = paladinsAPI.getPlayer(player_name)
-                else:  # Console name
-                    player_name, platform = player_name.rsplit(' ', 1)
-                    players = paladinsAPI.searchPlayers(player_name)
+                except PlayerNotFound:
+                    return -1  # invalid name
+            else:  # Console name
+                player_name, platform = player_name.rsplit(' ', 1)
+                players = paladinsAPI.searchPlayers(player_name)
 
-                    platform = platform.lower()
-                    if platform == "xbox":
-                        platform = "10"
-                    elif platform == "ps4":
-                        platform = "9"
-                    elif platform == "switch":
-                        platform = "22"
-                    else:
-                        # ```md\nInvalid platform name. Valid platform names are:\n1. Xbox\n2. PS4\n3. Switch```
-                        return -2
+                platform = platform.lower()
+                if platform == "xbox":
+                    platform = "10"
+                elif platform == "ps4":
+                    platform = "9"
+                elif platform == "switch":
+                    platform = "22"
+                else:
+                    return -2  # Invalid platform name.
 
-                    players = [player for player in players if player.playerName.lower() == player_name.lower() and
-                               player['portal_id'] == platform]
-                    num_players = len(players)
-                    if num_players > 1:
-                        return -3  # too many names (name overlap in switch)
+                players = [player for player in players if player.playerName.lower() == player_name.lower() and
+                           player['portal_id'] == platform]
+                num_players = len(players)
 
-                    # The one player name
-                    player = players.pop()
+                if num_players == 0:
+                    return -1  # invalid name
+                if num_players > 1:
+                    return -3  # too many names (name overlap in switch)
 
-            except BufferError:
-                return -1  # invalid name
+                # The one player name
+                player = players.pop()
+
             new_id = int(player.playerId)
             player_ids[original_name] = new_id  # store the new id in the dictionary
 
@@ -322,6 +324,9 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         except PlayerNotFound:
             return self.lang_dict["general_error2"][lang].format(player_name)
 
+        # if info.createdDatetime == "":
+        #    print(info.accountLevel, info.wins, info.playerName, info.platform)
+
         # Overall Info
         ss = self.lang_dict["stats_s1"][lang]
         total = int(info.wins) + int(info.losses)
@@ -347,8 +352,16 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
         # Extra info
         s3 = self.lang_dict["stats_s3"][lang]
-        ss += s3.format(self.dashes, str(info.createdDatetime).split()[0], str(info.lastLoginDatetime).split()[0],
-                        str(info.platform), str(info.playedGods), str(info.totalAchievements))
+        try:
+            created = str(info.createdDatetime).split()[0]
+        except IndexError:
+            created = "Unknown"
+        try:
+            last = str(info.lastLoginDatetime).split()[0]
+        except IndexError:
+            last = "Unknown"
+        ss += s3.format(self.dashes, created, last, str(info.platform), str(info.playedGods),
+                        str(info.totalAchievements))
         return ss
 
     # Uses Paladins API to get overall stats for a player (Mobile version)
@@ -431,8 +444,16 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
         # Extra info
         s3 = self.lang_dict["stats_s3"][lang+"_mobile"]
-        s3 = s3.format(str(info.createdDatetime).split()[0], str(info.lastLoginDatetime).split()[0],
-                       str(info.totalAchievements), str(info.platform), str(info.playedGods))
+        try:
+            created = str(info.createdDatetime).split()[0]
+        except IndexError:
+            created = "Unknown"
+        try:
+            last = str(info.lastLoginDatetime).split()[0]
+        except IndexError:
+            last = "Unknown"
+
+        s3 = s3.format(created, last, str(info.totalAchievements), str(info.platform), str(info.playedGods))
 
         parts = s3.split("\n")
         embed3 = discord.Embed(

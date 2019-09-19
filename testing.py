@@ -74,9 +74,9 @@ def get_player_id(player_name):
         return new_id
 
 
-print(get_player_id("AndrewChicken"))
-print(get_player_id("\"GUNZJESTER PS4\""))
-print(get_player_id("\"Tadd Nasty xbox\""))
+# print(get_player_id("AndrewChicken"))
+# print(get_player_id("\"GUNZJESTER PS4\""))
+# print(get_player_id("\"Tadd Nasty xbox\""))
 
 
 # paladins_data = paladinsAPI.getMatchHistory(7241948)

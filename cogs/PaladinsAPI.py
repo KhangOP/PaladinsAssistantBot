@@ -719,7 +719,6 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         embeds = [embed, embed2]
         return embeds
 
-    """
     async def auto_update(self, discord_id):
         player_name = self.check_player_name(discord_id)
         if player_name == "None":
@@ -737,7 +736,6 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
         # pass the data to the update function
         await self.update(paladins_data, discord_id)
-    """
 
     # Helper function to track changes
     async def update(self, paladins_data, discord_id):

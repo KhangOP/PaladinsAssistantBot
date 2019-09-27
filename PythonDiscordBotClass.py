@@ -19,18 +19,29 @@ from colorama import Fore, init
 init(autoreset=True)
 
 
-class PaladinsAssistant(discord.Client):
+class PaladinsAssistant(commands.Bot):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        # Creating client reference
         self.client = Bot
+
+        # Removing default help command.
+        self.client.remove_command(self, 'help')
+
         #
         self.load_bot_config()
+
+        # load bot cogs
         self.load_cogs()
+
+        # store cog instance
+        self.mega_var = self.get_cog("Solo Commands")
 
         # Start the background tasks
         self.bg_task1 = self.loop.create_task(self.change_bot_presence())
-        self.bg_task2 = self.loop.create_task(self.log_information())
+        if self.PREFIX == ">>":  # only start the logging on the main bot
+            self.bg_task2 = self.loop.create_task(self.log_information())
         self.bg_task3 = self.loop.create_task(self.reset_uses())
 
     # Bot variables
@@ -50,7 +61,7 @@ class PaladinsAssistant(discord.Client):
     daily_error_count = 0
     daily_command_count = 0
 
-    async def load_bot_config(self):
+    def load_bot_config(self):
         # Gets token and prefix from a file
         with open(self.BOT_CONFIG, 'r') as f:
             self.TOKEN = f.readline().strip()
@@ -62,33 +73,25 @@ class PaladinsAssistant(discord.Client):
         print('Logged in as')
         print(self.user.name)
         print('------')
-        # global daily_command_count
-        # daily_command_count = 0
-        # global daily_error_count
-        # daily_error_count = 0
-        # client.loop.create_task(reset_uses())
-        # client.loop.create_task(change_bot_presence())
         # if PREFIX != '&&':  # Prevents test bot from messing up bot stats log
         #    client.loop.create_task(log_information())
         await self.count_servers()
         print("Client is fully online and ready to go...")
 
-    async def get_prefix(self, bot, message):
-        default_prefix = [self.PREFIX]
-        if message.guild:
+    # Here we load our extensions(cogs) listed above in [initial_extensions].
+    def load_cogs(self):
+        for extension in self.INITIAL_EXTENSIONS:
             try:
-                with open("languages/server_configs") as json_f:
-                    server_conf = json.load(json_f)
-                    try:
-                        default_prefix = server_conf[str(message.guild.id)]["prefix"].split(",")
-                    except KeyError:
-                        pass
-            except FileNotFoundError:
-                pass
-        return commands.when_mentioned_or(*default_prefix)(bot, message)
+                self.client.load_extension(self, extension)
+                # super().load_extension(extension)
+                print(Fore.GREEN + "Loaded extension:", Fore.MAGENTA + extension)
+            except BaseException as e:
+                print(Fore.RED + "Failed to load: {} because of {}".format(extension, e))
+        print("")
 
     # We can use this code to track when people message this bot (a.k.a asking it commands)
     async def on_message(self, message):
+        # self.mega_var.load_lang()
         channel = message.channel
         # we do not want the bot to reply to itself
         if message.author == self.user:
@@ -97,8 +100,8 @@ class PaladinsAssistant(discord.Client):
         # Seeing if someone is using the bot_prefix and calling a command
         if message.content.startswith(self.PREFIX):
             print(message.author, message.content, channel, message.guild, await helper.get_est_time())
-            global daily_command_count
-            daily_command_count = daily_command_count + 1
+            # global daily_command_count
+            # daily_command_count = daily_command_count + 1
         # Seeing if someone is using the bot_prefix and calling a command
         if message.content.startswith(self.PREFIX + " "):
             msg = 'Oops looks like you have a space after the bot prefix {0.author.mention}'.format(message)
@@ -120,6 +123,8 @@ class PaladinsAssistant(discord.Client):
             print(Fore.GREEN + "Current servers:", Fore.MAGENTA + str(len(self.guilds)))
             print(Fore.GREEN + "Members in support server:", Fore.MAGENTA +
                   str(len(self.get_guild(554372822739189761).members)))
+            print(Fore.GREEN + "Total unique Discord Users:", Fore.MAGENTA + str(len(self.users)))
+            print(Fore.GREEN + "Total Discord Server Members:", Fore.MAGENTA + str(len(list(self.get_all_members()))))
 
     # Changes bot presence every min
     async def change_bot_presence(self):
@@ -129,17 +134,6 @@ class PaladinsAssistant(discord.Client):
             await self.change_presence(status=discord.Status.dnd,  # Online, idle, invisible, dnd
                                        activity=discord.Game(name=secure_random.choice(self.GAME), type=0))
             await asyncio.sleep(60)  # Ever min
-
-    # Here we load our extensions(cogs) listed above in [initial_extensions].
-    def load_cogs(self):
-        for extension in self.INITIAL_EXTENSIONS:
-            try:
-                self.load_extension()
-                # super().load_extension(extension)
-                print(Fore.GREEN + "Loaded extension:", Fore.MAGENTA + extension)
-            except BaseException as e:
-                print(Fore.RED + "Failed to load: {} because of {}".format(extension, e))
-        print("")
 
     # Logs to a file server count, errors, commands used, api calls used (every 15 minutes to get a daily stats)
     async def log_information(self):
@@ -189,7 +183,8 @@ class PaladinsAssistant(discord.Client):
             await asyncio.sleep(60 * 60 * 24)   # once per day
 
     # Bot tries to message the error in the channel where its caused and then tries to dm the error to the user
-    async def send_error(self, cont, msg):
+    @staticmethod
+    async def send_error(cont, msg):
         error_msg = "```diff\n- {}```".format(msg)
         try:  # First lets try to send the message to the channel the command was called
             await cont.send(error_msg)
@@ -217,22 +212,20 @@ class PaladinsAssistant(discord.Client):
                 await self.send_error(cont=ctx, msg="Connection error. Please try again.")
                 return None
             elif isinstance(error.original, discord.Forbidden):
-                await self.send_error(cont=ctx, msg="The bot does not have permission to send messages in the channel:\n{}"
-                                               "\n\n- where "
-                                               "you just called the command:\n{}".format(ctx.channel,
-                                                                                         ctx.message.content))
+                await self.send_error(cont=ctx, msg="The bot does not have permission to send messages in the channel:"
+                                                    "\n{} \n\n- where you just called the command:\n{}"
+                                      .format(ctx.channel, ctx.message.content))
                 return None
             elif isinstance(error.original, MemoryError):
-                await self.send_error(cont=ctx,
-                                 msg="Your lucky... you caused the bot to run out of memory. Don't worry though"
-                                     "... the bot will recover. Please try again.")
+                await self.send_error(cont=ctx, msg="Your lucky... you caused the bot to run out of memory. Don't worry"
+                                                    " though... the bot will recover. Please try again.")
 
             # Checking different types of ValueError (only closed file for now)
             elif isinstance(error.original, ValueError):
                 if str(error.original) == "I/O operation on closed file.":
-                    await self.send_error(cont=ctx,
-                                     msg="The bot tried to send you a file/image but it has been taken away from"
-                                         "the bot...probably because of an internet fluke. Please try again.")
+                    await self.send_error(cont=ctx, msg="The bot tried to send you a file/image but it has been taken "
+                                                        "away from the bot...probably because of an internet fluke. "
+                                                        "Please try again.")
                     return None
 
         # Checks for discord command errors
@@ -241,8 +234,8 @@ class PaladinsAssistant(discord.Client):
         elif isinstance(error, commands.BadArgument):
             await self.send_error(cont=ctx, msg="Make sure the command is in the correct format.")
         elif isinstance(error, commands.errors.UnexpectedQuoteError):
-            await self.send_error(cont=ctx, msg="If you are trying to type the name Mal`Damba please type his name as one "
-                                           "word without any kinda of quote marks.")
+            await self.send_error(cont=ctx, msg="If you are trying to type the name Mal`Damba please type his name "
+                                                "as one word without any kinda of quote marks.")
         elif isinstance(error, commands.TooManyArguments):
             await self.send_error(cont=ctx, msg=error)
         elif isinstance(error, commands.CommandNotFound):
@@ -267,18 +260,31 @@ class PaladinsAssistant(discord.Client):
                 error_log_file.write(error_trace)
                 traceback.print_exception(type(error), error, error.__traceback__, file=error_log_file)
 
-            msg = "Unfortunately, something really messed up. If you entered the command correctly just wait a few seconds" \
-                  " and then try again. If the problem occurs again it is most likely a bug that will need be fixed."
+            msg = "Unfortunately, something really messed up. If you entered the command correctly " \
+                  "just wait a few seconds and then try again. If the problem occurs again it is " \
+                  "most likely a bug that will need be fixed."
             await self.send_error(cont=ctx, msg=msg)
     # """
 
+
+# Overrides the prefix for the bot to allow for customs prefixes
+async def get_prefix(bot, message):
+    default_prefix = [bot.PREFIX]
+    if message.guild:
+        try:
+            with open("languages/server_configs") as json_f:
+                server_conf = json.load(json_f)
+                try:
+                    default_prefix = server_conf[str(message.guild.id)]["prefix"].split(",")
+                except KeyError:
+                    pass
+        except FileNotFoundError:
+            pass
+    return commands.when_mentioned_or(*default_prefix)(bot, message)
+
+
 # Creating client for bot
-# client = Bot(command_prefix=get_prefix)
-# client.remove_command('help')  # Removing default help command.
+client = PaladinsAssistant(command_prefix=get_prefix)
 
-
-client = PaladinsAssistant()
-# client.remove_command('help')
-
-# Start the bot
+# Starting the bot
 client.run(client.TOKEN, bot=True, reconnect=True)

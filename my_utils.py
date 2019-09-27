@@ -739,6 +739,7 @@ async def create_player_key_image(x, y, color=False):
     return key
 
 
+"""
 # Class of commands that are solo (a.k.a) are not used/related to other functions
 class Lang:
     file_name = 'languages/server_configs'
@@ -758,3 +759,4 @@ class Lang:
 with open(Lang.file_name) as json_lang:
     print(Fore.CYAN + "Loaded server languages for lang class...")
     Lang.lan = json.load(json_lang)
+"""

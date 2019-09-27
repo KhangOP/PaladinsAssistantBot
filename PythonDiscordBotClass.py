@@ -19,6 +19,7 @@ from colorama import Fore, init
 init(autoreset=True)
 
 
+# Class to contain the bot and allow for easy variable storage (class vars.)
 class PaladinsAssistant(commands.Bot):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -29,7 +30,7 @@ class PaladinsAssistant(commands.Bot):
         # Removing default help command.
         self.client.remove_command(self, 'help')
 
-        #
+        # token/prefix
         self.load_bot_config()
 
         # load bot cogs
@@ -61,22 +62,14 @@ class PaladinsAssistant(commands.Bot):
     daily_error_count = 0
     daily_command_count = 0
 
+    unique_users = {}
+
+    # Gets token and prefix from a file
     def load_bot_config(self):
-        # Gets token and prefix from a file
         with open(self.BOT_CONFIG, 'r') as f:
             self.TOKEN = f.readline().strip()
             self.PREFIX = f.readline().strip()
         f.close()
-
-    # Launching the bot function
-    async def on_ready(self):
-        print('Logged in as')
-        print(self.user.name)
-        print('------')
-        # if PREFIX != '&&':  # Prevents test bot from messing up bot stats log
-        #    client.loop.create_task(log_information())
-        await self.count_servers()
-        print("Client is fully online and ready to go...")
 
     # Here we load our extensions(cogs) listed above in [initial_extensions].
     def load_cogs(self):
@@ -88,33 +81,6 @@ class PaladinsAssistant(commands.Bot):
             except BaseException as e:
                 print(Fore.RED + "Failed to load: {} because of {}".format(extension, e))
         print("")
-
-    # We can use this code to track when people message this bot (a.k.a asking it commands)
-    async def on_message(self, message):
-        # self.mega_var.load_lang()
-        channel = message.channel
-        # we do not want the bot to reply to itself
-        if message.author == self.user:
-            return
-
-        # Seeing if someone is using the bot_prefix and calling a command
-        if message.content.startswith(self.PREFIX):
-            print(message.author, message.content, channel, message.guild, await helper.get_est_time())
-            # global daily_command_count
-            # daily_command_count = daily_command_count + 1
-        # Seeing if someone is using the bot_prefix and calling a command
-        if message.content.startswith(self.PREFIX + " "):
-            msg = 'Oops looks like you have a space after the bot prefix {0.author.mention}'.format(message)
-            try:  # First lets try to send the message to the channel the command was called
-                await message.channel.send(msg)
-            except BaseException:
-                try:  # Next lets try to DM the message to the user
-                    await message.author.send(msg)
-                except BaseException:  # Bad sign if we end up here but is possible if the user blocks some DM's
-                    print("The bot can't message the user in their DM's or in the channel they called the function.")
-
-        # on_message has priority over function commands
-        await self.process_commands(message)
 
     # Prints the number of servers the bot is in
     async def count_servers(self):
@@ -135,7 +101,7 @@ class PaladinsAssistant(commands.Bot):
                                        activity=discord.Game(name=secure_random.choice(self.GAME), type=0))
             await asyncio.sleep(60)  # Ever min
 
-    # Logs to a file server count, errors, commands used, api calls used (every 15 minutes to get a daily stats)
+    # Logs to a file server count, errors, commands used, api calls used (every 15 minutes to get daily stats)
     async def log_information(self):
         await self.wait_until_ready()
         # sleep_time = await helper.get_second_until_hour()
@@ -198,6 +164,53 @@ class PaladinsAssistant(commands.Bot):
             except BaseException:  # Bad sign if we end up here but is possible if the user blocks some DM's
                 print("The bot can't message the user in their DM's or in the channel they called the function.")
 
+    """ Below are method overrides for Discord.Bot """
+
+    # We can use this code to track when people message this bot (a.k.a asking it commands)
+    async def on_message(self, message):
+        # self.mega_var.load_lang()
+        channel = message.channel
+        # we do not want the bot to reply to itself
+        if message.author == self.user:
+            return
+
+        # Seeing if someone is using the bot_prefix and calling a command
+        if message.content.startswith(self.PREFIX + " "):
+            msg = 'Oops looks like you have a space after the bot prefix {0.author.mention}'.format(message)
+            try:  # First lets try to send the message to the channel the command was called
+                await channel.send(msg)
+            except BaseException:
+                try:  # Next lets try to DM the message to the user
+                    await message.author.send(msg)
+                except BaseException:  # Bad sign if we end up here but is possible if the user blocks some DM's
+                    print(
+                        "The bot can't message the user in their DM's or in the channel they called the function.")
+
+        # on_message has priority over function commands
+        await self.process_commands(message)
+
+    # Launching the bot function
+    async def on_ready(self):
+        print('Logged in as')
+        print(self.user.name)
+        print('------')
+        # if PREFIX != '&&':  # Prevents test bot from messing up bot stats log
+        #    client.loop.create_task(log_information())
+        await self.count_servers()
+        print("Client is fully online and ready to go...")
+
+    # Allows us to count and see all commands sent to the bot
+    async def on_command(self, ctx):
+        message = ctx.message
+        print(message.author, message.content, message.channel, message.guild, await helper.get_est_time())
+        self.daily_command_count = self.daily_command_count + 1
+
+        discord_id = ctx.author.id
+        if discord_id in self.unique_users:
+            self.unique_users[discord_id] += 1
+        else:
+            self.unique_users[discord_id] = 1
+
     # """
     # Handles errors when a user messes up the spelling or forgets an argument to a command or an error occurs
     async def on_command_error(self, ctx, error):
@@ -250,8 +263,7 @@ class PaladinsAssistant(commands.Bot):
         elif isinstance(error, commands.CheckFailure):
             await self.send_error(cont=ctx, msg=error)
         else:
-            global daily_error_count
-            daily_error_count = daily_error_count + 1
+            self.daily_error_count = self.daily_error_count + 1
             print(Fore.RED + "An uncaught error occurred: ", error)  # More error checking
             error_file = str(await helper.get_est_time()).replace("/", "-").replace(":", "-").split()
             error_file = "_".join(error_file[::-1])

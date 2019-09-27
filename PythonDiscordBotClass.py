@@ -57,7 +57,7 @@ class PaladinsAssistant(commands.Bot):
     GAME = ["Paladins", BOT_STATUS, BOT_VERSION, BOT_STATUS, "Features"]
 
     # Below cogs represents the folder our cogs are in. The dot is like an import path.
-    INITIAL_EXTENSIONS = ['cogs.help', 'cogs.rand', 'cogs.PaladinsAPI', 'cogs.solo_commands']
+    INITIAL_EXTENSIONS = ['cogs.Help', 'cogs.Rand', 'cogs.PaladinsAPI', 'cogs.BotConfig', 'cogs.Owner']
 
     daily_error_count = 0
     daily_command_count = 0

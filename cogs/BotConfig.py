@@ -2,10 +2,9 @@ from discord.ext import commands
 import json
 import my_utils as helper
 from colorama import Fore
-from psutil import Process
-from os import getpid
 
 
+# Function decoder that only allows server owns to use a certain command
 def server_owner_only():
     async def predicate(ctx):
         # If in dm's
@@ -27,7 +26,7 @@ def enabled_function(enabled=True, message="Command disabled."):
         # If in dm's
         if ctx.guild is None:
             return True
-        #if not ctx.guild.owner == ctx.author:
+        # if not ctx.guild.owner == ctx.author:
         #    raise NotServerOwner("Sorry you are not authorized to use this command. Only the server owner: " +
         #                        str(ctx.guild.owner) + " can use this command")
         if not enabled:
@@ -41,9 +40,9 @@ class NoNo(BaseException):
     pass
 
 
-# Class of commands that are solo (a.k.a) are not used/related to other functions
-class SoloCommandCog(commands.Cog, name="Solo Commands"):
-    """SoloCommandsCog"""
+# Class handles server configs. Allows a server owner to change the language or prefix of the bot in a server
+class BotConfigCog(commands.Cog, name="Bot Config"):
+    """BotConfigCog"""
     # Different supported languages
     languages = ["Polish", "Português"]
     abbreviations = ["pl", "pt"]
@@ -102,7 +101,7 @@ class SoloCommandCog(commands.Cog, name="Solo Commands"):
                     with open(self.file_name, 'w') as json_d:
                         json.dump(server_ids, json_d)
                     self.load_lang()  # Update the global/class list
-                    helper.Lang.lan = server_ids  # Update the other class list
+                    # helper.Lang.lan = server_ids  # Update the other class list
                 await ctx.send("This bot is now set to use the language: `" + language + "` in this server")
             elif language == "reset":
                 with open(self.file_name) as json_f:
@@ -112,7 +111,7 @@ class SoloCommandCog(commands.Cog, name="Solo Commands"):
                 with open(self.file_name, 'w') as json_d:
                     json.dump(server_ids, json_d)
                 self.load_lang()  # Update the global/class list
-                helper.Lang.lan = server_ids  # Update the other class list
+                # helper.Lang.lan = server_ids  # Update the other class list
                 await ctx.send("Server language has been reset to English")
             else:
                 lines = ""
@@ -155,23 +154,7 @@ class SoloCommandCog(commands.Cog, name="Solo Commands"):
 
         await ctx.send('```md\n' + message + '```')
 
-    @commands.is_owner()
-    @commands.command(name='check_bot', aliases=["bot_check"])
-    async def check_bot(self, ctx):
-        with open("log_file.csv", 'r') as r_log_file:
-            lines = r_log_file.read().splitlines()
-            servers, n1, old_errors, num_cmd, old_api_calls, old_date = lines[-1].split(',')
-
-        bot_memory = f'{round(Process(getpid()).memory_info().rss/1024/1024, 2)} MB'
-
-        ss = "1. [Server count:]({})\n2. [Help Server Members:]({})\n3. [Fatal Errors:]({})\n4. " \
-             "[Commands Used:]({})\n5. [API Calls Used:]({})\n6. [Date:]({})\n7. [Memory Usage:]({})" \
-            .format(servers, n1.strip(), old_errors.strip(), num_cmd.strip(), old_api_calls.strip(), old_date.strip(),
-                    bot_memory.strip())
-        ss_f = '```md\n' + self.dashes + '\n' + ss + '```'
-        await ctx.send(ss_f)
-
 
 # Add this class to the cog list
 def setup(bot):
-    bot.add_cog(SoloCommandCog(bot))
+    bot.add_cog(BotConfigCog(bot))

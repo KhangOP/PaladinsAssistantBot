@@ -266,13 +266,13 @@ async def change_bot_presence():
 
 
 # Below cogs represents the folder our cogs are in. The dot is like an import path.
-initial_extensions = ['cogs.help', 'cogs.rand', 'cogs.PaladinsAPI', 'cogs.solo_commands']
+INITIAL_EXTENSIONS = ['cogs.Help', 'cogs.Rand', 'cogs.PaladinsAPI', 'cogs.BotConfig', 'cogs.Owner']
 # initial_extensions = ['cogs.help', 'cogs.rand', 'cogs.PaladinsAPI', 'cogs.solo_commands', 'cogs.new_api']
 
 
 # Here we load our extensions(cogs) listed above in [initial_extensions].
 def load_cogs():
-    for extension in initial_extensions:
+    for extension in INITIAL_EXTENSIONS:
         try:
             client.load_extension(extension)
             print(Fore.GREEN + "Loaded extension:", Fore.MAGENTA + extension)

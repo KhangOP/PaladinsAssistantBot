@@ -868,7 +868,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     @commands.cooldown(3, 30, commands.BucketType.user)
     # Gets stats for a champ using Paladins API
     async def top(self, ctx, player_name, option, amount="limit"):
-        lang = await helper.Lang.check_language(ctx=ctx)
+        lang = await self.bot.check_language(ctx=ctx)
         # Maybe convert the player name
         if str(player_name) == "me":
             player_name = self.check_player_name(str(ctx.author.id))
@@ -989,7 +989,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                       ignore_extra=False)
     @commands.cooldown(4, 30, commands.BucketType.user)
     async def deck(self, ctx, player_name, champ_name, deck_index=None):
-        lang = await helper.Lang.check_language(ctx=ctx)
+        lang = await self.bot.check_language(ctx=ctx)
         # Maybe convert the player name
         if str(player_name) == "me":
             player_name = self.check_player_name(str(ctx.author.id))
@@ -1104,7 +1104,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                                                                                       "Historia"])
     @commands.cooldown(3, 40, commands.BucketType.user)
     async def history(self, ctx, player_name, amount=None, champ_name=None):
-        lang = await helper.Lang.check_language(ctx=ctx)
+        lang = await self.bot.check_language(ctx=ctx)
         # Maybe convert the player name
         personal_update = False
         if str(player_name) == "me":
@@ -1288,7 +1288,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     @commands.command(name='match', pass_context=True, ignore_extra=False, aliases=["Match", "mecz", "Mecz"])
     @commands.cooldown(2, 30, commands.BucketType.user)
     async def match(self, ctx, player_name, match_id=None, colored="-b"):
-        lang = await helper.Lang.check_language(ctx=ctx)
+        lang = await self.bot.check_language(ctx=ctx)
         # Maybe convert the player name
         personal_update = False
         if str(player_name) == "me":
@@ -1431,7 +1431,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     @commands.command(name='last', pass_context=True, ignore_extra=False, aliases=["Last", "ostatni", "Ostatni"])
     @commands.cooldown(2, 30, commands.BucketType.user)
     async def last(self, ctx, player_name, match_id=-1):
-        lang = await helper.Lang.check_language(ctx=ctx)
+        lang = await self.bot.check_language(ctx=ctx)
         # Maybe convert the player name
         personal_update = False
         if str(player_name) == "me":
@@ -1547,7 +1547,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     @commands.cooldown(2, 30, commands.BucketType.user)
     async def current(self, ctx, player_name, option="-s"):
         print(Fore.MAGENTA + f'{round(Process(getpid()).memory_info().rss/1024/1024, 2)} MB')
-        lang = await helper.Lang.check_language(ctx=ctx)
+        lang = await self.bot.check_language(ctx=ctx)
         # Maybe convert the player name
         if str(player_name) == "me":
             player_name = self.check_player_name(str(ctx.author.id))
@@ -1900,7 +1900,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     @commands.command(name='stats', aliases=['Statystyki', 'Stats'], pass_context=True, ignore_extra=False)
     @commands.cooldown(3, 30, commands.BucketType.user)
     async def stats(self, ctx, player_name, option=None):
-        lang = await helper.Lang.check_language(ctx=ctx)
+        lang = await self.bot.check_language(ctx=ctx)
         await helper.store_commands(ctx.author.id, "stats")
 
         # Maybe convert the player name

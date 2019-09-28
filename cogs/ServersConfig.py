@@ -38,7 +38,7 @@ class ServersConfigCog(commands.Cog, name="Servers Config"):
 
     # Triggers a reload of the server configs json file and then updates this cogs json as well
     def reload_server_conf(self):
-        print(Fore.CYAN + "Reloaded server configs...")
+        print(Fore.CYAN + "Reloading server configs...")
         self.bot.load_bot_servers_config()
         self.lan = self.bot.servers_config
 
@@ -57,6 +57,7 @@ class ServersConfigCog(commands.Cog, name="Servers Config"):
                     # server_ids[str(ctx.guild.id)]["lang"] = "en"
                 with open(self.file_name, 'w') as json_d:
                     json.dump(server_ids, json_d)
+                self.reload_server_conf()  # Update the main bots json
                 await ctx.send("This bot is now set to use the prefix: `" + prefix + "` in this server")
 
     @commands.command(name='language', aliases=["język"])

@@ -40,7 +40,7 @@ class PaladinsAssistant(commands.Bot):
         self.load_cogs()
 
         # Store cog instance
-        # self.mega_var = self.get_cog("Solo Commands")
+        self.language = self.get_cog("Servers Config")
 
         # Start the background tasks
         self.bg_task1 = self.loop.create_task(self.change_bot_presence())
@@ -174,15 +174,6 @@ class PaladinsAssistant(commands.Bot):
                 print(Fore.RED + str(msg))
             except BaseException:  # Bad sign if we end up here but is possible if the user blocks some DM's
                 print("The bot can't message the user in their DM's or in the channel they called the function.")
-
-    async def check_language(self, ctx):
-        if ctx.guild is None:  # DM to the bot will not have guild.id
-            return "en"
-        guild_id = str(ctx.guild.id)
-        if guild_id in self.servers_config and "lang" in self.servers_config[guild_id]:
-            return self.servers_config[guild_id]["lang"]
-        else:  # default
-            return "en"
 
     """ Below are method overrides for Discord.Bot """
 

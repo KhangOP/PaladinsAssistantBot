@@ -101,6 +101,15 @@ class ServersConfigCog(commands.Cog, name="Servers Config"):
             # print("This server's id is:" + str(ctx.guild.id))
             # await ctx.send("This server's id is: " + str(ctx.guild.id))
 
+    async def check_language(self, ctx):
+        if ctx.guild is None:  # DM to the bot will not have guild.id
+            return "en"
+        guild_id = str(ctx.guild.id)
+        if guild_id in self.lan and "lang" in self.lan[guild_id]:
+            return self.lan[guild_id]["lang"]
+        else:  # default
+            return "en"
+
     @commands.command(name='check')
     async def check_server_language(self, ctx):
         guild_id = str(ctx.guild.id)

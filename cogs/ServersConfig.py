@@ -1,6 +1,5 @@
 from discord.ext import commands
 import json
-import my_utils as helper
 from colorama import Fore
 
 
@@ -21,48 +20,27 @@ class NotServerOwner(commands.CheckFailure):
     pass
 
 
-def enabled_function(enabled=True, message="Command disabled."):
-    async def predicate(ctx):
-        # If in dm's
-        if ctx.guild is None:
-            return True
-        # if not ctx.guild.owner == ctx.author:
-        #    raise NotServerOwner("Sorry you are not authorized to use this command. Only the server owner: " +
-        #                        str(ctx.guild.owner) + " can use this command")
-        if not enabled:
-            await ctx.send(message)
-            raise NoNo
-        return True
-    return commands.check(predicate)
-
-
-class NoNo(BaseException):
-    pass
-
-
 # Class handles server configs. Allows a server owner to change the language or prefix of the bot in a server
-class BotConfigCog(commands.Cog, name="Bot Config"):
-    """BotConfigCog"""
+class ServersConfigCog(commands.Cog, name="Servers Config"):
+    """ServersConfigCog"""
     # Different supported languages
     languages = ["Polish", "Português"]
     abbreviations = ["pl", "pt"]
-    file_name = 'languages/server_configs'
-    lan = []
-    dashes = "----------------------------------------"
+
+    file_name = ''
+    lan = {}
 
     def __init__(self, bot):
         self.bot = bot
-        self.load_lang()
 
-    def load_lang(self):
-        with open(self.file_name) as json_f:
-            print(Fore.CYAN + "Loaded server languages...")
-            self.lan = json.load(json_f)
+        self.lan = self.bot.servers_config
+        self.file_name = self.bot.BOT_SERVER_CONFIG_FILE
 
-    @enabled_function(False)
-    @commands.command(name='decorators')
-    async def decorators(self, ctx):
-        await ctx.send("Sup my dude.")
+    # Triggers a reload of the server configs json file and then updates this cogs json as well
+    def reload_server_conf(self):
+        print(Fore.CYAN + "Reloaded server configs...")
+        self.bot.load_bot_servers_config()
+        self.lan = self.bot.servers_config
 
     @commands.command(name='prefix')
     @commands.guild_only()
@@ -95,13 +73,11 @@ class BotConfigCog(commands.Cog, name="Bot Config"):
                         server_ids[str(ctx.guild.id)]["lang"] = language  # store the server id in the dictionary
                     except KeyError:  # Server has no configs yet
                         server_ids[str(ctx.guild.id)] = {}
-                        # server_ids[str(ctx.guild.id)]["prefix"] = ">>"
                         server_ids[str(ctx.guild.id)]["lang"] = language
                     # need to update the file now
                     with open(self.file_name, 'w') as json_d:
                         json.dump(server_ids, json_d)
-                    self.load_lang()  # Update the global/class list
-                    # helper.Lang.lan = server_ids  # Update the other class list
+                    self.reload_server_conf()  # Update the main bots json
                 await ctx.send("This bot is now set to use the language: `" + language + "` in this server")
             elif language == "reset":
                 with open(self.file_name) as json_f:
@@ -110,8 +86,8 @@ class BotConfigCog(commands.Cog, name="Bot Config"):
                 # need to update the file now
                 with open(self.file_name, 'w') as json_d:
                     json.dump(server_ids, json_d)
-                self.load_lang()  # Update the global/class list
-                # helper.Lang.lan = server_ids  # Update the other class list
+                self.reload_server_conf()  # Update the main bots json
+
                 await ctx.send("Server language has been reset to English")
             else:
                 lines = ""
@@ -134,27 +110,7 @@ class BotConfigCog(commands.Cog, name="Bot Config"):
             await ctx.send("This server's language is English")
             return "English"
 
-    # Print how many times a person has used each command
-    @commands.command(name='usage', aliases=["użycie"])
-    async def usage(self, ctx):
-        user_commands = await helper.get_store_commands(ctx.author.id)
-        len(user_commands)
-        message = "Commands used by {}\n{}\n".format(ctx.author, self.dashes)
-
-        # Data to plot
-        labels = []
-        data = []
-        i = 1
-
-        for command, usage in user_commands.items():
-            message += "{}. {:9} {}\n".format(str(i), str(command), str(usage))
-            labels.append(command)
-            data.append(usage)
-            i += 1
-
-        await ctx.send('```md\n' + message + '```')
-
 
 # Add this class to the cog list
 def setup(bot):
-    bot.add_cog(BotConfigCog(bot))
+    bot.add_cog(ServersConfigCog(bot))

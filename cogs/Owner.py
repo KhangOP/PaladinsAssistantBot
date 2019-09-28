@@ -3,6 +3,25 @@ from psutil import Process
 from os import getpid
 
 
+def enabled_function(enabled=True, message="Command disabled."):
+    async def predicate(ctx):
+        # If in dm's
+        if ctx.guild is None:
+            return True
+        # if not ctx.guild.owner == ctx.author:
+        #    raise NotServerOwner("Sorry you are not authorized to use this command. Only the server owner: " +
+        #                        str(ctx.guild.owner) + " can use this command")
+        if not enabled:
+            await ctx.send(message)
+            raise NoNo
+        return True
+    return commands.check(predicate)
+
+
+class NoNo(BaseException):
+    pass
+
+
 # Hold commands that only the bot owner can use
 class OwnerCog(commands.Cog, name="Bot Owner Commands"):
     """OwnerCog"""
@@ -27,6 +46,11 @@ class OwnerCog(commands.Cog, name="Bot Owner Commands"):
                     bot_memory.strip())
         ss_f = '```md\n' + self.dashes + '\n' + ss + '```'
         await ctx.send(ss_f)
+
+    @enabled_function(False)
+    @commands.command(name='decorators')
+    async def decorators(self, ctx):
+        await ctx.send("Sup my dude.")
 
 
 # Add this class to the cog list

@@ -266,7 +266,8 @@ async def change_bot_presence():
 
 
 # Below cogs represents the folder our cogs are in. The dot is like an import path.
-INITIAL_EXTENSIONS = ['cogs.Help', 'cogs.Rand', 'cogs.PaladinsAPI', 'cogs.BotConfig', 'cogs.Owner']
+INITIAL_EXTENSIONS = ['cogs.Help', 'cogs.Rand', 'cogs.PaladinsAPI', 'cogs.ServersConfig', 'cogs.Owner',
+                      'cogs.Other']
 # initial_extensions = ['cogs.help', 'cogs.rand', 'cogs.PaladinsAPI', 'cogs.solo_commands', 'cogs.new_api']
 
 

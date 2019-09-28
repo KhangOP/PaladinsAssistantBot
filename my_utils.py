@@ -625,7 +625,6 @@ async def create_player_stats_image(champ_icon, champ_stats, index, party, color
     champ_stats_image.paste(champ_icon, (offset, offset))
 
     platform = champ_stats[10]
-    platform_logo = None
     if platform == "XboxLive":
         platform_logo = Image.open("icons/xbox_logo.png").resize((100, 100), Image.ANTIALIAS)
         platform_logo = platform_logo.convert("RGBA")
@@ -737,26 +736,3 @@ async def create_player_key_image(x, y, color=False):
     base_draw.text((x + 3600, 0), "Healing", font=ImageFont.truetype("arial", 80), fill=fill)
 
     return key
-
-
-"""
-# Class of commands that are solo (a.k.a) are not used/related to other functions
-class Lang:
-    file_name = 'languages/server_configs'
-    lan = {}
-
-    @classmethod
-    async def check_language(cls, ctx):
-        if ctx.guild is None:  # DM to the bot will not have guild.id
-            return "en"
-        guild_id = str(ctx.guild.id)
-        if guild_id in cls.lan and "lang" in cls.lan[guild_id]:
-            return cls.lan[guild_id]["lang"]
-        else:  # default
-            return "en"
-
-
-with open(Lang.file_name) as json_lang:
-    print(Fore.CYAN + "Loaded server languages for lang class...")
-    Lang.lan = json.load(json_lang)
-"""

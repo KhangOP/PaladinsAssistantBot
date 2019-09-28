@@ -30,13 +30,16 @@ class PaladinsAssistant(commands.Bot):
         # Removing default help command.
         self.client.remove_command(self, 'help')
 
-        # token/prefix
+        # token/prefix (BOT)
         self.load_bot_config()
 
-        # load bot cogs
+        # prefix/language (Servers)
+        self.load_bot_servers_config()
+
+        # Load BOT cogs
         self.load_cogs()
 
-        # store cog instance
+        # Store cog instance
         self.mega_var = self.get_cog("Solo Commands")
 
         # Start the background tasks
@@ -46,7 +49,8 @@ class PaladinsAssistant(commands.Bot):
         self.bg_task3 = self.loop.create_task(self.reset_uses())
 
     # Bot variables
-    BOT_CONFIG = "token"
+    BOT_CONFIG_FILE = "token"
+    BOT_SERVER_CONFIG_FILE = "languages/server_configs"
 
     BOT_STATUS = ">>help"
     TOKEN = ""
@@ -57,19 +61,26 @@ class PaladinsAssistant(commands.Bot):
     GAME = ["Paladins", BOT_STATUS, BOT_VERSION, BOT_STATUS, "Features"]
 
     # Below cogs represents the folder our cogs are in. The dot is like an import path.
-    INITIAL_EXTENSIONS = ['cogs.Help', 'cogs.Rand', 'cogs.PaladinsAPI', 'cogs.BotConfig', 'cogs.Owner']
+    INITIAL_EXTENSIONS = ['cogs.Help', 'cogs.Rand', 'cogs.PaladinsAPI', 'cogs.ServersConfig', 'cogs.Owner',
+                          'cogs.Other']
 
     daily_error_count = 0
     daily_command_count = 0
 
     unique_users = {}
+    servers_config = {}
 
     # Gets token and prefix from a file
     def load_bot_config(self):
-        with open(self.BOT_CONFIG, 'r') as f:
+        with open(self.BOT_CONFIG_FILE, 'r') as f:
             self.TOKEN = f.readline().strip()
             self.PREFIX = f.readline().strip()
         f.close()
+
+    # Loads in different server configs (prefix/language)
+    def load_bot_servers_config(self):
+        with open(self.BOT_SERVER_CONFIG_FILE) as json_f:
+            self.servers_config = json.load(json_f)
 
     # Here we load our extensions(cogs) listed above in [initial_extensions].
     def load_cogs(self):
@@ -283,15 +294,12 @@ class PaladinsAssistant(commands.Bot):
 async def get_prefix(bot, message):
     default_prefix = [bot.PREFIX]
     if message.guild:
-        try:
-            with open("languages/server_configs") as json_f:
-                server_conf = json.load(json_f)
-                try:
-                    default_prefix = server_conf[str(message.guild.id)]["prefix"].split(",")
-                except KeyError:
-                    pass
-        except FileNotFoundError:
-            pass
+        with open("languages/server_configs") as json_f:
+            server_conf = json.load(json_f)
+            try:
+                default_prefix = server_conf[str(message.guild.id)]["prefix"].split(",")
+            except KeyError:
+                pass
     return commands.when_mentioned_or(*default_prefix)(bot, message)
 
 

@@ -272,9 +272,9 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             kda = await self.calc_kda(stat.kills, stat.deaths, stat.assists)
 
             # Global win rate and kda
-            t_wins += wins
-            t_loses += losses
             if wins + losses > 10:  # Player needs to have over 20 matches with a champ for it to affect kda
+                t_wins += wins
+                t_loses += losses
                 t_kda += float(kda) * (wins + losses)  # These two lines allow the kda to be weighted
                 count += 1 + (wins + losses)  # aka the more a champ is played the more it affects global kda
 
@@ -526,10 +526,9 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         t_wins = 0
         t_loses = 0
         t_kda = 0
-        count = 0
+        count = 1
 
         for stat in stats:
-            count += 1
             wins = stat.wins
             losses = stat.losses
             kda = await self.calc_kda(stat.kills, stat.deaths, stat.assists)
@@ -566,9 +565,9 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             # Global win rate and kda
             t_wins += wins
             t_loses += losses
-            if wins + losses > 20:  # Player needs to have over 20 matches with a champ for it to affect kda
+            if wins + losses > 10:  # Player needs to have over 20 matches with a champ for it to affect kda
                 t_kda += float(kda) * (wins + losses)  # These two lines allow the kda to be weighted
-                count += 1 + (wins + losses)  # aka the more a champ is played the more it affects global kda
+                count += (wins + losses)  # aka the more a champ is played the more it affects global kda
 
         # They have not played this champion yet
         if ss == "":
@@ -586,6 +585,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         # Global win rate and kda
         global_ss = str("\n\nGlobal KDA: {}\nGlobal Win Rate: {}% ({}-{})")
         win_rate = await self.calc_win_rate(t_wins, t_wins + t_loses)
+        print(t_kda, count)
         t_kda = str('{0:.2f}').format(t_kda / count)
         global_ss = global_ss.format(t_kda, win_rate, t_wins, t_loses)
         ss += global_ss
@@ -648,10 +648,9 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         t_wins = 0
         t_loses = 0
         t_kda = 0
-        count = 0
+        count = 1
 
         for stat in stats:
-            count += 1
             wins = stat.wins
             losses = stat.losses
             kda = await self.calc_kda(stat.kills, stat.deaths, stat.assists)
@@ -670,11 +669,11 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                                win_rate, wins, losses, str(stat.lastPlayed).split()[0])
 
             # Global win rate and kda
-            t_wins += wins
-            t_loses += losses
-            if wins + losses > 20:  # Player needs to have over 20 matches with a champ for it to affect kda
+            if wins + losses > 10:  # Player needs to have over 20 matches with a champ for it to affect kda
+                t_wins += wins
+                t_loses += losses
                 t_kda += float(kda) * (wins + losses)  # These two lines allow the kda to be weighted
-                count += 1 + (wins + losses)  # aka the more a champ is played the more it affects global kda
+                count += (wins + losses)  # aka the more a champ is played the more it affects global kda
 
         # They have not played this champion yet
         if ss == "":
@@ -931,10 +930,8 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             level = stat.godLevel
 
             last_played = str(stat.lastPlayed)
-            if not last_played:  # Bought the champ but never played them
-                break
-
-            player_champion_data.append([stat.godName, level, kda, win_rate, wins + losses, stat.json['Minutes']])
+            if last_played:  # Bought the champ but never played them
+                player_champion_data.append([stat.godName, level, kda, win_rate, wins + losses, stat.json['Minutes']])
 
         # Convert option
         ordering = False if ctx.invoked_with in ["Bottom", "bottom"] else True

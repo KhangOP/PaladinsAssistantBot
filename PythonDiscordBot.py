@@ -248,6 +248,8 @@ async def count_servers():
         print(Fore.GREEN + "Current servers:", Fore.MAGENTA + str(len(client.guilds)))
         print(Fore.GREEN + "Members in support server:", Fore.MAGENTA +
               str(len(client.get_guild(554372822739189761).members)))
+        print(Fore.GREEN + "Total unique Discord Users:", Fore.MAGENTA + str(len(client.users)))
+        print(Fore.GREEN + "Total Discord Server Members:", Fore.MAGENTA + str(len(list(client.get_all_members()))))
 
 
 # Changes bot presence every min

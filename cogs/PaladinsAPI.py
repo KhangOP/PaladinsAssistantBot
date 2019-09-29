@@ -1807,16 +1807,16 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
             # Adding team win rate's and kda's
             team1_wr, team2_wr = 0, 0
+            team1_level, team2_level = 0, 0
+            team1_kda, team2_kda = 0, 0
             if team1_overall[0] != 0:
                 team1_wr = round(team1_overall[2] / team1_overall[0], 2)
+                team1_level = str(int(team1_overall[1] / team1_overall[0]))
+                team1_kda = str(round(team1_overall[3] / team1_overall[0], 2))
             if team2_overall[0] != 0:
                 team2_wr = round(team2_overall[2] / team2_overall[0], 2)
-
-            team1_level = str(int(team1_overall[1] / team1_overall[0]))
-            team1_kda = str(round(team1_overall[3] / team1_overall[0], 2))
-
-            team2_level = str(int(team2_overall[1] / team2_overall[0]))
-            team2_kda = str(round(team2_overall[3] / team2_overall[0], 2))
+                team2_level = str(int(team2_overall[1] / team2_overall[0]))
+                team2_kda = str(round(team2_overall[3] / team2_overall[0], 2))
 
             if not mobile_status:
                 match_data += "\n\nAverage stats\n"

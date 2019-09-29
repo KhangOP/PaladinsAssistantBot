@@ -584,7 +584,6 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         # Global win rate and kda
         global_ss = str("\n\nGlobal KDA: {}\nGlobal Win Rate: {}% ({}-{})")
         win_rate = await self.calc_win_rate(t_wins, t_wins + t_loses)
-        print(t_kda, count)
         t_kda = str('{0:.2f}').format(t_kda / count)
         global_ss = global_ss.format(t_kda, win_rate, t_wins, t_loses)
         ss += global_ss

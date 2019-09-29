@@ -161,13 +161,12 @@ class HelpCog(commands.Cog, name="Help Commands"):
         command_name = "current"
         command_description = "Get stats for a player's current match."
         parameters = ["player_name", "option"]
-        descriptions = ["Player's Paladins IGN"]
-        ''', "Type -a if you want an advanced look for all the players. "
-                                                  "If -a is provided then the stats of the champion that each person "
+        descriptions = ["Player's Paladins IGN", "Type -a if you want an advanced look for all the players. "
+                                                 "If -a is provided then the stats of the champion that each person "
                                                  "plays will be returned as well.\n[Optional parameter]: if not "
-                                                 "provide, defaults to just returning every player's overall stats"]'''
-        examples = ["{} {}".format(command_name, "z1unknown")]
-        # , "{} {}".format(command_name, "z1unknown -a")]
+                                                 "provide, defaults to just returning every player's overall stats"]
+        # examples = ["{} {}".format(command_name, "z1unknown")]
+        examples = ["{} {}".format(command_name, "z1unknown"), "{} {}".format(command_name, "z1unknown -a")]
         await ctx.send(embed=create_embed(command_name, command_description, parameters, descriptions, examples))
 
     @help.command()

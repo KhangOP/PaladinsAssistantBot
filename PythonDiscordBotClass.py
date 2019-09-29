@@ -220,7 +220,6 @@ class PaladinsAssistant(commands.Bot):
     # Allows us to count and see all commands sent to the bot
     async def on_command(self, ctx):
         message = ctx.message
-        print(message.author, message.content, message.channel, message.guild, await helper.get_est_time())
         self.daily_command_count = self.daily_command_count + 1
 
         discord_id = ctx.author.id
@@ -228,6 +227,8 @@ class PaladinsAssistant(commands.Bot):
             self.unique_users[discord_id] += 1
         else:
             self.unique_users[discord_id] = 1
+        print(message.author, message.content, message.channel, message.guild, await helper.get_est_time(),
+              len(self.unique_users))
 
     # """
     # Handles errors when a user messes up the spelling or forgets an argument to a command or an error occurs

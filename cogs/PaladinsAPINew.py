@@ -274,7 +274,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             # Global win rate and kda
             t_wins += wins
             t_loses += losses
-            if wins + losses > 20:  # Player needs to have over 20 matches with a champ for it to affect kda
+            if wins + losses > 10:  # Player needs to have over 20 matches with a champ for it to affect kda
                 t_kda += float(kda) * (wins + losses)  # These two lines allow the kda to be weighted
                 count += 1 + (wins + losses)  # aka the more a champ is played the more it affects global kda
 
@@ -447,12 +447,14 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         return embeds
 
     # Gets stats for a champ using Paladins API
-    async def get_champ_stats_api(self, player_name, champ, simple, lang):
+    async def get_champ_stats_api(self, player_name, champ, simple, lang, mobile=False):
         # Gets player id and error checks
         player_id = self.get_player_id(player_name)
         if player_id == -1:
             if simple == 1:
-                ss = str('*{:18} Lv. {:3}  {:7}   {:6}\n')
+                if mobile:
+                    return [champ, "???", "???", "???"]
+                ss = str('*   {:15} Lv. {:3}  {:7}   {:6}\n')
                 ss = ss.format(champ, "???", "???", "???")
                 return ss
             match_data = self.lang_dict["general_error2"][lang].format(player_name)
@@ -462,12 +464,24 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             )
             return embed
         elif player_id == -2:
+            if simple == 1:
+                if mobile:
+                    return [champ, "???", "???", "???"]
+                ss = str('*   {:15} Lv. {:3}  {:7}   {:6}\n')
+                ss = ss.format(champ, "???", "???", "???")
+                return ss
             embed = discord.Embed(
                 title="```Invalid platform name. Valid platform names are:\n1. Xbox\n2. PS4\n3. Switch```",
                 colour=discord.colour.Color.red()
             )
             return embed
         elif player_id == -3:
+            if simple == 1:
+                if mobile:
+                    return [champ, "???", "???", "???"]
+                ss = str('*   {:15} Lv. {:3}  {:7}   {:6}\n')
+                ss = ss.format(champ, "???", "???", "???")
+                return ss
             embed = discord.Embed(
                 title="Name overlap detected. Please look up your Paladins ID using the `>>console` command.",
                 colour=discord.colour.Color.red()
@@ -480,6 +494,8 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             # "champion": "Makoa", "champion_id": "2288", "player_id": "704972387", "ret_msg": null}
         except BaseException:
             if simple == 1:
+                if mobile:
+                    return [champ, "???", "???", "???"]
                 ss = str('*   {:15} Lv. {:3}  {:7}   {:6}\n')
                 ss = ss.format(champ, "???", "???", "???")
                 return ss
@@ -491,6 +507,8 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             return embed
         if stats is None:  # Private account
             if simple == 1:
+                if mobile:
+                    return [champ, "???", "???", "???"]
                 ss = str('*{:18} Lv. {:3}  {:7}   {:6}\n')
                 ss = ss.format(champ, "???", "???", "???")
                 return ss
@@ -529,6 +547,8 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 ss = ss.format(champ, level, kda, stat.kills, stat.deaths, stat.assists,
                                win_rate, wins, losses, str(stat.lastPlayed).split()[0])
                 if simple == 1:
+                    if mobile:
+                        return [champ, str(level), win_rate, kda]
                     win_rate += " %"
                     kda = "(" + kda + ")"
                     ss = str('*   {:15} Lv. {:3}  {:7}   {:6}\n')
@@ -756,7 +776,6 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         # Save changes to the file
         with open(directory, 'w') as json_f:
             json.dump(all_data, json_f)
-
 
     @commands.command(name='console', pass_context=True, ignore_extra=False, aliases=["Console"])
     @commands.cooldown(3, 30, commands.BucketType.user)
@@ -1474,7 +1493,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 map_name = match.mapName.replace("LIVE ", "").replace("Ranked ", "").replace(" (TDM)", "") \
                     .replace(" (Onslaught) ", "").replace(" (Siege)", "").replace("Practice ", "").lower() \
                     .replace(" ", "_").replace("'", "")
-                map_url = "https://raw.githubusercontent.com/EthanHicks1/PaladinsAssistantBot/master/icons/maps/{}.png" \
+                map_url = "https://raw.githubusercontent.com/EthanHicks1/PaladinsAssistantBot/master/icons/maps/{}.png"\
                     .format(map_name)
                 embed.set_image(url=map_url)
 
@@ -1497,7 +1516,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     # Get stats for a player's current match.
     @commands.command(name='current', pass_context=True, aliases=["Current", "partida", "Partida", "obecny", "Obecny"],
                       ignore_extra=False)
-    @commands.cooldown(2, 30, commands.BucketType.user)
+    @commands.cooldown(30, 30, commands.BucketType.user)
     async def current(self, ctx, player_name, option="-s"):
         print(Fore.MAGENTA + f'{round(Process(getpid()).memory_info().rss/1024/1024, 2)} MB')
         lang = await self.bot.language.check_language(ctx=ctx)
@@ -1595,12 +1614,14 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             team1_champs = []
             team1_overall = [0, 0, 0, 0]  # num, level, win rate, kda
             team1_embed = []
+            mobile_data1 = []
 
             team2 = []
             team2_ranks = []
             team2_champs = []
             team2_overall = [0, 0, 0, 0]  # num, level, win rate, kda
             team2_embed = []
+            mobile_data2 = []
 
             for player in players:
                 try:
@@ -1712,9 +1733,15 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                     except ValueError:
                         pass
                 # Add in champ stats
-                can_use = False
+                can_use = True  # ToDo --- Change this later
                 if option == "-a" and can_use:
-                    player_champ_data += await self.get_champ_stats_api(pl[0], champ, 1, lang=lang)
+                    if not mobile_status:
+                        player_champ_data += await self.get_champ_stats_api(pl[0], champ, 1, lang=lang)
+                    else:
+                        pd = await self.get_champ_stats_api(pl[0], champ, 1, lang=lang, mobile=mobile_status)
+                        p1 = "{} (Lv. {})".format(pd[0], pd[1])
+                        p2 = "{}% \u200b \u200b \u200b \u200b \u200b \u200b {} KDA".format(pd[2], pd[3])
+                        mobile_data1.append([p1, p2])
 
             match_data += "\n"
             player_champ_data += "\n"
@@ -1754,20 +1781,26 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
                 # Add in champ stats
                 if option == "-a" and can_use:
-                    player_champ_data += await self.get_champ_stats_api(pl[0], champ, 1, lang=lang)
+                    if not mobile_status:
+                        player_champ_data += await self.get_champ_stats_api(pl[0], champ, 1, lang=lang)
+                    else:
+                        pd = await self.get_champ_stats_api(pl[0], champ, 1, lang=lang, mobile=mobile_status)
+                        p1 = "{} (Lv. {})".format(pd[0], pd[1])
+                        p2 = "{}% \u200b \u200b \u200b \u200b \u200b \u200b {} KDA".format(pd[2], pd[3])
+                        mobile_data2.append([p1, p2])
 
             # Adding team win rate's and kda's
             team1_wr, team2_wr = 0, 0
+            team1_level, team2_level = 0, 0
+            team1_kda, team2_kda = 0, 0
             if team1_overall[0] != 0:
                 team1_wr = round(team1_overall[2] / team1_overall[0], 2)
+                team1_level = str(int(team1_overall[1] / team1_overall[0]))
+                team1_kda = str(round(team1_overall[3] / team1_overall[0], 2))
             if team2_overall[0] != 0:
                 team2_wr = round(team2_overall[2] / team2_overall[0], 2)
-
-            team1_level = str(int(team1_overall[1] / team1_overall[0]))
-            team1_kda = str(round(team1_overall[3] / team1_overall[0], 2))
-
-            team2_level = str(int(team2_overall[1] / team2_overall[0]))
-            team2_kda = str(round(team2_overall[3] / team2_overall[0], 2))
+                team2_level = str(int(team2_overall[1] / team2_overall[0]))
+                team2_kda = str(round(team2_overall[3] / team2_overall[0], 2))
 
             if not mobile_status:
                 match_data += "\n\nAverage stats\n"
@@ -1817,11 +1850,6 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             if not mobile_status:
                 await ctx.send("```diff\n" + match_data + "```", file=file)
             else:  # Mobile version
-                embed_title = discord.Embed(
-                    title=match_info_embed,
-                    colour=discord.colour.Color.dark_gold(),
-                )
-
                 p1, p2 = team1_embed.pop()
                 embed = discord.Embed(
                     colour=discord.colour.Color.blue(),
@@ -1840,13 +1868,34 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 for info in team2_embed:
                     embed2.add_field(name=info[0], value=info[1], inline=False)
 
-                await ctx.send(embed=embed_title)
-                await ctx.send(embed=embed)
+                await ctx.send('```fix\n{}```'.format(match_info_embed), embed=embed)
                 await ctx.send(file=file)
                 await ctx.send(embed=embed2)
 
             if "\n" in player_champ_data and value != -1:
-                await ctx.send("```diff\n" + player_champ_data + "```")
+                if not mobile_status:
+                    await ctx.send("```diff\n" + player_champ_data + "```")
+                else:
+                    if mobile_data1:  # List contains data
+                        mobile_embed = discord.Embed(
+                            colour=discord.colour.Color.blue(),
+                            title="Team 1 Champion Stats:",
+                            description="\u200b"
+                        )
+                        for info in mobile_data1:
+                            mobile_embed.add_field(name=info[0], value=info[1], inline=False)
+                        await ctx.send(embed=mobile_embed)
+
+                    if mobile_data2:  # List contains data
+                        mobile_embed2 = discord.Embed(
+                            colour=discord.colour.Color.red(),
+                            title="Team 2 Champion Stats:",
+                            description="\u200b"
+                        )
+                        for info in mobile_data2:
+                            mobile_embed2.add_field(name=info[0], value=info[1], inline=False)
+                        await ctx.send(embed=mobile_embed2)
+
             print(Fore.MAGENTA + f'{round(Process(getpid()).memory_info().rss/1024/1024, 2)} MB')
 
     # Returns simple stats based on the option they choose (champ_name, or me)

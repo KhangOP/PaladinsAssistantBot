@@ -10,10 +10,9 @@ import json
 import traceback
 from socket import gaierror
 import requests
-import os
 
 import my_utils as helper
-from cogs import PaladinsAPI
+from pyrez.api import PaladinsAPI
 
 from colorama import Fore, init
 init(autoreset=True)
@@ -33,6 +32,8 @@ class PaladinsAssistant(commands.Bot):
         # token/prefix (Bot)
         self.load_bot_config()
 
+        self.paladinsAPI = PaladinsAPI(devId=self.ID, authKey=self.KEY)
+
         # prefix/language (Servers)
         self.load_bot_servers_config()
 
@@ -46,7 +47,7 @@ class PaladinsAssistant(commands.Bot):
         self.bg_task1 = self.loop.create_task(self.change_bot_presence())
         if self.PREFIX == ">>":  # only start the logging on the main bot
             self.bg_task2 = self.loop.create_task(self.log_information())
-        self.bg_task3 = self.loop.create_task(self.reset_uses())
+        # self.bg_task3 = self.loop.create_task(self.reset_uses())
 
     # Bot variables
     BOT_CONFIG_FILE = "token"
@@ -55,13 +56,15 @@ class PaladinsAssistant(commands.Bot):
     BOT_STATUS = ">>help"
     TOKEN = ""
     PREFIX = ""
+    ID = ""
+    KEY = ""
 
     BOT_AUTHOR = "FeistyJalapeno#9045"
     BOT_VERSION = "Version 1.0.0"
     GAME = ["Paladins", BOT_STATUS, BOT_VERSION, BOT_STATUS, "Features"]
 
     # Below cogs represents the folder our cogs are in. The dot is like an import path.
-    INITIAL_EXTENSIONS = ['cogs.Help', 'cogs.Rand', 'cogs.PaladinsAPI', 'cogs.ServersConfig', 'cogs.Owner',
+    INITIAL_EXTENSIONS = ['cogs.Help', 'cogs.Rand', 'cogs.PaladinsAPINew', 'cogs.ServersConfig', 'cogs.Owner',
                           'cogs.Other']
 
     daily_error_count = 0
@@ -70,11 +73,13 @@ class PaladinsAssistant(commands.Bot):
     unique_users = {}
     servers_config = {}
 
-    # Gets token and prefix from a file
+    # Gets Token, Prefix (Bot) and ID, Key (PyRez API) from a file
     def load_bot_config(self):
         with open(self.BOT_CONFIG_FILE, 'r') as f:
             self.TOKEN = f.readline().strip()
             self.PREFIX = f.readline().strip()
+            self.ID = int(f.readline())
+            self.KEY = f.readline()
         f.close()
 
     # Loads in different server configs (prefix/language)
@@ -124,7 +129,7 @@ class PaladinsAssistant(commands.Bot):
 
                 lines = r_log_file.read().splitlines()
                 servers, n1, old_errors, num_cmd, old_api_calls, old_date = lines[-1].split(',')
-                api_calls = PaladinsAPI.paladinsAPI.getDataUsed()
+                api_calls = self.paladinsAPI.getDataUsed()
                 api_calls = api_calls.totalRequestsToday
 
                 ss_c = str(len(self.get_guild(554372822739189761).members))
@@ -147,6 +152,7 @@ class PaladinsAssistant(commands.Bot):
             print("Logged commands uses and server count: {}".format(await helper.get_est_time()))
             await asyncio.sleep(60 * 15)  # Log information every 15 mins
 
+    """
     # Resets command uses for -a on the current command at 6am everyday
     async def reset_uses(self):
         await self.wait_until_ready()
@@ -158,6 +164,7 @@ class PaladinsAssistant(commands.Bot):
             for discord_id in os.listdir("user_data"):
                 await updater.auto_update(discord_id)
             await asyncio.sleep(60 * 60 * 24)   # once per day
+    """
 
     # Bot tries to message the error in the channel where its caused and then tries to dm the error to the user
     @staticmethod

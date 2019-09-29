@@ -263,10 +263,9 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         t_wins = 0
         t_loses = 0
         t_kda = 0
-        count = 0
+        count = 1
 
         for stat in stats:
-            count += 1
             wins = stat.wins
             losses = stat.losses
             kda = await self.calc_kda(stat.kills, stat.deaths, stat.assists)
@@ -276,7 +275,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 t_wins += wins
                 t_loses += losses
                 t_kda += float(kda) * (wins + losses)  # These two lines allow the kda to be weighted
-                count += 1 + (wins + losses)  # aka the more a champ is played the more it affects global kda
+                count += (wins + losses)  # aka the more a champ is played the more it affects global kda
 
         kda = str('{0:.2f}').format(t_kda / count)
 
@@ -563,9 +562,9 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                     return ss
 
             # Global win rate and kda
-            t_wins += wins
-            t_loses += losses
             if wins + losses > 10:  # Player needs to have over 20 matches with a champ for it to affect kda
+                t_wins += wins
+                t_loses += losses
                 t_kda += float(kda) * (wins + losses)  # These two lines allow the kda to be weighted
                 count += (wins + losses)  # aka the more a champ is played the more it affects global kda
 

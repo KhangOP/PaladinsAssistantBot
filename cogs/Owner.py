@@ -1,6 +1,7 @@
 from discord.ext import commands
 from psutil import Process
 from os import getpid
+import asyncio
 
 
 def enabled_function(enabled=True, message="Command disabled."):
@@ -46,6 +47,12 @@ class OwnerCog(commands.Cog, name="Bot Owner Commands"):
                     bot_memory.strip())
         ss_f = '```md\n' + self.dashes + '\n' + ss + '```'
         await ctx.send(ss_f)
+
+    @commands.is_owner()
+    @commands.command(name='shut_down')
+    async def shut_down_bot(self, ctx):
+        await ctx.send("```fix\n{}```".format("Bot shut down will commence in 30 seconds."))
+        await self.bot.logout()
 
     @enabled_function(False)
     @commands.command(name='decorators')

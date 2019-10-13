@@ -49,6 +49,15 @@ class PaladinsAssistant(commands.Bot):
             self.bg_task2 = self.loop.create_task(self.log_information())
         # self.bg_task3 = self.loop.create_task(self.reset_uses())
 
+        self.block_commands = False
+        self.warn_shut_down = False
+
+        self.block_embed = discord.Embed(
+                    title="\N{WARNING SIGN} Bot shut down completing. Commands are blocked. \N{WARNING SIGN}",
+                    description="The bot is being shut down for a scheduled outage or update.",
+                    colour=discord.colour.Color.red(),
+                    )
+
     # Bot variables
     BOT_CONFIG_FILE = "token"
     BOT_SERVER_CONFIG_FILE = "languages/server_configs"
@@ -65,7 +74,7 @@ class PaladinsAssistant(commands.Bot):
 
     # Below cogs represents the folder our cogs are in. The dot is like an import path.
     INITIAL_EXTENSIONS = ['cogs.Help', 'cogs.Rand', 'cogs.PaladinsAPINew', 'cogs.ServersConfig', 'cogs.Owner',
-                          'cogs.Other']
+                          'cogs.Other', 'cogs.new_api']
 
     daily_error_count = 0
     daily_command_count = 0
@@ -122,6 +131,7 @@ class PaladinsAssistant(commands.Bot):
         await self.wait_until_ready()
         # sleep_time = await helper.get_second_until_hour()
         # await asyncio.sleep(sleep_time)
+        await self.wait_until_ready()
         while not self.is_closed():
             with open("log_file.csv", 'r') as r_log_file:
                 date = await helper.get_est_time()
@@ -186,8 +196,8 @@ class PaladinsAssistant(commands.Bot):
 
     # We can use this code to track when people message this bot (a.k.a asking it commands)
     async def on_message(self, message):
-        # self.mega_var.load_lang()
         channel = message.channel
+
         # we do not want the bot to reply to itself
         if message.author == self.user:
             return
@@ -201,24 +211,95 @@ class PaladinsAssistant(commands.Bot):
                 try:  # Next lets try to DM the message to the user
                     await message.author.send(msg)
                 except BaseException:  # Bad sign if we end up here but is possible if the user blocks some DM's
-                    print(
-                        "The bot can't message the user in their DM's or in the channel they called the function.")
+                    print("The bot can't message the user in their DM's or in the channel they called the function.")
 
         # on_message has priority over function commands
         await self.process_commands(message)
+
+    async def process_commands(self, message):
+        """|coro|
+
+        This function processes the commands that have been registered
+        to the bot and other groups. Without this coroutine, none of the
+        commands will be triggered.
+
+        By default, this coroutine is called inside the :func:`.on_message`
+        event. If you choose to override the :func:`.on_message` event, then
+        you should invoke this coroutine as well.
+
+        This is built using other low level tools, and is equivalent to a
+        call to :meth:`~.Bot.get_context` followed by a call to :meth:`~.Bot.invoke`.
+
+        This also checks if the message's author is a bot and doesn't
+        call :meth:`~.Bot.get_context` or :meth:`~.Bot.invoke` if so.
+
+        Parameters
+        -----------
+        message: :class:`discord.Message`
+            The message to process commands for.
+        """
+        if message.author.bot:
+            return
+
+        ctx = await self.get_context(message)
+        if ctx.command is not None:
+            if self.block_commands:
+                await ctx.send(embed=self.block_embed)
+            else:
+                if self.warn_shut_down:
+                    await ctx.send("```fix\n \N{WARNING SIGN} Bot shut down commencing. "
+                                   "Commands will be disabled soon. \N{WARNING SIGN}```")
+                await self.invoke(ctx)
 
     # Launching the bot function
     async def on_ready(self):
         print('Logged in as')
         print(self.user.name)
         print('------')
-        # if PREFIX != '&&':  # Prevents test bot from messing up bot stats log
-        #    client.loop.create_task(log_information())
         await self.count_servers()
         print("Client is fully online and ready to go...")
 
+    # Self closing function.
+    async def logout(self):
+        """|coro|
+
+        Logs out of Discord and closes all connections. (except fails on itself sometimes ¯\_(ツ)_/¯ )
+        """
+        # close task that changes the bots presence
+        self.bg_task1.cancel()
+
+        self.warn_shut_down = True
+
+        # Set the bot to idle while shutting down
+        await self.change_presence(status=discord.Status.idle, activity=discord.Game(name="Bot Shutdown", type=0))
+
+        await asyncio.sleep(20)
+
+        self.block_commands = True
+        await asyncio.sleep(10)
+
+        # shut down logging task if it's the main bot
+        if hasattr(self, 'bg_task2'):
+            self.bg_task2.cancel()
+
+        # Set the bot to offline right before Discord closes everything
+        await self.change_presence(status=discord.Status.offline)
+        await asyncio.sleep(5)  # make sure the status is set before shutting down
+
+        # Built in function to close Discord bot
+        await self.close()
+
     # Allows us to count and see all commands sent to the bot
     async def on_command(self, ctx):
+        # bot shutting down
+        """
+        if self.warn_shut_down:
+            if self.block_commands:
+                await ctx.send("Bot shut down completing. Commands are blocked.")
+            else:
+                await ctx.send("Bot shut down is commencing... bot will go offline in less than 30 seconds.")
+        """
+
         message = ctx.message
         self.daily_command_count = self.daily_command_count + 1
 
@@ -227,8 +308,8 @@ class PaladinsAssistant(commands.Bot):
             self.unique_users[discord_id] += 1
         else:
             self.unique_users[discord_id] = 1
-        print(message.author, message.content, message.channel, message.guild, await helper.get_est_time(),
-              len(self.unique_users))
+        print(message.author, message.author.id, message.content, message.channel, message.guild,
+              await helper.get_est_time(), len(self.unique_users))
 
     # """
     # Handles errors when a user messes up the spelling or forgets an argument to a command or an error occurs

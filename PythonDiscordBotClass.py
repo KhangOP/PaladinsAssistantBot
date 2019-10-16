@@ -2,6 +2,9 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import Bot
 
+from discord.ext.commands.errors import CommandError, CommandNotFound
+
+
 import asyncio
 import aiohttp.client_exceptions as aiohttp_client_exceptions
 import concurrent.futures
@@ -49,6 +52,7 @@ class PaladinsAssistant(commands.Bot):
             self.bg_task2 = self.loop.create_task(self.log_information())
         # self.bg_task3 = self.loop.create_task(self.reset_uses())
 
+        # These vars are used for the bot shut down feature
         self.block_commands = False
         self.warn_shut_down = False
 
@@ -57,6 +61,12 @@ class PaladinsAssistant(commands.Bot):
                     description="The bot is being shut down for a scheduled outage or update.",
                     colour=discord.colour.Color.red(),
                     )
+
+        self.warn_shut_down_embed = discord.Embed(
+            title="\N{WARNING SIGN} Bot shut down commencing. Commands will be disabled soon. \N{WARNING SIGN}",
+            description="The bot is being shut down for a scheduled outage or update.",
+            colour=discord.colour.Color.orange(),
+        )
 
     # Bot variables
     BOT_CONFIG_FILE = "token"
@@ -179,15 +189,19 @@ class PaladinsAssistant(commands.Bot):
     # Bot tries to message the error in the channel where its caused and then tries to dm the error to the user
     @staticmethod
     async def send_error(cont, msg):
-        error_msg = "```diff\n- {}```".format(msg)
+        msg = str(msg)
+        error_embed = discord.Embed(
+            title="\N{WARNING SIGN} " + msg + " \N{WARNING SIGN}",
+            colour=discord.colour.Color.red(),
+        )
         try:  # First lets try to send the message to the channel the command was called
-            await cont.send(error_msg)
+            await cont.send(embed=error_embed)
             print(Fore.RED + str(msg))
         except BaseException as e:
             print(e)
             try:  # Next lets try to DM the message to the user
                 author = cont.message.author
-                await author.send(error_msg)
+                await author.send(embed=error_embed)
                 print(Fore.RED + str(msg))
             except BaseException:  # Bad sign if we end up here but is possible if the user blocks some DM's
                 print("The bot can't message the user in their DM's or in the channel they called the function.")
@@ -216,40 +230,48 @@ class PaladinsAssistant(commands.Bot):
         # on_message has priority over function commands
         await self.process_commands(message)
 
-    async def process_commands(self, message):
+    async def invoke(self, ctx):
         """|coro|
 
-        This function processes the commands that have been registered
-        to the bot and other groups. Without this coroutine, none of the
-        commands will be triggered.
-
-        By default, this coroutine is called inside the :func:`.on_message`
-        event. If you choose to override the :func:`.on_message` event, then
-        you should invoke this coroutine as well.
-
-        This is built using other low level tools, and is equivalent to a
-        call to :meth:`~.Bot.get_context` followed by a call to :meth:`~.Bot.invoke`.
-
-        This also checks if the message's author is a bot and doesn't
-        call :meth:`~.Bot.get_context` or :meth:`~.Bot.invoke` if so.
+        Invokes the command given under the invocation context and
+        handles all the internal event dispatch mechanisms.
 
         Parameters
         -----------
-        message: :class:`discord.Message`
-            The message to process commands for.
+        ctx: :class:`.Context`
+            The invocation context to invoke.
         """
-        if message.author.bot:
-            return
-
-        ctx = await self.get_context(message)
         if ctx.command is not None:
+
+            # My own code in override to prevent or warn command use
             if self.block_commands:
                 await ctx.send(embed=self.block_embed)
+                return None
             else:
                 if self.warn_shut_down:
-                    await ctx.send("```fix\n \N{WARNING SIGN} Bot shut down commencing. "
-                                   "Commands will be disabled soon. \N{WARNING SIGN}```")
-                await self.invoke(ctx)
+                    await ctx.send(embed=self.warn_shut_down_embed)
+                    # await ctx.send("```fix\n \N{WARNING SIGN} Bot shut down commencing. "
+                    #               "Commands will be disabled soon. \N{WARNING SIGN}```")
+
+            self.dispatch('command', ctx)
+            try:
+                if await self.can_run(ctx, call_once=True):
+                    await ctx.command.invoke(ctx)
+
+                    # causes error
+                    """
+                    if self.warn_shut_down:
+                        await ctx.send("```fix\n \N{WARNING SIGN} Bot shut down commencing...... "
+                                       "Commands will be disabled soon. \N{WARNING SIGN}```")
+                    """
+
+            except CommandError as exc:
+                await ctx.command.dispatch_error(ctx, exc)
+            else:
+                self.dispatch('command_completion', ctx)
+        elif ctx.invoked_with:
+            exc = CommandNotFound('Command "{}" is not found'.format(ctx.invoked_with))
+            self.dispatch('command_error', ctx, exc)
 
     # Launching the bot function
     async def on_ready(self):
@@ -263,7 +285,7 @@ class PaladinsAssistant(commands.Bot):
     async def logout(self):
         """|coro|
 
-        Logs out of Discord and closes all connections. (except fails on itself sometimes ¯\_(ツ)_/¯ )
+        Logs out of Discord and closes all connections. (except fails on itself sometimes it seems ¯\_(ツ)_/¯ )
         """
         # close task that changes the bots presence
         self.bg_task1.cancel()
@@ -273,10 +295,10 @@ class PaladinsAssistant(commands.Bot):
         # Set the bot to idle while shutting down
         await self.change_presence(status=discord.Status.idle, activity=discord.Game(name="Bot Shutdown", type=0))
 
-        await asyncio.sleep(20)
+        await asyncio.sleep(40)
 
         self.block_commands = True
-        await asyncio.sleep(10)
+        await asyncio.sleep(15)
 
         # shut down logging task if it's the main bot
         if hasattr(self, 'bg_task2'):
@@ -285,6 +307,10 @@ class PaladinsAssistant(commands.Bot):
         # Set the bot to offline right before Discord closes everything
         await self.change_presence(status=discord.Status.offline)
         await asyncio.sleep(5)  # make sure the status is set before shutting down
+
+        # for task in asyncio.Task.all_tasks():
+        #    task.cancel()
+        #    print("canceling tasks")
 
         # Built in function to close Discord bot
         await self.close()
@@ -352,8 +378,7 @@ class PaladinsAssistant(commands.Bot):
         elif isinstance(error, commands.TooManyArguments):
             await self.send_error(cont=ctx, msg=error)
         elif isinstance(error, commands.CommandNotFound):
-            msg = f"\N{WARNING SIGN} {error}"
-            await self.send_error(cont=ctx, msg=msg)
+            await self.send_error(cont=ctx, msg=error)
         elif isinstance(error, commands.CommandOnCooldown):
             await self.send_error(cont=ctx, msg=error)
         elif isinstance(error, commands.MissingPermissions):

@@ -51,7 +51,7 @@ class OwnerCog(commands.Cog, name="Bot Owner Commands"):
     @commands.is_owner()
     @commands.command(name='shut_down')
     async def shut_down_bot(self, ctx):
-        await ctx.send("```fix\n{}```".format("Bot shut down will commence in 30 seconds."))
+        await ctx.send("```fix\n{}```".format("Bot shut down will commence in 60 seconds."))
         await self.bot.logout()
 
     @enabled_function(False)

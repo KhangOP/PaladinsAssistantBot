@@ -1,0 +1,25 @@
+>>current bilgaxer
+
+Traceback (most recent call last):
+  File "C:\Users\Ethan\Anaconda3\envs\Rewrite\lib\site-packages\discord\ext\commands\core.py", line 63, in wrapped
+    ret = await coro(*args, **kwargs)
+  File "F:\PaladinsAssistantBot\cogs\PaladinsAPINew.py", line 1696, in current
+    buffer = await helper.create_match_image(team1_champs, team2_champs, team1_ranks, team2_ranks)
+  File "F:\PaladinsAssistantBot\my_utils.py", line 244, in create_match_image
+    buffer2 = await create_team_image(team2, ranks2)
+  File "F:\PaladinsAssistantBot\my_utils.py", line 188, in create_team_image
+    champion_images.append(Image.open("icons/champ_icons/{}.png".format(await convert_champion_name(champ))))
+  File "F:\PaladinsAssistantBot\my_utils.py", line 152, in convert_champion_name
+    champ_name = champ_name.lower()
+AttributeError: 'NoneType' object has no attribute 'lower'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\Ethan\Anaconda3\envs\Rewrite\lib\site-packages\discord\ext\commands\bot.py", line 814, in invoke
+    await ctx.command.invoke(ctx)
+  File "C:\Users\Ethan\Anaconda3\envs\Rewrite\lib\site-packages\discord\ext\commands\core.py", line 683, in invoke
+    await injected(*ctx.args, **ctx.kwargs)
+  File "C:\Users\Ethan\Anaconda3\envs\Rewrite\lib\site-packages\discord\ext\commands\core.py", line 72, in wrapped
+    raise CommandInvokeError(exc) from exc
+discord.ext.commands.errors.CommandInvokeError: Command raised an exception: AttributeError: 'NoneType' object has no attribute 'lower'

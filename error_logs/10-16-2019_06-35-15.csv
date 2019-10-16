@@ -1,11 +1,11 @@
->>current me
+>>deck <@203499877508841472> "Bomb king" 1
 
 Traceback (most recent call last):
   File "C:\Users\Ethan\Anaconda3\envs\Rewrite\lib\site-packages\discord\ext\commands\core.py", line 63, in wrapped
     ret = await coro(*args, **kwargs)
-  File "F:\PaladinsAssistantBot\cogs\PaladinsAPI.py", line 1842, in current
-    "\u200b \u200b \u200b \u200b \u200b \u200b {} KDA".format(team1_level, team1_wr, team1_kda)
-UnboundLocalError: local variable 'team1_level' referenced before assignment
+  File "F:\PaladinsAssistantBot\cogs\PaladinsAPINew.py", line 1026, in deck
+    if (len(player_decks)) <= 1 and player_decks[0].deckId == 0:
+TypeError: object of type 'NoneType' has no len()
 
 The above exception was the direct cause of the following exception:
 
@@ -16,4 +16,4 @@ Traceback (most recent call last):
     await injected(*ctx.args, **ctx.kwargs)
   File "C:\Users\Ethan\Anaconda3\envs\Rewrite\lib\site-packages\discord\ext\commands\core.py", line 72, in wrapped
     raise CommandInvokeError(exc) from exc
-discord.ext.commands.errors.CommandInvokeError: Command raised an exception: UnboundLocalError: local variable 'team1_level' referenced before assignment
+discord.ext.commands.errors.CommandInvokeError: Command raised an exception: TypeError: object of type 'NoneType' has no len()

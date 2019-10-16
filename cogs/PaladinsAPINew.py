@@ -1930,6 +1930,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 result = await self.get_player_stats_api(player_name, lang=lang)
                 await ctx.send("```md\n" + result + "```")
             else:
+                # returns something that is not an embed?
                 embeds = await self.get_player_stats_api_mobile(player_name, lang=lang)
                 for embed in embeds:
                     await ctx.send(embed=embed)

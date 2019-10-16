@@ -1,9 +1,9 @@
->>current eureka777
+>>current Megii33
 
 Traceback (most recent call last):
   File "C:\Users\Ethan\Anaconda3\envs\Rewrite\lib\site-packages\discord\ext\commands\core.py", line 63, in wrapped
     ret = await coro(*args, **kwargs)
-  File "F:\PaladinsAssistantBot\cogs\PaladinsAPI.py", line 1729, in current
+  File "F:\PaladinsAssistantBot\cogs\PaladinsAPINew.py", line 1696, in current
     buffer = await helper.create_match_image(team1_champs, team2_champs, team1_ranks, team2_ranks)
   File "F:\PaladinsAssistantBot\my_utils.py", line 243, in create_match_image
     buffer1 = await create_team_image(team1, ranks1)

@@ -798,6 +798,13 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 await ctx.send("Found `0` players with the name `{}`.".format(player_name))
                 return None
 
+            # Hi-Rez endpoint down.
+            if players is None:
+                await ctx.send("A Hi-Rez endpoint is down meaning this command won't work. "
+                               "Please don't try again for a while and give Hi-Rez a few hours to get the "
+                               "endpoint online again.")
+                return None
+
             players = [player for player in players if player.playerName.lower() == player_name.lower() and
                        player['portal_id'] == platform]
             num_players = len(players)
@@ -1023,6 +1030,13 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             champ_name = await self.convert_champion_name(champ_name)
 
             player_decks = self.bot.paladinsAPI.getPlayerLoadouts(player_id)
+
+            if player_decks is None:
+                await ctx.send("A Hi-Rez endpoint is down meaning this command won't work. "
+                               "Please don't try again for a while and give Hi-Rez a few hours to get the "
+                               "endpoint online again.")
+                return None
+
             if (len(player_decks)) <= 1 and player_decks[0].deckId == 0:
                 await ctx.send("`Can't get decks for {} because their account is private.`\n"
                                "<:ying_mad:576792455148601345><:lian_palm:576792454968246282>".format(player_name))

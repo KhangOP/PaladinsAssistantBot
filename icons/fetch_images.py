@@ -9,17 +9,6 @@ import json
 from colorama import Fore, init
 init(autoreset=True)
 
-from pyrez.api import PaladinsAPI
-
-file_name = "token"
-# Gets ID and KEY from a file
-with open(file_name, 'r') as f:
-    TOKEN = f.readline().strip()    # Does nothing
-    PREFIX = f.readline()           # Does nothing
-    ID = int(f.readline())
-    KEY = f.readline()
-f.close()
-
 
 DAMAGES = ["Cassie", "Kinessa", "Drogoz", "Bomb King", "Viktor", "Sha Lin", "Tyra", "Willo", "Lian", "Strix",
            "Vivian", "Dredge", "Imani"]
@@ -148,13 +137,13 @@ def save_card_descriptions(name):
 
 # get_image_paladins_wiki("Io", "broken-deity")
 
-new_champ = "IO"
-save_champ_cards(new_champ)
+# new_champ = "IO"
+# save_champ_cards(new_champ)
 
 # save_image("https://gamepedia.cursecdn.com/paladins_gamepedia/b/be/Card_Celestial_Body.png", "testing", "io-asd")
 
-for champ in all_champs:
-    champ_name = champ.replace(' ', '-')
+# for champ in all_champs:
+#    champ_name = champ.replace(' ', '-')
 
     # save_champ_icons(champ_name)
     # save_champ_headers(champ_name)

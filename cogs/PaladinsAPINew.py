@@ -57,6 +57,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             return -1
 
     @classmethod
+    # Used to change text prefix to change it's color
     async def color_win_rates(cls, text, win_rate):
         if float(win_rate) > 60.0:
             return "+" + text
@@ -64,6 +65,34 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             return "-" + text
         else:
             return "*" + text
+
+    # Checking for is_on_mobile() status
+    async def get_mobile_status(self, ctx):
+        mobile_status = False
+        if ctx.guild is None:  # In DM's
+            guilds = self.bot.guilds
+            for guild in guilds:
+                member = guild.get_member(ctx.author.id)
+                if member is not None:
+                    mobile_status = member.is_on_mobile()
+        else:
+            mobile_status = ctx.author.is_on_mobile()
+        return mobile_status
+
+    # adds in whitespace by tricking discord
+    async def force_whitespace(self, string, max_length):
+        padded_string = string
+        length = len(padded_string)
+
+        if length % 2 != 0:
+            padded_string += " "
+
+        max_length = (max_length - length)*2 + length
+
+        while len(padded_string) <= max_length:
+            padded_string += "\u200b "
+
+        return padded_string
 
     # Get the player id for a player based on their name. First it checks a dictionary and if they are not in there then
     # it does an API call to get the player's id. Then it writes that id to the dictionary. Helps save API calls.
@@ -926,6 +955,8 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         player_champion_data = []
         count = 0
 
+        mobile_status = await self.get_mobile_status(ctx=ctx)
+
         for stat in stats:
             count += 1
             wins = stat.wins
@@ -938,7 +969,6 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
             last_played = str(stat.lastPlayed)
 
-            # todo add one catagory for mobile version
             if last_played:  # Bought the champ but never played them
                 player_champion_data.append([stat.godName, level, kda, win_rate, wins + losses, stat.json['Minutes']])
 
@@ -962,29 +992,74 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             return None
 
         player_champion_data = sorted(player_champion_data, key=lambda x: x[index], reverse=ordering)
-        message = "{:15}    {:7} {:6} {:10} {:9} {:6}\n{}\n" \
-            .format("Champion", "Level", "KDA", "Win Rate", "Matches", "Time(mins.)",
-                    "------------------------------------------------------------------")
-        message2 = ""
 
-        for i, champ in enumerate(player_champion_data, start=0):
-            if i == limit:
-                break
-            champ = [str(j) for j in champ]  # convert all elements to string to make formatting easier
-            hours = int(int(champ[5]) / 60)
-            minutes = int(champ[5]) % 60
-            champ[5] = "{}h {}m".format(hours, minutes)
-            if i >= 9:
-                if i < 20:
-                    message += "{}. {:15}{:7} {:6} {:10} {:9} {:6}\n".format(i + 1, *champ)
+        # non-mobile version
+        if not mobile_status:
+            message = "{:15}    {:7} {:6} {:10} {:9} {:6}\n{}\n" \
+                .format("Champion", "Level", "KDA", "Win Rate", "Matches", "Time(mins.)",
+                        "------------------------------------------------------------------")
+            message2 = ""
+
+            for i, champ in enumerate(player_champion_data, start=0):
+                if i == limit:
+                    break
+                champ = [str(j) for j in champ]  # convert all elements to string to make formatting easier
+                hours = int(int(champ[5]) / 60)
+                minutes = int(champ[5]) % 60
+                champ[5] = "{}h {}m".format(hours, minutes)
+                if i >= 9:
+                    if i < 20:
+                        message += "{}. {:15}{:7} {:6} {:10} {:9} {:6}\n".format(i + 1, *champ)
+                    else:
+                        message2 += "{}. {:15}{:7} {:6} {:10} {:9} {:6}\n".format(i + 1, *champ)
                 else:
-                    message2 += "{}. {:15}{:7} {:6} {:10} {:9} {:6}\n".format(i + 1, *champ)
-            else:
-                message += "{}.  {:15}{:7} {:6} {:10} {:9} {:6}\n".format(i + 1, *champ)
+                    message += "{}.  {:15}{:7} {:6} {:10} {:9} {:6}\n".format(i + 1, *champ)
 
-        await ctx.send("```md\n" + message + "```")
-        if message2 != "":
-            await ctx.send("```md\n" + message2 + "```")
+            await ctx.send("```md\n" + message + "```")
+            if message2 != "":
+                await ctx.send("```md\n" + message2 + "```")
+        # mobile compact version
+        else:
+            title_options = ["Champion", "Level", "KDA", "Win Rate", "Matches", "Time(mins.)"]
+            select_title = "{} ({})".format("Champion", title_options[index])
+            mobile_embed = discord.Embed(
+                title=select_title,
+                colour=discord.colour.Color.dark_teal(),
+                description="\u200b"
+            )
+
+            for i, champ in enumerate(player_champion_data, start=0):
+                if i == limit:
+                    break
+                new_value = "{} ({})".format(champ[0], champ[index])
+
+                mobile_embed.add_field(name=new_value, value="\u200b", inline=False)
+
+            """
+            for i, champ in enumerate(player_champion_data, start=0):
+                if i == limit:
+                    break
+                new_word = await self.force_whitespace(champ[0], 15)
+                new_word2 = await self.force_whitespace(champ[index], 10)
+                # print("-->{}<--".format(new_word))
+                # print("-->{}<--".format(new_word2))
+                gay = new_word + new_word2
+                print(gay)
+                # top_message += "{:2}. {}\n".format(i + 1, gay)
+                top_message += gay + "\n"
+
+            mobile_embed = discord.Embed(
+                title="Filer title.",
+                colour=discord.colour.Color.dark_teal(),
+                description=top_message
+            )
+            """
+
+            mobile_embed.set_footer(text="If you would like to see more information then use this "
+                                         "command on Discord Desktop.")
+            mobile_embed.set_thumbnail(url=await helper.get_champ_image(player_champion_data[0][0]))
+
+            await ctx.send(embed=mobile_embed)
 
     @commands.command(name='deck', pass_context=True, aliases=["Deck", "decks", "Decks", "talia", "Talia"],
                       ignore_extra=False)
@@ -1498,10 +1573,8 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                     colour=discord.colour.Color.dark_teal(),
                 )
 
-                try:
-                    embed.set_thumbnail(url=await helper.get_champ_image(match.godName))
-                except BaseException:
-                    print("oops")
+
+                embed.set_thumbnail(url=await helper.get_champ_image(match.godName))
 
                 map_name = match.mapName.replace("LIVE ", "").replace("Ranked ", "").replace(" (TDM)", "") \
                     .replace(" (Onslaught) ", "").replace(" (Siege)", "").replace("Practice ", "").lower() \
@@ -1660,15 +1733,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                         team2_ranks.append(str(player.tier))
 
             # Checking for is_on_mobile() status
-            mobile_status = False
-            if ctx.guild is None:  # In DM's
-                guilds = self.bot.guilds
-                for guild in guilds:
-                    member = guild.get_member(ctx.author.id)
-                    if member is not None:
-                        mobile_status = member.is_on_mobile()
-            else:
-                mobile_status = ctx.author.is_on_mobile()
+            mobile_status = await self.get_mobile_status(ctx=ctx)
 
             match_data = ""
             match_data += player_name + " is in a " + match_string + " match."  # Match Type
@@ -1932,15 +1997,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             return None
 
         # Checking for is_on_mobile() status
-        mobile_status = False
-        if ctx.guild is None:  # In DM's
-            guilds = self.bot.guilds
-            for guild in guilds:
-                member = guild.get_member(ctx.author.id)
-                if member is not None:
-                    mobile_status = member.is_on_mobile()
-        else:
-            mobile_status = ctx.author.is_on_mobile()
+        mobile_status = await self.get_mobile_status(ctx=ctx)
 
         # get basic player stats
         if option is None:

@@ -1031,14 +1031,22 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             for i, champ in enumerate(player_champion_data, start=0):
                 if i == limit:
                     break
+                hours = int(int(champ[5]) / 60)
+                minutes = int(champ[5]) % 60
+                champ[5] = "{}h {}m".format(hours, minutes)
                 new_value = "{} ({})".format(champ[0], champ[index])
 
                 mobile_embed.add_field(name=new_value, value="\u200b", inline=False)
 
             """
+            top_message = ""
             for i, champ in enumerate(player_champion_data, start=0):
                 if i == limit:
                     break
+                hours = int(int(champ[5]) / 60)
+                minutes = int(champ[5]) % 60
+                champ[5] = "{}h {}m".format(hours, minutes)
+                champ = [str(j) for j in champ]  # convert all elements to string to make formatting easier
                 new_word = await self.force_whitespace(champ[0], 15)
                 new_word2 = await self.force_whitespace(champ[index], 10)
                 # print("-->{}<--".format(new_word))
@@ -1048,15 +1056,17 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 # top_message += "{:2}. {}\n".format(i + 1, gay)
                 top_message += gay + "\n"
 
-            mobile_embed = discord.Embed(
+            mobile_embed2 = discord.Embed(
                 title="Filer title.",
                 colour=discord.colour.Color.dark_teal(),
                 description=top_message
             )
+            await ctx.send(embed=mobile_embed2)
             """
 
             mobile_embed.set_footer(text="If you would like to see more information then use this "
-                                         "command on Discord Desktop.")
+                                         "command on Discord Desktop. "
+                                         "Limited to top 10 champs and only the option requested.")
             mobile_embed.set_thumbnail(url=await helper.get_champ_image(player_champion_data[0][0]))
 
             await ctx.send(embed=mobile_embed)

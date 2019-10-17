@@ -159,6 +159,8 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             return "Ranked"
         elif "End Times" in match_name or "Crazy King" in match_name:  # Event name
             return "End Times"
+        elif "(KOTH)" in match_name:  # Test Maps (WIP Thrones)
+            return "KOTH"
         elif "(Siege)" in match_name:  # Test Maps (WIP Thrones)
             return "Test Maps"
         else:
@@ -935,6 +937,8 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             level = stat.godLevel
 
             last_played = str(stat.lastPlayed)
+
+            # todo add one catagory for mobile version
             if last_played:  # Bought the champ but never played them
                 player_champion_data.append([stat.godName, level, kda, win_rate, wins + losses, stat.json['Minutes']])
 

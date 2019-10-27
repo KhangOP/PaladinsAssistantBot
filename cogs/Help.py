@@ -71,6 +71,8 @@ class HelpCog(commands.Cog, name="Help Commands"):
                              text="Bot created by FeistyJalapeno#9045.")
             # If you have questions, suggestions, found a bug, etc. feel free to DM me.")
             embed.add_field(name='help', value='Returns this message.', inline=False)
+            embed.add_field(name='console_name', value='Returns info for how console players should type their '
+                                                       'name for the bot to recognize.', inline=False)
             embed.add_field(name='store', value='Stores a players IGN in Paladins for the bot to use.', inline=False)
             embed.add_field(name='last', value='Returns stats for a player\'s match.', inline=False)
             embed.add_field(name='match', value='Returns detailed stats for a player\'s match.', inline=False)
@@ -246,6 +248,15 @@ class HelpCog(commands.Cog, name="Help Commands"):
                         ]
         examples = ["{} {}".format(command_name, "z1unknown Androxus"),
                     "{} {}".format(command_name, "z1unknown Androxus 1")]
+        await ctx.send(embed=create_embed(command_name, command_description, parameters, descriptions, examples))
+
+    @help.command()
+    async def console_name(self, ctx):
+        command_name = "console_name"
+        command_description = "Returns info for how console players should type their name for the bot to recognize."
+        parameters = ["None"]
+        descriptions = ["Parameterless command"]
+        examples = ["{} {}".format(command_name, "")]
         await ctx.send(embed=create_embed(command_name, command_description, parameters, descriptions, examples))
 
     @help.command()

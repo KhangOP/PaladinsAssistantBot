@@ -150,10 +150,11 @@ def save_card_descriptions(name):
     # save_champ_cards(champ_name)
     # save_card_descriptions(name=champ_name)
 
-# new_champ = "Mal'Damba"
-# save_champ_cards(new_champ)
+new_champ = "raum"
+# save_champ_cards(new_champ) not ready yet
 # save_champ_icons(new_champ)
-# save_champ_headers(new_champ)
+# save_champ_headers(new_champ) not ready yet
+# save_card_descriptions(new_champ) not ready yet
 
 # response = requests.get("https://c-3sux78kvnkay76x24mgskvkjogx2eiax78ykijtx2eius.g00.gamepedia.com/g00/3_"
 #                                "c-3vgrgjoty.mgskvkjog.ius_/c-3SUXKVNKAY76x24nzzvyx3ax2fx2fmgskvkjog.iax78ykijt."

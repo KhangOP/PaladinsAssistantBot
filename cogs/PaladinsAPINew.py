@@ -770,11 +770,11 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             return None
 
         # update when the data was last updated
-        today = datetime.now().replace(microsecond=0)
+        # today = datetime.now().replace(microsecond=0)
         # print(today, type(today))
-        last_tracked = datetime.strptime(all_data["last_updated"], "%Y-%m-%d %H:%M:%S")
+        # last_tracked = datetime.strptime(all_data["last_updated"], "%Y-%m-%d %H:%M:%S")
         # print(last_tracked, type(last_tracked))
-        last_tracked = (today - last_tracked).seconds
+        # last_tracked = (today - last_tracked).seconds
         # print(last_tracked)
 
         all_data["last_updated"] = str(datetime.now().replace(microsecond=0))
@@ -1582,7 +1582,6 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                     description=match_data,
                     colour=discord.colour.Color.dark_teal(),
                 )
-
 
                 embed.set_thumbnail(url=await helper.get_champ_image(match.godName))
 

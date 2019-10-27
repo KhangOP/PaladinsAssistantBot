@@ -188,12 +188,19 @@ class PaladinsAssistant(commands.Bot):
 
     # Bot tries to message the error in the channel where its caused and then tries to dm the error to the user
     @staticmethod
-    async def send_error(cont, msg):
+    async def send_error(cont, msg, msg2=None):
         msg = str(msg)
-        error_embed = discord.Embed(
-            title="\N{WARNING SIGN} " + msg + " \N{WARNING SIGN}",
-            colour=discord.colour.Color.red(),
-        )
+        if not msg2:
+            error_embed = discord.Embed(
+                title="\N{WARNING SIGN} " + msg + " \N{WARNING SIGN}",
+                colour=discord.colour.Color.red(),
+            )
+        else:
+            error_embed = discord.Embed(
+                title="\N{WARNING SIGN} " + msg + " \N{WARNING SIGN}",
+                description=msg2,
+                colour=discord.colour.Color.red(),
+            )
         try:  # First lets try to send the message to the channel the command was called
             await cont.send(embed=error_embed)
             print(Fore.RED + str(msg))
@@ -376,7 +383,15 @@ class PaladinsAssistant(commands.Bot):
             await self.send_error(cont=ctx, msg="If you are trying to type the name Mal`Damba please type his name "
                                                 "as one word without any kinda of quote marks.")
         elif isinstance(error, commands.TooManyArguments):
-            await self.send_error(cont=ctx, msg=error)
+            await self.send_error(
+                cont=ctx,
+                msg="Too many arguments passed to a command.",
+                msg2="If you are unsure of command's format then type `>>help command_name` to "
+                     "learn more about the format of a command.\n\n"
+                     "Below are the 2 most command reasons you may have passed extra arguments to a command."
+                     "```1. Type all Champion names as one word. So BombKing, ShaLin, and MalDamaba.```"
+                     "```2. Console names need to by typed with quotes around them and with the platform name. "
+                     "Please use the command >>console_name to learn how to format your console name.```")
         elif isinstance(error, commands.CommandNotFound):
             await self.send_error(cont=ctx, msg=error)
         elif isinstance(error, commands.CommandOnCooldown):

@@ -388,8 +388,8 @@ class PaladinsAssistant(commands.Bot):
                 msg="Too many arguments passed to a command.",
                 msg2="If you are unsure of command's format then type `>>help command_name` to "
                      "learn more about the format of a command.\n\n"
-                     "Below are the 2 most command reasons you may have passed extra arguments to a command."
-                     "```1. Type all Champion names as one word. So BombKing, ShaLin, and MalDamaba.```"
+                     "Below are the 2 most common reasons you may have passed extra arguments to a command."
+                     "```1. Type all Champion names as one word. So BombKing, ShaLin, and MalDamba.```"
                      "```2. Console names need to by typed with quotes around them and with the platform name. "
                      "Please use the command >>console_name to learn how to format your console name.```")
         elif isinstance(error, commands.CommandNotFound):

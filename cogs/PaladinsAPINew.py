@@ -1029,7 +1029,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             )
 
             for i, champ in enumerate(player_champion_data, start=0):
-                if i == limit:
+                if i == 10:
                     break
                 hours = int(int(champ[5]) / 60)
                 minutes = int(champ[5]) % 60

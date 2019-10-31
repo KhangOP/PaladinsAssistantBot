@@ -56,6 +56,22 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         else:
             return -1
 
+    # Converts the language to prefix
+    @staticmethod
+    async def convert_language(x):
+        return {
+            "en": 1,  # English
+            "de": 2,  # German
+            "fr": 3,  # French
+            "zh": 5,  # Chinese
+            "od": 7,  # Out-dated/Unused
+            "es": 9,  # Spanish
+            "pt": 10,  # Portuguese
+            "ru": 11,  # Russian
+            "pl": 12,  # Polish
+            "tr": 13,  # Turkish
+        }.get(x, 1)  # Return English by default if an unknown number is entered
+
     @classmethod
     # Used to change text prefix to change it's color
     async def color_win_rates(cls, text, win_rate):
@@ -1118,7 +1134,8 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
             champ_name = await self.convert_champion_name(champ_name)
 
-            player_decks = self.bot.paladinsAPI.getPlayerLoadouts(player_id)
+            lang_num = await self.convert_language(lang)
+            player_decks = self.bot.paladinsAPI.getPlayerLoadouts(player_id, language=lang_num)
 
             if player_decks is None:
                 await ctx.send("A Hi-Rez endpoint is down meaning this command won't work. "
@@ -1166,7 +1183,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
                 await ctx.send("```md\n" + message + "```")
             else:
-                buffer = await helper.create_deck_image(player_name, champ_name, deck)
+                buffer = await helper.create_deck_image(player_name, champ_name, deck, lang=lang)
                 file = discord.File(filename="Deck.png", fp=buffer)
                 await ctx.send("```Enjoy the beautiful image below.```", file=file)
 

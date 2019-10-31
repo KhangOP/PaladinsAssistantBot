@@ -312,14 +312,13 @@ async def draw_match_vs():
     return final_buffer
 
 
-async def create_card_image(card_image, champ_info):
+async def create_card_image(card_image, champ_info, json_data, lang):
     image_size_x = 256
     image_size_y = 196
     x_offset = 28
     y_offset = 48
-    champ_name = champ_info[0]
-    champ_card_name = champ_info[1]
-    champ_card_level = champ_info[2]
+    champ_card_name = champ_info[0]
+    champ_card_level = champ_info[1]
 
     # Load in the Frame image from the web
     # response = requests.get("https://web2.hirez.com/paladins/cards/frame-{}.png".format(champ_card_level))
@@ -342,19 +341,9 @@ async def create_card_image(card_image, champ_info):
     draw = ImageDraw.Draw(image_base)
     draw.text((30, frame_y-56), champ_card_level, font=ImageFont.truetype("arialbd", 44))
 
-    if "mal" in champ_name.lower():
-        champ_name = "mal-damba"
-
     try:
-        file_name = "icons/champ_card_desc/{}.json".format(champ_name)
-        with open(file_name, encoding='utf-8') as json_f:
-            json_data = json.load(json_f)
-    except (IndexError, json.decoder.JSONDecodeError, FileNotFoundError):
-        json_data = {}
-
-    try:
-        desc = json_data[champ_card_name]["card_desc"]
-        cool_down = json_data[champ_card_name]["card_cd"]
+        desc = json_data[lang][champ_card_name]["card_desc"]
+        cool_down = json_data[lang][champ_card_name]["card_cd"]
 
         # Scale of the card
         scale = re.search('=(.+?)\|', desc)
@@ -412,7 +401,7 @@ async def create_card_image(card_image, champ_info):
 
 
 # Creates a image desks
-async def create_deck_image(player_name, champ_name, deck):
+async def create_deck_image(player_name, champ_name, deck, lang):
     card_image_x = 314
     card_image_y = 479
 
@@ -432,17 +421,34 @@ async def create_deck_image(player_name, champ_name, deck):
     for i, card in enumerate(deck.cards):
         card_m = str(card).split("(")
         number = str(card_m[1]).split(")")[0]
-        info = [champ_name, card_m[0].strip(), number]
+        info = [card_m[0].strip(), number]
 
+        # open data file
+        if "mal" in champ_name.lower():
+            champ_name = "mal-damba"
+
+        # Opens the json data that relates to the specific champion
         try:
-            card_name = card_m[0].strip().lower().replace(" ", "-").replace("'", "")
+            file_name = "icons/champ_card_desc_lang/{}.json".format(champ_name)
+            # file_name = "icons/champ_card_desc/{}.json".format(champ_name)    # Just English
+            with open(file_name, encoding='utf-8') as json_f:
+                json_data = json.load(json_f)
+        except (IndexError, json.decoder.JSONDecodeError, FileNotFoundError):
+            json_data = {}
+
+        # Opens the image of the card
+        try:
             if 'mal' in champ_name:
                 champ_name = "Mal'Damba"
-            card_icon_image = Image.open("icons/champ_cards/{}/{}.png".format(champ_name, card_name))
+
+            en_card_name = json_data[lang][card_m[0].strip()]["card_name_en"]
+            en_card_name = en_card_name.strip().lower().replace(" ", "-").replace("'", "")
+
+            card_icon_image = Image.open("icons/champ_cards/{}/{}.png".format(champ_name, en_card_name))
         except FileNotFoundError:
             card_icon_image = Image.open("icons/temp_card_art.png")
 
-        card_icon = await create_card_image(card_icon_image, info)
+        card_icon = await create_card_image(card_icon_image, info, json_data, lang=lang)
 
         card_icon = Image.open(card_icon)
         deck_image.paste(card_icon, (card_image_x * i, 800-card_image_y), card_icon)

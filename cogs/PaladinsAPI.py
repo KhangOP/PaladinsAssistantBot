@@ -1075,7 +1075,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
                 await ctx.send("```md\n" + message + "```")
             else:
-                buffer = await helper.create_deck_image(player_name, champ_name, deck)
+                buffer = await helper.create_deck_image(player_name, champ_name, deck, lang=lang)
                 file = discord.File(filename="Deck.png", fp=buffer)
                 await ctx.send("```Enjoy the beautiful image below.```", file=file)
 

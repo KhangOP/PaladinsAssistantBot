@@ -205,6 +205,8 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     # Gets KDA and Win Rate for a player from Nonsocial's herokuapp
     @classmethod
     async def get_global_kda(cls, player_id):
+        if str(player_id) == '0':
+            return ["Private Account", "???", "???", "???"]
         url = "http://nonsocial.herokuapp.com/api/kda?player=" + str(player_id)
         async with aiohttp.ClientSession(conn_timeout=5, read_timeout=5) as cs:
             async with cs.get(url) as r:

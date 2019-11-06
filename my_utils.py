@@ -440,9 +440,11 @@ async def create_deck_image(player_name, champ_name, deck, lang):
         try:
             if 'mal' in champ_name:
                 champ_name = "Mal'Damba"
-
-            en_card_name = json_data[lang][card_m[0].strip()]["card_name_en"]
-            en_card_name = en_card_name.strip().lower().replace(" ", "-").replace("'", "")
+            try:
+                en_card_name = json_data[lang][card_m[0].strip()]["card_name_en"]
+                en_card_name = en_card_name.strip().lower().replace(" ", "-").replace("'", "")
+            except KeyError:
+                en_card_name = "Not implemented yet."
 
             card_icon_image = Image.open("icons/champ_cards/{}/{}.png".format(champ_name, en_card_name))
         except FileNotFoundError:

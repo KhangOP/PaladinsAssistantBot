@@ -205,6 +205,8 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     # Gets KDA and Win Rate for a player from Nonsocial's herokuapp
     @classmethod
     async def get_global_kda(cls, player_id):
+        if str(player_id) == '0':
+            return ["Private Account", "???", "???", "???"]
         url = "http://nonsocial.herokuapp.com/api/kda?player=" + str(player_id)
         async with aiohttp.ClientSession(conn_timeout=5, read_timeout=5) as cs:
             async with cs.get(url) as r:
@@ -987,7 +989,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         if message2 != "":
             await ctx.send("```md\n" + message2 + "```")
 
-    @commands.command(name='deck', pass_context=True, aliases=["Deck", "decks", "Decks", "talia", "Talia"],
+    @commands.command(name='deck', pass_context=True, aliases=["Deck", "decks", "Decks", "talia", "Talia", 'baralho', 'baralhos'],
                       ignore_extra=False)
     @commands.cooldown(4, 30, commands.BucketType.user)
     async def deck(self, ctx, player_name, champ_name, deck_index=None):
@@ -1951,7 +1953,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                     await ctx.send(embed=embed)
 
     # Stores Player's IGN for the bot to use
-    @commands.command(name='store', pass_context=True, ignore_extra=False, aliases=["zapisz", "Zapisz", "Store"])
+    @commands.command(name='store', pass_context=True, ignore_extra=False, aliases=["zapisz", "Zapisz", "Store", 'salva'])
     @commands.cooldown(2, 30, commands.BucketType.user)
     async def store_player_name(self, ctx, player_ign):
         with open("player_discord_ids") as json_f:

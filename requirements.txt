@@ -1,9 +1,8 @@
-aiohttp==3.5.4
 asn1crypto==1.2.0
 beautifulsoup4==4.8.1
 cffi==1.13.1
 cryptography==2.6.1
-discord.py==1.2.4
+discord.py==1.2.5
 mkl-fft==1.0.10
 mkl-random==1.0.2
 olefile==0.46

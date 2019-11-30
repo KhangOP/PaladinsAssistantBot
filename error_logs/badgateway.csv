@@ -1,0 +1,37 @@
+>>current me
+
+Traceback (most recent call last):
+  File "C:\Users\Ethan\Anaconda3\envs\Rewrite\lib\site-packages\discord\ext\commands\core.py", line 79, in wrapped
+    ret = await coro(*args, **kwargs)
+  File "F:\PaladinsAssistantBot\cogs\PaladinsAPINew.py", line 1955, in current
+    await ctx.send("```diff\n" + match_data + "```", file=file)
+  File "C:\Users\Ethan\Anaconda3\envs\Rewrite\lib\site-packages\discord\abc.py", line 806, in send
+    content=content, tts=tts, embed=embed, nonce=nonce)
+  File "C:\Users\Ethan\Anaconda3\envs\Rewrite\lib\site-packages\discord\http.py", line 225, in request
+    raise HTTPException(r, data)
+discord.errors.HTTPException: 502 Bad Gateway (error code: 0): <html>
+<head><title>502 Bad Gateway</title></head>
+<body>
+<center><h1>502 Bad Gateway</h1></center>
+<hr><center>cloudflare</center>
+</body>
+</html>
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "F:/PaladinsAssistantBot/PythonDiscordBotClass.py", line 266, in invoke
+    await ctx.command.invoke(ctx)
+  File "C:\Users\Ethan\Anaconda3\envs\Rewrite\lib\site-packages\discord\ext\commands\core.py", line 728, in invoke
+    await injected(*ctx.args, **ctx.kwargs)
+  File "C:\Users\Ethan\Anaconda3\envs\Rewrite\lib\site-packages\discord\ext\commands\core.py", line 88, in wrapped
+    raise CommandInvokeError(exc) from exc
+discord.ext.commands.errors.CommandInvokeError: Command raised an exception: HTTPException: 502 Bad Gateway (error code: 0): <html>
+<head><title>502 Bad Gateway</title></head>
+<body>
+<center><h1>502 Bad Gateway</h1></center>
+<hr><center>cloudflare</center>
+</body>
+</html>
+

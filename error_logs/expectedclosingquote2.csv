@@ -1,0 +1,16 @@
+>>stats <@386553595182448641> "Sha lin'
+
+Traceback (most recent call last):
+  File "F:/PaladinsAssistantBot/PythonDiscordBotClass.py", line 259, in invoke
+    await ctx.command.invoke(ctx)
+  File "C:\Users\Ethan\Anaconda3\envs\Rewrite\lib\site-packages\discord\ext\commands\core.py", line 676, in invoke
+    await self.prepare(ctx)
+  File "C:\Users\Ethan\Anaconda3\envs\Rewrite\lib\site-packages\discord\ext\commands\core.py", line 641, in prepare
+    await self._parse_arguments(ctx)
+  File "C:\Users\Ethan\Anaconda3\envs\Rewrite\lib\site-packages\discord\ext\commands\core.py", line 562, in _parse_arguments
+    transformed = await self.transform(ctx, param)
+  File "C:\Users\Ethan\Anaconda3\envs\Rewrite\lib\site-packages\discord\ext\commands\core.py", line 425, in transform
+    argument = view.get_quoted_word()
+  File "C:\Users\Ethan\Anaconda3\envs\Rewrite\lib\site-packages\discord\ext\commands\view.py", line 148, in get_quoted_word
+    raise ExpectedClosingQuoteError(close_quote)
+discord.ext.commands.errors.ExpectedClosingQuoteError: Expected closing ".

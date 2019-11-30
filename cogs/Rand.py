@@ -20,7 +20,8 @@ class RandomCog(commands.Cog, name="Random Commands"):
     DAMAGE_CMD = ["damage", "napastnik", "dano"]
     FLANKS = ["Skye", "Buck", "Evie", "Androxus", "Maeve", "Lex", "Zhin", "Talus", "Moji", "Koga"]
     FLANK_CMD = ["flank", "skrzydłowy", "flanco"]
-    FRONTLINES = ["Barik", "Fernando", "Ruckus", "Makoa", "Torvald", "Inara", "Ash", "Terminus", "Khan", "Atlas"]
+    FRONTLINES = ["Barik", "Fernando", "Ruckus", "Makoa", "Torvald", "Inara", "Ash", "Terminus", "Khan", "Atlas",
+                  "Raum"]
     FRONTLINE_CMD = ["tank", "frontline", "obrońca", "tanque"]
     SUPPORTS = ["Grohk", "Grover", "Ying", "Mal Damba", "Seris", "Jenos", "Furia", "Pip"]
     SUPPORT_CMD = ["healer", "support", "wsparcie", "suporte"]

@@ -1,0 +1,29 @@
+>>stats me
+
+Traceback (most recent call last):
+  File "C:\Users\Ethan\Anaconda3\envs\Rewrite\lib\site-packages\discord\ext\commands\core.py", line 79, in wrapped
+    ret = await coro(*args, **kwargs)
+  File "F:\PaladinsAssistantBot\cogs\PaladinsAPINew.py", line 2012, in stats
+    await helper.store_commands(ctx.author.id, "stats")
+  File "F:\PaladinsAssistantBot\my_utils.py", line 51, in store_commands
+    user_info = json.load(json_f)
+  File "C:\Users\Ethan\Anaconda3\envs\Rewrite\lib\json\__init__.py", line 299, in load
+    parse_constant=parse_constant, object_pairs_hook=object_pairs_hook, **kw)
+  File "C:\Users\Ethan\Anaconda3\envs\Rewrite\lib\json\__init__.py", line 354, in loads
+    return _default_decoder.decode(s)
+  File "C:\Users\Ethan\Anaconda3\envs\Rewrite\lib\json\decoder.py", line 339, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+  File "C:\Users\Ethan\Anaconda3\envs\Rewrite\lib\json\decoder.py", line 357, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "F:/PaladinsAssistantBot/PythonDiscordBotClass.py", line 266, in invoke
+    await ctx.command.invoke(ctx)
+  File "C:\Users\Ethan\Anaconda3\envs\Rewrite\lib\site-packages\discord\ext\commands\core.py", line 728, in invoke
+    await injected(*ctx.args, **ctx.kwargs)
+  File "C:\Users\Ethan\Anaconda3\envs\Rewrite\lib\site-packages\discord\ext\commands\core.py", line 88, in wrapped
+    raise CommandInvokeError(exc) from exc
+discord.ext.commands.errors.CommandInvokeError: Command raised an exception: JSONDecodeError: Expecting value: line 1 column 1 (char 0)

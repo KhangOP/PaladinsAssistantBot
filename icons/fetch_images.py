@@ -162,13 +162,13 @@ def save_card_descriptions(name):
 
 # save_image("https://gamepedia.cursecdn.com/paladins_gamepedia/b/be/Card_Celestial_Body.png", "testing", "io-asd")
 
-# for champ in all_champs:
-    # champ_name = champ.replace(' ', '-')
+for champ in all_champs:
+    champ_name = champ.replace(' ', '-')
 
     # save_champ_icons(champ_name)
     # save_champ_headers(champ_name)
-    # save_champ_cards(champ_name)
-    # save_card_descriptions(name=champ_name)
+    save_champ_cards(champ_name)
+    save_card_descriptions(name=champ_name)
 
 # new_champ = "raum"
 # save_champ_cards(new_champ)     # not ready yet

@@ -377,6 +377,8 @@ class PaladinsAssistant(commands.Bot):
         # Checks for discord command errors
         if isinstance(error, commands.MissingRequiredArgument):
             await self.send_error(cont=ctx, msg="A required argument to the command you called is missing.")
+        elif isinstance(error, discord.errors.HTTPException):  # New error with the Discord API update
+            await self.send_error(cont=ctx, msg="Discord itself had a connection error. Please try again.")
         elif isinstance(error, commands.BadArgument):
             await self.send_error(cont=ctx, msg="Make sure the command is in the correct format.")
         elif isinstance(error, commands.errors.UnexpectedQuoteError):

@@ -132,6 +132,10 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 player_name, platform = player_name.rsplit(' ', 1)
                 players = self.bot.paladinsAPI.searchPlayers(player_name)
 
+                # New check
+                if players is None:
+                    return -1
+
                 platform = platform.lower()
                 if platform == "xbox":
                     platform = "10"

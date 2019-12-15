@@ -379,11 +379,20 @@ class PaladinsAssistant(commands.Bot):
             await self.send_error(cont=ctx, msg="A required argument to the command you called is missing.")
         elif isinstance(error, discord.errors.HTTPException):  # New error with the Discord API update
             await self.send_error(cont=ctx, msg="Discord itself had a connection error. Please try again.")
+        elif isinstance(error, discord.ext.commands.errors.CommandInvokeError):  # New error with the Discord API update
+            await self.send_error(cont=ctx, msg="Discord itself had a connection error. Please try again.")
         elif isinstance(error, commands.BadArgument):
             await self.send_error(cont=ctx, msg="Make sure the command is in the correct format.")
+
+        # Quote issues
         elif isinstance(error, commands.errors.UnexpectedQuoteError):
             await self.send_error(cont=ctx, msg="If you are trying to type the name Mal`Damba please type his name "
                                                 "as one word without any kinda of quote marks.")
+        elif isinstance(error, commands.errors.ExpectedClosingQuoteError):
+            await self.send_error(cont=ctx, msg=error)
+        elif isinstance(error, commands.errors.InvalidEndOfQuotedStringError):
+            await self.send_error(cont=ctx, msg=error)
+
         elif isinstance(error, commands.TooManyArguments):
             await self.send_error(
                 cont=ctx,

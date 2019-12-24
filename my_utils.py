@@ -183,7 +183,7 @@ async def create_team_image(champ_list, ranks):
         champ_list.append("?")
 
     for champ in champ_list:
-        if champ != "?" and not None:   # This is new
+        if champ != "?" and champ is not None:
             try:
                 champion_images.append(Image.open("icons/champ_icons/{}.png".format(await convert_champion_name(champ))))
             except FileNotFoundError:

@@ -390,6 +390,94 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                         str(info.totalAchievements))
         return ss
 
+    async def get_player_stats_api_new(self, player_name, lang):
+        # Player level, played hours, etc
+        player_id = self.get_player_id(player_name)
+        if player_id == -1:
+            embed = discord.Embed(
+                title=self.lang_dict["general_error2"][lang].format(player_name),
+                colour=discord.colour.Color.red()
+            )
+            return [embed]
+        elif player_id == -2:
+            embed = discord.Embed(
+                title="```Invalid platform name. Valid platform names are:\n1. Xbox\n2. PS4\n3. Switch```",
+                colour=discord.colour.Color.red()
+            )
+            return [embed]
+        elif player_id == -3:
+            embed = discord.Embed(
+                title="Name overlap detected. Please look up your Paladins ID using the `>>console` command.",
+                colour=discord.colour.Color.red()
+            )
+            return [embed]
+
+        try:
+            info = self.bot.paladinsAPI.getPlayer(player_id)
+        except PlayerNotFound:
+            embed = discord.Embed(
+                description=self.lang_dict["general_error2"][lang].format(player_name),
+                colour=discord.colour.Color.red()
+            )
+            return [embed]
+
+        embed = discord.Embed(
+            title="Some Title \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b "
+                  "\u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b "
+                  "\u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b ",
+            colour=discord.colour.Color.dark_teal(),
+        )
+
+        # Add in icon image
+        embed.set_thumbnail(url=await helper.get_champ_image("Drogoz"))
+
+        # Overall Info
+        ss = self.lang_dict["stats_s1"][lang]
+        p1, p2 = ss.split("*")
+        total = int(info.wins) + int(info.losses)
+        wr = await self.calc_win_rate(int(info.wins), total)
+        p2 = p2.format(str(info.playerName), str(info.accountLevel), wr, str(total), str(info.leaves))
+        embed.add_field(name="**```{}```**".format(p1), value=p2, inline=False)
+
+        # Ranked Info
+        s2 = self.lang_dict["stats_s2"][lang]
+
+        # Get the platform's ranked stats
+        platform = str(info.platform).lower()
+        if platform == "steam" or platform == "hirez":
+            ranked = info.rankedKeyboard
+        else:
+            ranked = info.rankedController
+
+        win = int(ranked.wins)
+        lose = int(ranked.losses)
+        wr = await self.calc_win_rate(win, win + lose)
+        p1, p2 = s2.split("*")
+        p1 = p1.format(str(ranked.currentSeason))
+        p2 = p2.format("`"+str(ranked.currentRank.getName()+"`"), str(ranked.currentTrumpPoints), str(ranked.leaderboardIndex),
+                       wr, win, lose, str(ranked.leaves))
+        embed.add_field(name="**```{}```**".format(p1), value=p2, inline=False)
+
+        # Extra info
+        s3 = self.lang_dict["stats_s3"][lang]
+        try:
+            created = str(info.createdDatetime).split()[0]
+        except IndexError:
+            created = "Unknown"
+        try:
+            last = str(info.lastLoginDatetime).split()[0]
+        except IndexError:
+            last = "Unknown"
+
+        p1, p2 = s3.split("*")
+        p2 = p2.format(created, last, str(info.platform), str(info.playedGods), str(info.totalAchievements))
+        embed.add_field(name="**```{}```**".format(p1), value=p2, inline=False)
+
+        # print(ss, s2, s3)
+
+        embeds = [embed]
+        return embeds
+
     # Uses Paladins API to get overall stats for a player (Mobile version)
     async def get_player_stats_api_mobile(self, player_name, lang):
         # Player level, played hours, etc
@@ -2037,8 +2125,8 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 result = await self.get_player_stats_api(player_name, lang=lang)
                 await ctx.send("```md\n" + result + "```")
             else:
-                # returns something that is not an embed?
                 embeds = await self.get_player_stats_api_mobile(player_name, lang=lang)
+                # embeds = await self.get_player_stats_api_new(player_name, lang=lang)
                 for embed in embeds:
                     await ctx.send(embed=embed)
         # get stats for a specific character
@@ -2089,12 +2177,14 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         # await ctx.send(info)
         # return None
 
+        """
         info = ""
         for i in range(0, 20):
             td = await self.get_global_kda("FeistyJalapeno")
             info += str(td) + "\n"
 
         await ctx.send(info)
+        """
         """
         for i in range(0, 10):
             embed = discord.Embed(
@@ -2103,6 +2193,38 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             )
             await ctx.send(embed=embed)
         """
+        """
+        embed = discord.Embed(
+            description="Someone's stats:\n Name: Bruh \n Winrate: 55%",
+            colour=discord.colour.Color.dark_teal(),
+        )
+        await ctx.send(embed=embed)
+
+        embed = discord.Embed(
+            title="Some Title",
+            description="Someone's stats:\n Name: Bruh \n Winrate: 55%",
+            colour=discord.colour.Color.dark_teal(),
+        )
+        await ctx.send(embed=embed)
+
+        embed = discord.Embed(
+            title="`Someone's stats:`\n ```Name: Bruh``` \n Winrate: 55%",
+            colour=discord.colour.Color.dark_teal(),
+        )
+        await ctx.send(embed=embed)
+        """
+
+        embed = discord.Embed(
+            title="Some Title \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b "
+                  "\u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b "
+                  "\u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b ",
+            colour=discord.colour.Color.dark_teal(),
+        )
+        embed.add_field(name="`Some Title`", value="Someone's stats:\nName: Bruh \nWinrate: 55%", inline=False)
+        embed.add_field(name="```Some Title```", value="Derp:\nName: Dabber \nWinrate: 72.54%", inline=False)
+        embed.set_thumbnail(url=await helper.get_champ_image("Drogoz"))
+        await ctx.send(embed=embed)
+
         return None
 
 

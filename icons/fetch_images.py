@@ -49,10 +49,18 @@ def get_image_paladins_wiki(champion_name, card_image_name):
     c = r.content
     soup = BeautifulSoup(c, 'html.parser')
     # tags = soup.findAll('img')
-    card_image_name = card_image_name.replace("-", " ").title()
-    card_image_name = "Card {}.png".format(card_image_name)
-    print(card_image_name)
-    image_data = soup.find('img', alt=card_image_name)
+    card_image_name1 = card_image_name.replace("-", " ").title()
+    card_image_name1 = "Card {}.png".format(card_image_name1)
+
+    print(card_image_name1)
+    image_data = soup.find('img', alt=card_image_name1)
+
+    # Try to look for the image again without removing the dashes
+    if image_data is None:
+        card_image_name2 = card_image_name.title()
+        card_image_name2 = "Card {}.png".format(card_image_name2)
+        image_data = soup.find('img', alt=card_image_name2)
+
     try:
         image_url = image_data['src']
         image_url = image_url.split(".png")[0].replace("/thumb", "") + ".png"

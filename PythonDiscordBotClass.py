@@ -373,14 +373,14 @@ class PaladinsAssistant(commands.Bot):
                                                         "away from the bot...probably because of an internet fluke. "
                                                         "Please try again.")
                     return None
+            elif "502 Bad Gateway" in str(error.original):  # New error with the Discord API update
+                await self.send_error(cont=ctx, msg="Discord had a connection error. Please try again.")
 
         # Checks for discord command errors
         if isinstance(error, commands.MissingRequiredArgument):
             await self.send_error(cont=ctx, msg="A required argument to the command you called is missing.")
         # elif isinstance(error, discord.errors.HTTPException):  # New error with the Discord API update
         #    await self.send_error(cont=ctx, msg="Discord itself had a connection error. Please try again.")
-        elif "502 Bad Gateway" in str(error.original):   # New error with the Discord API update
-            await self.send_error(cont=ctx, msg="Discord had a connection error. Please try again.")
         elif isinstance(error, commands.BadArgument):
             await self.send_error(cont=ctx, msg="Make sure the command is in the correct format.")
 

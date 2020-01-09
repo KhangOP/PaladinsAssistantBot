@@ -11,7 +11,7 @@ init(autoreset=True)
 
 
 DAMAGES = ["Cassie", "Kinessa", "Drogoz", "Bomb King", "Viktor", "Sha Lin", "Tyra", "Willo", "Lian", "Strix",
-           "Vivian", "Dredge", "Imani"]
+           "Vivian", "Dredge", "Imani", "Tiberius"]
 FLANKS = ["Skye", "Buck", "Evie", "Androxus", "Maeve", "Lex", "Zhin", "Talus", "Moji", "Koga"]
 TANKS = ["Barik", "Fernando", "Ruckus", "Makoa", "Torvald", "Inara", "Ash", "Terminus", "Khan", "Atlas"]
 SUPPORTS = ["Grohk", "Grover", "Ying", "Mal'Damba", "Seris", "Jenos", "Furia", "Pip", "Io"]
@@ -60,6 +60,7 @@ def get_image_paladins_wiki(champion_name, card_image_name):
         print(card_image_name)
         image_url = ""
 
+    # print(image_url)
     return image_url
 
 
@@ -102,6 +103,7 @@ def save_champ_headers(name):
     print("Fetched champion header for: ", name)
 
 
+# Saves images
 def save_champ_cards(name):
     json_data = requests.get("https://cms.paladins.com/wp-json/wp/v2/champions?slug={}&lang_id=1"
                              .format(name.replace(' ', '-')))
@@ -162,6 +164,7 @@ def save_card_descriptions(name):
 
 # save_image("https://gamepedia.cursecdn.com/paladins_gamepedia/b/be/Card_Celestial_Body.png", "testing", "io-asd")
 
+"""
 for champ in all_champs:
     champ_name = champ.replace(' ', '-')
 
@@ -169,12 +172,13 @@ for champ in all_champs:
     # save_champ_headers(champ_name)
     save_champ_cards(champ_name)
     save_card_descriptions(name=champ_name)
+"""
 
-# new_champ = "raum"
-# save_champ_cards(new_champ)     # not ready yet
+new_champ = "tiberius"
 # save_champ_icons(new_champ)
 # save_champ_headers(new_champ)
-# save_card_descriptions(new_champ)   # not ready yet
+save_champ_cards(new_champ)
+# save_card_descriptions(new_champ)
 
 # for i in range(1, 6):
 #    url = "https://web2.hirez.com/paladins/cards/frame-{}.png".format(i)

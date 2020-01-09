@@ -16,7 +16,7 @@ class RandomCog(commands.Cog, name="Random Commands"):
 
     # List of Champs by Class
     DAMAGES = ["Cassie", "Kinessa", "Drogoz", "Bomb King", "Viktor", "Sha Lin", "Tyra", "Willo", "Lian", "Strix",
-               "Vivian", "Dredge", "Imani"]
+               "Vivian", "Dredge", "Imani", "Tiberius"]
     DAMAGE_CMD = ["damage", "napastnik", "dano"]
     FLANKS = ["Skye", "Buck", "Evie", "Androxus", "Maeve", "Lex", "Zhin", "Talus", "Moji", "Koga"]
     FLANK_CMD = ["flank", "skrzydłowy", "flanco"]

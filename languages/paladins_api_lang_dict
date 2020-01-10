@@ -10,12 +10,12 @@
     "pt": "Jogador {} não existe ou tem perfil privado. Por favor, verifique se o nome está correto! (Letras maiúsculas não importam)."
   },
   "stats_s1": {
-    "en": "Casual stats:\n{}\nName: {}\nAccount Level: {}\nWin Rate: {}% out of {} matches.\nTimes Deserted: {}\n\n",
-    "en_mobile": "Casual stats:\nName:*{}\nAccount Level:*{}\nWin Rate:*{}% out of {} matches.\nTimes Deserted:*{}",
-    "pl": "Statystyki szybkich gier:\n{}\nNazwa: {}\nPoziom konta: {}\nProcent wygranych gier: {}%, po zagraniu {} meczy.\nOpuszczone mecze: {}\n\n",
-    "pl_mobile": "Statystyki szybkich gier:\nNazwa:*{}\nPoziom konta:*{}\nProcent wygranych gier:*{}%, po zagraniu {} meczy.\nOpuszczone mecze:*{}",
-    "pt": "Casual stats:\n{}\nNome: {}\nLevel: {}\nWin Rate: {}% de {} partidas.\nDesertor: {}\n\n",
-    "pt_mobile": "Casual stats:\nNome:*{}\nLevel:*{}\nWin Rate:*{}% de {} partidas.\nDesertor:*{}"
+    "en": "Casual stats:\n{}\nName: {}\nAccount Level: {}\nWin Rate: {}% out of {} matches.\nKDA: {}\nTimes Deserted: {}\n\n",
+    "en_mobile": "Casual stats:\nName:*{}\nAccount Level:*{}\nWin Rate:*{}% out of {} matches.\nKDA:*{}\nTimes Deserted:*{}",
+    "pl": "Statystyki szybkich gier:\n{}\nNazwa: {}\nPoziom konta: {}\nProcent wygranych gier: {}%, po zagraniu {} meczy.\nKDA: {}\nOpuszczone mecze: {}\n\n",
+    "pl_mobile": "Statystyki szybkich gier:\nNazwa:*{}\nPoziom konta:*{}\nProcent wygranych gier:*{}%, po zagraniu {} meczy.\nKDA:*{}\nOpuszczone mecze:*{}",
+    "pt": "Casual stats:\n{}\nNome: {}\nLevel: {}\nWin Rate: {}% de {} partidas.\nKDA: {}\nDesertor: {}\n\n",
+    "pt_mobile": "Casual stats:\nNome:*{}\nLevel:*{}\nWin Rate:*{}% de {} partidas.\nKDA:*{}\nDesertor:*{}"
   },
   "stats_s2": {
     "en": "Ranked stats for Season {}:\n{}\nRank: {}\nTP: {} (position: {})\nWin Rate: {}% ({}-{})\nTimes Deserted: {}\n\n",

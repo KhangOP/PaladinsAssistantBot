@@ -85,7 +85,7 @@ class HelpCog(commands.Cog, name="Help Commands"):
             embed.add_field(name='deck', value='Prints out all the decks a player has for a champion. If an a number is'
                                                'given after the character name then an image will be created of that '
                                                'deck.', inline=False)
-            embed.add_field(name='top', value='Prints the top 10 highest or lowest stats of a player\'s champions.',
+            embed.add_field(name='top', value='Prints a sorted list of stats of a player\'s champions.',
                             inline=False)
             embed.add_field(name='console', value='Command console players can use to look up their player_id.',
                             inline=False)
@@ -174,20 +174,22 @@ class HelpCog(commands.Cog, name="Help Commands"):
     @help.command()
     async def top(self, ctx):
         command_name = "top/bottom"
-        command_description = "Prints the top 10 highest or lowest stats of a player\'s champions."
-        parameters = ["player_name", "option", "all?"]
+        command_description = "Returns a list of a player\'s champions stats sorted." \
+                              "\n>>top - highest to lowest\n>>bottom - lowest to highest"
+        parameters = ["player_name", "option", "class?"]
         option_description = "can be one of the following: \n\n" \
                              "1. <Level>: Level of a champion.\n" \
                              "2. <KDA>: KDA of a champion.\n" \
                              "3. <WL>: Win Rate of with champion.\n" \
                              "4. <Matches>: total matches played with a champion.\n" \
                              "5. <Time>: play time of a champion.\n"
-        all_option = "If the word \"all\" is provide then the command returns "\
-                     "stats for all a player's champions.\n" \
-                     "[Optional parameter]: if not provide, the command defaults to returning the 10 highest or " \
-                     "lowest stats."
+        all_option = "If the word \"class\" is provide then the command sorts the stats for all a player's " \
+                     "champions by class type\n" \
+                     "[Optional parameter]: if not provide, the command defaults to returning the all stats of a " \
+                     "players sorted ignoring class type."
         descriptions = ["Player's Paladins IGN", option_description, all_option]
-        examples = ["{} {}".format("top", "Level"), "{} {}".format("top", "KDA all"), "{} {}".format("bottom", "Time")]
+        examples = ["{} {}".format("top", "Level"), "{} {}".format("top", "KDA class"),
+                    "{} {}".format("bottom", "Time")]
         await ctx.send(embed=create_embed(command_name, command_description, parameters, descriptions, examples))
 
     @help.command()

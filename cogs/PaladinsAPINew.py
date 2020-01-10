@@ -1191,28 +1191,56 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         # mobile compact version
         else:
             title_options = ["Champion", "Level", "KDA", "Win Rate", "Matches", "Time(mins.)"]
-            select_title = "{} ({})".format("Champion", title_options[index])
+            if by_class == "class":
+                class_title = ["{} ({})".format("Damage Champions", title_options[index]),
+                               "{} ({})".format("Flank Champions", title_options[index]),
+                               "{} ({})".format("Tank Champions", title_options[index]),
+                               "{} ({})".format("Support Champions", title_options[index])]
+                class_message = ["", "", "", ""]
+                class_image = ["", "", "", ""]
 
-            new_value = ""
+                for i, champ in enumerate(player_champion_data, start=0):
+                    c_index = self.get_champ_class(champ[0])
+                    hours = int(int(champ[5]) / 60)
+                    minutes = int(champ[5]) % 60
+                    champ[5] = "{}h {}m".format(hours, minutes)
+                    if class_message[c_index] == "":    # store the name of the highest champ per class
+                        class_image[c_index] = champ[0]
+                    class_message[c_index] += "{} ({})\n".format(champ[0], champ[index])
 
-            for i, champ in enumerate(player_champion_data, start=0):
-                hours = int(int(champ[5]) / 60)
-                minutes = int(champ[5]) % 60
-                champ[5] = "{}h {}m".format(hours, minutes)
-                new_value += "{} ({})\n".format(champ[0], champ[index])
+                for title, data, image in zip(class_title, class_message, class_image):
+                    mobile_embed = discord.Embed(
+                        title=title,
+                        colour=discord.colour.Color.dark_teal(),
+                        description=data
+                    )
 
-            mobile_embed = discord.Embed(
-                title=select_title,
-                colour=discord.colour.Color.dark_teal(),
-                description=new_value
-            )
+                    mobile_embed.set_thumbnail(url=await helper.get_champ_image(image))
 
-            mobile_embed.set_footer(text="If you would like to see more information then use this "
-                                         "command on a non-mobile device. "
-                                         "Limited to only show the option requested on mobile.")
-            mobile_embed.set_thumbnail(url=await helper.get_champ_image(player_champion_data[0][0]))
+                    await ctx.send(embed=mobile_embed)
+            else:
+                select_title = "{} ({})".format("Champion", title_options[index])
 
-            await ctx.send(embed=mobile_embed)
+                new_value = ""
+
+                for i, champ in enumerate(player_champion_data, start=0):
+                    hours = int(int(champ[5]) / 60)
+                    minutes = int(champ[5]) % 60
+                    champ[5] = "{}h {}m".format(hours, minutes)
+                    new_value += "{} ({})\n".format(champ[0], champ[index])
+
+                mobile_embed = discord.Embed(
+                    title=select_title,
+                    colour=discord.colour.Color.dark_teal(),
+                    description=new_value
+                )
+
+                mobile_embed.set_footer(text="If you would like to see more information then use this "
+                                             "command on a non-mobile device. "
+                                             "Limited to only show the option requested on mobile.")
+                mobile_embed.set_thumbnail(url=await helper.get_champ_image(player_champion_data[0][0]))
+
+                await ctx.send(embed=mobile_embed)
 
     @commands.command(name='deck', pass_context=True,
                       aliases=["Deck", "decks", "Decks", "talia", "Talia", 'baralho', 'baralhos'], ignore_extra=False)

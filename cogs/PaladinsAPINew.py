@@ -1143,29 +1143,51 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
         player_champion_data = sorted(player_champion_data, key=lambda x: x[index], reverse=ordering)
 
+        paladins_class_type = ["", "", "", ""]
+        class_type_index = [0, 0, 0, 0]
+
         # non-mobile version
         if not mobile_status:
-            message = "{:15}    {:7} {:6} {:10} {:9} {:6}\n{}\n" \
-                .format("Champion", "Level", "KDA", "Win Rate", "Matches", "Time(mins.)",
-                        "------------------------------------------------------------------")
-            message2 = ""
-
             for i, champ in enumerate(player_champion_data, start=0):
                 champ = [str(j) for j in champ]  # convert all elements to string to make formatting easier
                 hours = int(int(champ[5]) / 60)
                 minutes = int(champ[5]) % 60
                 champ[5] = "{}h {}m".format(hours, minutes)
-                if i >= 9:
-                    if i < 20:
-                        message += "{}. {:15}{:7} {:6} {:10} {:9} {:6}\n".format(i + 1, *champ)
-                    else:
-                        message2 += "{}. {:15}{:7} {:6} {:10} {:9} {:6}\n".format(i + 1, *champ)
-                else:
-                    message += "{}.  {:15}{:7} {:6} {:10} {:9} {:6}\n".format(i + 1, *champ)
 
-            await ctx.send("```md\n" + message + "```")
-            if message2 != "":
-                await ctx.send("```md\n" + message2 + "```")
+                # Separate how the message will look
+                if by_class == "class":
+                    c_index = self.get_champ_class(champ[0])
+                    class_type_index[c_index] += 1
+                    if class_type_index[c_index] <= 9:
+                        paladins_class_type[c_index] \
+                            += "{}.  {:15}{:7} {:6} {:10} {:9} {:6}\n".format(class_type_index[c_index], *champ)
+                    else:
+                        paladins_class_type[c_index] \
+                            += "{}. {:15}{:7} {:6} {:10} {:9} {:6}\n".format(class_type_index[c_index], *champ)
+                else:
+                    if i >= 9:
+                        if i < 20:
+                            paladins_class_type[0] += "{}. {:15}{:7} {:6} {:10} {:9} {:6}\n".format(i + 1, *champ)
+                        else:
+                            paladins_class_type[1] += "{}. {:15}{:7} {:6} {:10} {:9} {:6}\n".format(i + 1, *champ)
+                    else:
+                        paladins_class_type[0] += "{}.  {:15}{:7} {:6} {:10} {:9} {:6}\n".format(i + 1, *champ)
+
+            if by_class == "class":
+                message = "{:15}    {:7} {:6} {:10} {:9} {:6}\n{}\n" \
+                    .format("Champion", "Level", "KDA", "Win Rate", "Matches", "Time(mins.)",
+                            "------------------------------------------------------------------")
+                await ctx.send("```md\n" + message + "#   Damage\n" + paladins_class_type[0] + "```")
+                await ctx.send("```md\n" + message + "#   Flank\n" + paladins_class_type[1] + "```")
+                await ctx.send("```md\n" + message + "#   Tank\n" + paladins_class_type[2] + "```")
+                await ctx.send("```md\n" + message + "#   Support\n" + paladins_class_type[3] + "```")
+            else:
+                message = "{:15}    {:7} {:6} {:10} {:9} {:6}\n{}\n" \
+                    .format("Champion", "Level", "KDA", "Win Rate", "Matches", "Time(mins.)",
+                            "------------------------------------------------------------------")
+                await ctx.send("```md\n" + message + paladins_class_type[0] + "```")
+                if paladins_class_type[1] != "":
+                    await ctx.send("```md\n" + paladins_class_type[1] + "```")
         # mobile compact version
         else:
             title_options = ["Champion", "Level", "KDA", "Win Rate", "Matches", "Time(mins.)"]

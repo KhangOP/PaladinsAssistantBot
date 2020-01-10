@@ -1048,7 +1048,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     @commands.command(name='top', pass_context=True, ignore_extra=False, aliases=["Top", "bottom", "Bottom"])
     @commands.cooldown(3, 30, commands.BucketType.user)
     # Gets stats for a champ using Paladins API
-    async def top(self, ctx, player_name, option, amount="limit"):
+    async def top(self, ctx, player_name, option, by_class="nope"):
         # lang = await self.bot.check_language(ctx=ctx)
         lang = await self.bot.language.check_language(ctx=ctx)
 
@@ -1128,9 +1128,6 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         # Convert option
         ordering = False if ctx.invoked_with in ["Bottom", "bottom"] else True
 
-        # amount converting
-        limit = -1 if amount == "all" else 10
-
         # Converts key word to index in list
         index = {
             "level": 1,
@@ -1154,8 +1151,6 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             message2 = ""
 
             for i, champ in enumerate(player_champion_data, start=0):
-                if i == limit:
-                    break
                 champ = [str(j) for j in champ]  # convert all elements to string to make formatting easier
                 hours = int(int(champ[5]) / 60)
                 minutes = int(champ[5]) % 60
@@ -1175,51 +1170,24 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         else:
             title_options = ["Champion", "Level", "KDA", "Win Rate", "Matches", "Time(mins.)"]
             select_title = "{} ({})".format("Champion", title_options[index])
+
+            new_value = ""
+
+            for i, champ in enumerate(player_champion_data, start=0):
+                hours = int(int(champ[5]) / 60)
+                minutes = int(champ[5]) % 60
+                champ[5] = "{}h {}m".format(hours, minutes)
+                new_value += "{} ({})\n".format(champ[0], champ[index])
+
             mobile_embed = discord.Embed(
                 title=select_title,
                 colour=discord.colour.Color.dark_teal(),
-                description="\u200b"
+                description=new_value
             )
-
-            for i, champ in enumerate(player_champion_data, start=0):
-                if i == 10:
-                    break
-                hours = int(int(champ[5]) / 60)
-                minutes = int(champ[5]) % 60
-                champ[5] = "{}h {}m".format(hours, minutes)
-                new_value = "{} ({})".format(champ[0], champ[index])
-
-                mobile_embed.add_field(name=new_value, value="\u200b", inline=False)
-
-            """
-            top_message = ""
-            for i, champ in enumerate(player_champion_data, start=0):
-                if i == limit:
-                    break
-                hours = int(int(champ[5]) / 60)
-                minutes = int(champ[5]) % 60
-                champ[5] = "{}h {}m".format(hours, minutes)
-                champ = [str(j) for j in champ]  # convert all elements to string to make formatting easier
-                new_word = await self.force_whitespace(champ[0], 15)
-                new_word2 = await self.force_whitespace(champ[index], 10)
-                # print("-->{}<--".format(new_word))
-                # print("-->{}<--".format(new_word2))
-                gay = new_word + new_word2
-                print(gay)
-                # top_message += "{:2}. {}\n".format(i + 1, gay)
-                top_message += gay + "\n"
-
-            mobile_embed2 = discord.Embed(
-                title="Filer title.",
-                colour=discord.colour.Color.dark_teal(),
-                description=top_message
-            )
-            await ctx.send(embed=mobile_embed2)
-            """
 
             mobile_embed.set_footer(text="If you would like to see more information then use this "
-                                         "command on Discord Desktop. "
-                                         "Limited to top 10 champs and only the option requested.")
+                                         "command on a non-mobile device. "
+                                         "Limited to only show the option requested on mobile.")
             mobile_embed.set_thumbnail(url=await helper.get_champ_image(player_champion_data[0][0]))
 
             await ctx.send(embed=mobile_embed)

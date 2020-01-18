@@ -2158,7 +2158,8 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             print(Fore.MAGENTA + f'{round(Process(getpid()).memory_info().rss/1024/1024, 2)} MB')
 
     # Returns simple stats based on the option they choose (champ_name, or me)
-    @commands.command(name='stats', aliases=['Statystyki', 'Stats'], pass_context=True, ignore_extra=False)
+    @commands.command(name='stats', aliases=['Stats', 'statystyki', 'Statystyki', 'statistiques', 'Statistiques'],
+                      pass_context=True, ignore_extra=False)
     @commands.cooldown(3, 30, commands.BucketType.user)
     async def stats(self, ctx, player_name, option=None):
         lang = await self.bot.language.check_language(ctx=ctx)

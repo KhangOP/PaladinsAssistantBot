@@ -24,8 +24,8 @@ class NotServerOwner(commands.CheckFailure):
 class ServersConfigCog(commands.Cog, name="Servers Config"):
     """ServersConfigCog"""
     # Different supported languages
-    languages = ["Polish", "Português"]
-    abbreviations = ["pl", "pt"]
+    languages = ["Polish", "Português", "French"]
+    abbreviations = ["pl", "pt", "fr"]
 
     file_name = ''
     lan = {}

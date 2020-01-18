@@ -17,17 +17,21 @@ class RandomCog(commands.Cog, name="Random Commands"):
     # List of Champs by Class
     DAMAGES = ["Cassie", "Kinessa", "Drogoz", "Bomb King", "Viktor", "Sha Lin", "Tyra", "Willo", "Lian", "Strix",
                "Vivian", "Dredge", "Imani", "Tiberius"]
-    DAMAGE_CMD = ["damage", "napastnik", "dano"]
+    DAMAGE_CMD = ["damage", "napastnik", "dano", "dégât"]
+
     FLANKS = ["Skye", "Buck", "Evie", "Androxus", "Maeve", "Lex", "Zhin", "Talus", "Moji", "Koga"]
-    FLANK_CMD = ["flank", "skrzydłowy", "flanco"]
+    FLANK_CMD = ["flank", "skrzydłowy", "flanco", "flanc"]
+
     FRONTLINES = ["Barik", "Fernando", "Ruckus", "Makoa", "Torvald", "Inara", "Ash", "Terminus", "Khan", "Atlas",
                   "Raum"]
     FRONTLINE_CMD = ["tank", "frontline", "obrońca", "tanque"]
+
     SUPPORTS = ["Grohk", "Grover", "Ying", "Mal Damba", "Seris", "Jenos", "Furia", "Pip"]
-    SUPPORT_CMD = ["healer", "support", "wsparcie", "suporte"]
-    CHAMP_CMD = ["champ", "czempion", "campeão"]
-    TEAM_CMD = ["team", "drużyna", "time", "comp"]
-    MAP_CMD = ["map", "mapa"]
+    SUPPORT_CMD = ["healer", "support", "wsparcie", "suporte", "soutien"]
+
+    CHAMP_CMD = ["champ", "czempion", "campeão", "champion"]
+    TEAM_CMD = ["team", "drużyna", "time", "comp", "equipe"]
+    MAP_CMD = ["map", "mapa", "carte"]
     # Map Names
     MAPS = ["Frog Isle", "Jaguar Falls", "Serpent Beach", "Frozen Guard", "Ice Mines", "Fish Market", "Timber Mill",
             "Stone Keep", "Brightmarsh", "Splitstone Quarry", "Ascension Peak", "Warder's Gate", "Shattered Desert",
@@ -70,7 +74,7 @@ class RandomCog(commands.Cog, name="Random Commands"):
         return team_string
 
     # Calls different random functions based on input
-    @commands.command(name='rand', aliases=["random", "losuj"], ignore_extra=False)
+    @commands.command(name='rand', aliases=["random", "losuj", "aleatoire", "aléatoire"], ignore_extra=False)
     @commands.cooldown(3, 30, commands.BucketType.user)
     async def rand(self, ctx, command):
         await helper.store_commands(ctx.author.id, "random")

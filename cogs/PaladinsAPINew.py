@@ -350,6 +350,8 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         except PlayerNotFound:
             return self.lang_dict["general_error2"][lang].format(player_name)
 
+        total = int(info.wins) + int(info.losses)
+
         # Adding in class stuff
         t_wins = 0
         t_loses = 0
@@ -357,26 +359,28 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         count = 1
 
         stats = self.bot.paladinsAPI.getChampionRanks(player_id)
-        for stat in stats:
-            wins = stat.wins
-            losses = stat.losses
-            kda = await self.calc_kda(stat.kills, stat.deaths, stat.assists)
+        if stats:  # if not None
+            for stat in stats:
+                wins = stat.wins
+                losses = stat.losses
+                kda = await self.calc_kda(stat.kills, stat.deaths, stat.assists)
+
+                # Global win rate and kda
+                if wins + losses > 10:  # Player needs to have over 20 matches with a champ for it to affect kda
+                    t_wins += wins
+                    t_loses += losses
+                    t_kda += float(kda) * (wins + losses)  # These two lines allow the kda to be weighted
+                    count += (wins + losses)  # aka the more a champ is played the more it affects global kda
 
             # Global win rate and kda
-            if wins + losses > 10:  # Player needs to have over 20 matches with a champ for it to affect kda
-                t_wins += wins
-                t_loses += losses
-                t_kda += float(kda) * (wins + losses)  # These two lines allow the kda to be weighted
-                count += (wins + losses)  # aka the more a champ is played the more it affects global kda
-
-        # Global win rate and kda
-        wr = await self.calc_win_rate(t_wins, t_wins + t_loses)
-        t_kda = str('{0:.2f}').format(t_kda / count)
+            wr = await self.calc_win_rate(t_wins, t_wins + t_loses)
+            t_kda = str('{0:.2f}').format(t_kda / count)
+        else:
+            wr = await self.calc_win_rate(int(info.wins), total)
+            t_kda = "???"
 
         # Overall Info
         ss = self.lang_dict["stats_s1"][lang]
-        total = int(info.wins) + int(info.losses)
-        # wr = await self.calc_win_rate(int(info.wins), total)
         ss = ss.format(self.dashes, str(info.playerName), str(info.accountLevel), wr, str(total), t_kda, str(info.leaves))
 
         # Ranked Info
@@ -537,26 +541,31 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         count = 1
 
         stats = self.bot.paladinsAPI.getChampionRanks(player_id)
-        for stat in stats:
-            wins = stat.wins
-            losses = stat.losses
-            kda = await self.calc_kda(stat.kills, stat.deaths, stat.assists)
+        total = int(info.wins) + int(info.losses)
 
-            # Global win rate and kda
-            if wins + losses > 10:  # Player needs to have over 20 matches with a champ for it to affect kda
-                t_wins += wins
-                t_loses += losses
-                t_kda += float(kda) * (wins + losses)  # These two lines allow the kda to be weighted
-                count += (wins + losses)  # aka the more a champ is played the more it affects global kda
+        if stats:  # if not None
+            for stat in stats:
+                wins = stat.wins
+                losses = stat.losses
+                kda = await self.calc_kda(stat.kills, stat.deaths, stat.assists)
 
-        # Global win rate and kda
-        wr = await self.calc_win_rate(t_wins, t_wins + t_loses)
-        t_kda = str('{0:.2f}').format(t_kda / count)
+                # Global win rate and kda
+                if wins + losses > 10:  # Player needs to have over 20 matches with a champ for it to affect kda
+                    t_wins += wins
+                    t_loses += losses
+                    t_kda += float(kda) * (wins + losses)  # These two lines allow the kda to be weighted
+                    count += (wins + losses)  # aka the more a champ is played the more it affects global kda
+
+                # Global win rate and kda
+            wr = await self.calc_win_rate(t_wins, t_wins + t_loses)
+            t_kda = str('{0:.2f}').format(t_kda / count)
+
+        else:
+            wr = await self.calc_win_rate(int(info.wins), total)
+            t_kda = "???"
 
         # Overall Info
         ss = self.lang_dict["stats_s1"][lang + "_mobile"]
-        total = int(info.wins) + int(info.losses)
-        # wr = await self.calc_win_rate(int(info.wins), total)
         ss = ss.format(str(info.playerName), str(info.accountLevel), wr, str(total), t_kda, str(info.leaves))
 
         parts = ss.split("\n")

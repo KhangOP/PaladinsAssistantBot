@@ -360,6 +360,9 @@ async def create_card_image(card_image, champ_info, json_data, lang):
     except KeyError:
         desc = "Card information missing from bot data."
         cool_down = 0
+    except AttributeError:
+        desc = "Couldn't find card description for some reason. Please report this."
+        cool_down = 0
 
     # Add card name
     draw = ImageDraw.Draw(image_base)

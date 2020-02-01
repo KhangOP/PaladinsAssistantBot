@@ -345,18 +345,23 @@ async def create_card_image(card_image, champ_info, json_data, lang):
         desc = json_data[lang][champ_card_name]["card_desc"]
         cool_down = json_data[lang][champ_card_name]["card_cd"]
 
-        # Scale of the card
-        scale = re.search('=(.+?)\|', desc)
-        scale = float(scale.group(1)) * int(champ_card_level)
-        # Text area of the card we are going to replace
-        replacement = re.search('{(.*?)}', desc)
+        # todo --- find all the cards that don't have the word scale in them and see if they follow the same format
+        # some cards don't have the word "scale" in them because cool-down scales.
+        if "scale" not in desc:
+            pass
+        else:
+            # Scale of the card
+            scale = re.search('=(.+?)\|', desc)
+            scale = float(scale.group(1)) * int(champ_card_level)
+            # Text area of the card we are going to replace
+            replacement = re.search('{(.*?)}', desc)
 
-        # Replacing the scaling text with the correct number
-        # desc = desc.replace('{'+str(replacement.group(1))+'}', str(float(scale.group(1)) * int(champ_card_level)))
-        desc = desc.replace('{' + str(replacement.group(1)) + '}', str(round(scale, 1)))
+            # Replacing the scaling text with the correct number
+            # desc = desc.replace('{'+str(replacement.group(1))+'}', str(float(scale.group(1)) * int(champ_card_level)))
+            desc = desc.replace('{' + str(replacement.group(1)) + '}', str(round(scale, 1)))
 
-        # Removes the extra text at the start in-between [****]
-        desc = re.sub("[\[].*?[\]]", '', desc)
+            # Removes the extra text at the start in-between [****]
+            desc = re.sub("[\[].*?[\]]", '', desc)
     except KeyError:
         desc = "Card information missing from bot data."
         cool_down = 0

@@ -6,6 +6,7 @@ from datetime import date
 
 
 from pyrez.exceptions import PlayerNotFound
+from pyrez.exceptions import PrivatePlayer
 from pyrez.exceptions import NotFound
 import aiohttp
 
@@ -128,6 +129,8 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                     player = self.bot.paladinsAPI.getPlayer(player_name)
                 except PlayerNotFound:
                     return -1  # invalid name
+                except PrivatePlayer:
+                    return -1
             else:  # Console name
                 player_name, platform = player_name.rsplit(' ', 1)
                 players = self.bot.paladinsAPI.searchPlayers(player_name)

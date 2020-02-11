@@ -13,7 +13,7 @@ init(autoreset=True)
 DAMAGES = ["Cassie", "Kinessa", "Drogoz", "Bomb King", "Viktor", "Sha Lin", "Tyra", "Willo", "Lian", "Strix",
            "Vivian", "Dredge", "Imani", "Tiberius"]
 FLANKS = ["Skye", "Buck", "Evie", "Androxus", "Maeve", "Lex", "Zhin", "Talus", "Moji", "Koga"]
-TANKS = ["Barik", "Fernando", "Ruckus", "Makoa", "Torvald", "Inara", "Ash", "Terminus", "Khan", "Atlas"]
+TANKS = ["Barik", "Fernando", "Ruckus", "Makoa", "Torvald", "Inara", "Ash", "Terminus", "Khan", "Atlas", "Raum"]
 SUPPORTS = ["Grohk", "Grover", "Ying", "Mal'Damba", "Seris", "Jenos", "Furia", "Pip", "Io"]
 
 all_champs = DAMAGES + FLANKS + TANKS + SUPPORTS
@@ -184,7 +184,7 @@ for champ in all_champs:
     save_card_descriptions(name=champ_name)
 """
 
-new_champ = "Mal'Damba"
+new_champ = "Raum"
 # save_champ_icons(new_champ)
 # save_champ_headers(new_champ)
 # save_champ_cards(new_champ)

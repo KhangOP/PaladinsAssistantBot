@@ -5,18 +5,14 @@ from PIL import Image
 from io import BytesIO
 
 import json
+import Champion
 
 from colorama import Fore, init
 init(autoreset=True)
 
 
-DAMAGES = ["Cassie", "Kinessa", "Drogoz", "Bomb King", "Viktor", "Sha Lin", "Tyra", "Willo", "Lian", "Strix",
-           "Vivian", "Dredge", "Imani", "Tiberius"]
-FLANKS = ["Skye", "Buck", "Evie", "Androxus", "Maeve", "Lex", "Zhin", "Talus", "Moji", "Koga"]
-TANKS = ["Barik", "Fernando", "Ruckus", "Makoa", "Torvald", "Inara", "Ash", "Terminus", "Khan", "Atlas", "Raum"]
-SUPPORTS = ["Grohk", "Grover", "Ying", "Mal'Damba", "Seris", "Jenos", "Furia", "Pip", "Io"]
-
-all_champs = DAMAGES + FLANKS + TANKS + SUPPORTS
+champs = Champion.Champion()
+all_champs = champs.DAMAGES + champs.FLANKS + champs.TANKS + champs.SUPPORTS
 
 languages = [1, 2, 3, 5, 7, 9, 10, 11, 12, 13]
 

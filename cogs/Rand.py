@@ -15,23 +15,14 @@ class RandomCog(commands.Cog, name="Random Commands"):
         self.load_lang()
 
     # List of Champs by Class
-    DAMAGES = ["Cassie", "Kinessa", "Drogoz", "Bomb King", "Viktor", "Sha Lin", "Tyra", "Willo", "Lian", "Strix",
-               "Vivian", "Dredge", "Imani", "Tiberius"]
     DAMAGE_CMD = ["damage", "napastnik", "dano", "dégât"]
-
-    FLANKS = ["Skye", "Buck", "Evie", "Androxus", "Maeve", "Lex", "Zhin", "Talus", "Moji", "Koga"]
     FLANK_CMD = ["flank", "skrzydłowy", "flanco", "flanc"]
-
-    FRONTLINES = ["Barik", "Fernando", "Ruckus", "Makoa", "Torvald", "Inara", "Ash", "Terminus", "Khan", "Atlas",
-                  "Raum"]
-    FRONTLINE_CMD = ["tank", "frontline", "obrońca", "tanque"]
-
-    SUPPORTS = ["Grohk", "Grover", "Ying", "Mal Damba", "Seris", "Jenos", "Furia", "Pip"]
+    TANK_CMD = ["tank", "frontline", "obrońca", "tanque"]
     SUPPORT_CMD = ["healer", "support", "wsparcie", "suporte", "soutien"]
-
     CHAMP_CMD = ["champ", "czempion", "campeão", "champion"]
     TEAM_CMD = ["team", "drużyna", "time", "comp", "equipe"]
     MAP_CMD = ["map", "mapa", "carte"]
+
     # Map Names
     MAPS = ["Frog Isle", "Jaguar Falls", "Serpent Beach", "Frozen Guard", "Ice Mines", "Fish Market", "Timber Mill",
             "Stone Keep", "Brightmarsh", "Splitstone Quarry", "Ascension Peak", "Warder's Gate", "Shattered Desert",
@@ -49,13 +40,15 @@ class RandomCog(commands.Cog, name="Random Commands"):
 
     async def pick_random_champion(self):
         secure_random = random.SystemRandom()
-        class_type = secure_random.choice([self.DAMAGES, self.FLANKS, self.SUPPORTS, self.FRONTLINES])
+        class_type = secure_random.choice([self.bot.champs.DAMAGES, self.bot.champs.FLANKS, self.bot.champs.SUPPORTS,
+                                           self.bot.champs.TANKS])
         champ = secure_random.choice(class_type)
         return champ
 
     async def gen_team(self):
         sr = random.SystemRandom()
-        team = [sr.choice(self.DAMAGES), sr.choice(self.FLANKS), sr.choice(self.SUPPORTS), sr.choice(self.FRONTLINES)]
+        team = [sr.choice(self.bot.champs.DAMAGES), sr.choice(self.bot.champs.FLANKS),
+                sr.choice(self.bot.champs.SUPPORTS), sr.choice(self.bot.champs.TANKS)]
 
         fill = await self.pick_random_champion()
         """Keep Generating a random champ until its not one we already have"""
@@ -87,23 +80,23 @@ class RandomCog(commands.Cog, name="Random Commands"):
         secure_random = random.SystemRandom()
 
         if command in self.DAMAGE_CMD:
-            champ = secure_random.choice(self.DAMAGES)
+            champ = secure_random.choice(self.bot.champs.DAMAGES)
             embed.add_field(name=self.lang_dict["random_damage"][lang], value=champ)
             embed.set_thumbnail(url=await helper.get_champ_image(champ))
             # await client.say(embed=embed)
             await ctx.send(embed=embed)
         elif command in self.FLANK_CMD:
-            champ = secure_random.choice(self.FLANKS)
+            champ = secure_random.choice(self.bot.champs.FLANKS)
             embed.add_field(name=self.lang_dict["random_flank"][lang], value=champ)
             embed.set_thumbnail(url=await helper.get_champ_image(champ))
             await ctx.send(embed=embed)
         elif command in self.SUPPORT_CMD:
-            champ = secure_random.choice(self.SUPPORTS)
+            champ = secure_random.choice(self.bot.champs.SUPPORTS)
             embed.add_field(name=self.lang_dict["random_healer"][lang], value=champ)
             embed.set_thumbnail(url=await helper.get_champ_image(champ))
             await ctx.send(embed=embed)
-        elif command in self.FRONTLINE_CMD:
-            champ = secure_random.choice(self.FRONTLINES)
+        elif command in self.TANK_CMD:
+            champ = secure_random.choice(self.bot.champs.TANKS)
             embed.add_field(name=self.lang_dict["random_tank"][lang], value=champ)
             embed.set_thumbnail(url=await helper.get_champ_image(champ))
             await ctx.send(embed=embed)

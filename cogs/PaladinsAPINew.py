@@ -23,12 +23,6 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         self.bot = bot
         self.load_lang()
 
-    DAMAGES = ["Cassie", "Kinessa", "Drogoz", "Bomb King", "Viktor", "Sha Lin", "Tyra", "Willo", "Lian", "Strix",
-               "Vivian", "Dredge", "Imani", "Tiberius"]
-    FLANKS = ["Skye", "Buck", "Evie", "Androxus", "Maeve", "Lex", "Zhin", "Talus", "Moji", "Koga"]
-    TANKS = ["Barik", "Fernando", "Ruckus", "Makoa", "Torvald", "Inara", "Ash", "Terminus", "Khan", "Atlas", "Raum"]
-    SUPPORTS = ["Grohk", "Grover", "Ying", "Mal Damba", "Seris", "Jenos", "Furia", "Pip", "Io"]
-
     dashes = "----------------------------------------"
 
     lang_dict = {}
@@ -39,21 +33,6 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         with open(self.file_name, encoding='utf-8') as json_f:
             print(Fore.CYAN + "Loaded language dictionary for PaladinsAPICog...")
             self.lang_dict = json.load(json_f)
-
-    # Returns a number for indexing in a list
-    @classmethod
-    def get_champ_class(cls, champ_name: str):
-        champ_name = champ_name.title()
-        if champ_name in cls.DAMAGES:
-            return 0
-        elif champ_name in cls.FLANKS:
-            return 1
-        elif champ_name in cls.TANKS:
-            return 2
-        elif champ_name in cls.SUPPORTS:
-            return 3
-        else:
-            return -1
 
     # Converts the language to prefix
     @staticmethod
@@ -205,11 +184,9 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             return "Onslaught"
         elif "Ranked" in match_name:
             return "Ranked"
-        elif "End Times" in match_name or "Crazy King" in match_name:  # Event name
-            return "End Times"
-        elif "(KOTH)" in match_name:  # Test Maps (WIP Thrones)
+        elif "(KOTH)" in match_name:
             return "KOTH"
-        elif "(Siege)" in match_name:  # Test Maps (WIP Thrones)
+        elif "(Siege)" in match_name:  # Test Maps (WIP)
             return "Test Maps"
         else:
             return "Siege"
@@ -1100,7 +1077,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
                 # Separate how the message will look
                 if by_class == "class":
-                    c_index = self.get_champ_class(champ[0])
+                    c_index = self.bot.champs.get_champ_class(champ[0])
                     class_type_index[c_index] += 1
                     if class_type_index[c_index] <= 9:
                         paladins_class_type[c_index] \
@@ -1144,7 +1121,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 class_image = ["", "", "", ""]
 
                 for i, champ in enumerate(player_champion_data, start=0):
-                    c_index = self.get_champ_class(champ[0])
+                    c_index = self.bot.champs.get_champ_class(champ[0])
                     hours = int(int(champ[5]) / 60)
                     minutes = int(champ[5]) % 60
                     champ[5] = "{}h {}m".format(hours, minutes)
@@ -1377,7 +1354,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                     if match_name != "Bot Match" and match_name != "End Times" and match_name != "Test Maps":
                         global_kda += float(kda)
                         total_matches += 1
-                        class_index = self.get_champ_class(match.godName)
+                        class_index = self.bot.champs.get_champ_class(match.godName)
                         if class_index != -1:
                             total_kda[class_index * 2] += float(kda)
                             total_kda[class_index * 2 + 1] += 1

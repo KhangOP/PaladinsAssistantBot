@@ -16,6 +16,7 @@ import requests
 
 import my_utils as helper
 from pyrez.api import PaladinsAPI
+import Champion
 
 from colorama import Fore, init
 init(autoreset=True)
@@ -36,6 +37,7 @@ class PaladinsAssistant(commands.Bot):
         self.load_bot_config()
 
         self.paladinsAPI = PaladinsAPI(devId=self.ID, authKey=self.KEY)
+        self.champs = Champion.Champion()
 
         # prefix/language (Servers)
         self.load_bot_servers_config()

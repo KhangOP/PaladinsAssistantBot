@@ -1,7 +1,7 @@
 from discord.ext import commands
 from discord import Embed, colour, File
 
-from PIL import Image, ImageFont, ImageDraw, ImageOps
+from PIL import Image, ImageFont, ImageDraw
 from io import BytesIO
 import json
 import textwrap

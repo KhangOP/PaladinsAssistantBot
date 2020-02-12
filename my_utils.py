@@ -4,15 +4,10 @@ from io import BytesIO
 from datetime import datetime, timedelta
 from pytz import timezone
 import json
-import textwrap
 import time
 import os
-import re
-from colorama import Fore
 import math
 
-from concurrent.futures import ThreadPoolExecutor
-import asyncio
 
 """
 start = time.time()
@@ -24,156 +19,153 @@ print(end - start)
 '''This file servers to provide helper functions that our used in more than one other program.'''
 
 
-directory = 'user_info'
-usage = "usage"
-limits = "limits"
-current_uses_per_day = 4
-card_frames_dir = "icons/card_frames"
+class BotUtils:
+    directory = 'user_info'
+    usage = "usage"
+    limits = "limits"
+    current_uses_per_day = 4
+    card_frames_dir = "icons/card_frames"
 
-command_list = ['last', 'stats', 'random', 'current', 'history', 'deck', 'match']
-command_limits = ['current']
+    command_list = ['last', 'stats', 'random', 'current', 'history', 'deck', 'match']
+    command_limits = ['current']
 
-
-# Logs how many times someone uses a command
-async def store_commands(discord_id, command_name, used=-1):  # if used == -1 then don't worry about tracking limits
-    discord_id = str(discord_id)
-    found = False
-    for filename in os.listdir(directory):
-        if filename == discord_id:
-            found = True
-            break
-        else:
-            continue
-
-    # if we found the player in the player dir
-    if found:
-        with open(directory + "/" + discord_id) as json_f:
-            user_info = json.load(json_f)
-        try:
-            user_info[usage][command_name] += 1
-        except KeyError:  # Add keys that are missing
-            user_info[usage][command_name] = 1
-
-        if command_name == 'current' and used != -1:
-            uses = user_info[limits]['current']
-            # take away one use from the user
-            if uses > 0:
-                user_info[limits]['current'] = (uses - used)
+    # Logs how many times someone uses a command
+    # if used == -1 then don't worry about tracking limits
+    async def store_commands(self, discord_id, command_name, used=-1):
+        discord_id = str(discord_id)
+        found = False
+        for filename in os.listdir(self.directory):
+            if filename == discord_id:
+                found = True
+                break
             else:
-                return False  # They can't use this command anymore today
-        # Save changes to the file
-        with open((directory + "/" + discord_id), 'w') as json_f:
-            json.dump(user_info, json_f)
+                continue
 
-    # we did not find the user in the player dir so we need to make their file
-    else:
-        user_info = {usage: {}, limits: {}}
+        # if we found the player in the player dir
+        if found:
+            with open(self.directory + "/" + discord_id) as json_f:
+                user_info = json.load(json_f)
+            try:
+                user_info[self.usage][command_name] += 1
+            except KeyError:  # Add keys that are missing
+                user_info[self.usage][command_name] = 1
 
-        # Set everything to zero since its a new user
-        for command in command_list:
-            if command == command_name:
-                user_info[usage][command] = 1
+            if command_name == 'current' and used != -1:
+                uses = user_info[self.limits]['current']
+                # take away one use from the user
+                if uses > 0:
+                    user_info[self.limits]['current'] = (uses - used)
+                else:
+                    return False  # They can't use this command anymore today
+            # Save changes to the file
+            with open((self.directory + "/" + discord_id), 'w') as json_f:
+                json.dump(user_info, json_f)
+
+        # we did not find the user in the player dir so we need to make their file
+        else:
+            user_info = {self.usage: {}, self.limits: {}}
+
+            # Set everything to zero since its a new user
+            for command in self.command_list:
+                if command == command_name:
+                    user_info[self.usage][command] = 1
+                else:
+                    user_info[self.usage][command] = 0
+
+            # Sets the limit of times a command can be used per day
+            for command in self.command_limits:
+                user_info[self.limits][command] = 4
+
+            # Write data to file
+            with open((self.directory + "/" + discord_id), 'w') as json_f:
+                json.dump(user_info, json_f)
+
+        return True
+
+    # Gets ths command uses of a person based on their discord_id
+    async def get_store_commands(self, discord_id):
+        discord_id = str(discord_id)
+        found = False
+        for filename in os.listdir(self.directory):
+            if filename == discord_id:
+                found = True
+                break
             else:
-                user_info[usage][command] = 0
+                continue
 
-        # Sets the limit of times a command can be used per day
-        for command in command_limits:
-            user_info[limits][command] = 4
-
-        # Write data to file
-        with open((directory + "/" + discord_id), 'w') as json_f:
-            json.dump(user_info, json_f)
-
-    return True
-
-
-# Gets ths command uses of a person based on their discord_id
-async def get_store_commands(discord_id):
-    discord_id = str(discord_id)
-    found = False
-    for filename in os.listdir(directory):
-        if filename == discord_id:
-            found = True
-            break
+        # if we found the player in the player dir
+        if found:
+            with open(self.directory + "/" + discord_id) as personal_json:
+                user_info = json.load(personal_json)
+                return user_info[self.usage]
+        # we did not find the user in the player dir so we need to make fun of them
         else:
-            continue
+            return "Lol, you trying to call this command without ever using the bot."
 
-    # if we found the player in the player dir
-    if found:
-        with open(directory + "/" + discord_id) as personal_json:
-            user_info = json.load(personal_json)
-            return user_info[usage]
-    # we did not find the user in the player dir so we need to make fun of them
-    else:
-        return "Lol, you trying to call this command without ever using the bot."
+    # Est Time zone for logging function calls
+    @classmethod
+    async def get_est_time(cls):
+        # using just timezone 'EST' does not include daylight savings
+        return datetime.now(timezone('US/Eastern')).strftime("%H:%M:%S %m/%d/%Y")
 
+    # Resets command uses back to 4
+    async def reset_command_uses(self):
+        for filename in os.listdir(self.directory):
+            with open(self.directory + "/" + filename) as json_f:
+                user_info = json.load(json_f)
+                user_info[self.limits]['current'] = 4  # Reset
+            # Save changes to the file
+            with open((self.directory + "/" + filename), 'w') as json_d:
+                json.dump(user_info, json_d)
+        print("Finished resetting command uses.")
 
-# Est Time zone for logging function calls
-async def get_est_time():
-    # using just timezone 'EST' does not include daylight savings
-    return datetime.now(timezone('US/Eastern')).strftime("%H:%M:%S %m/%d/%Y")
+    # Gets minutes left in the hour
+    @classmethod
+    async def get_second_until_hour(cls):
+        minutes_left_in_hour = 60 - datetime.now().minute   # Get minutes left until the next hour
+        minutes_left_in_hour = minutes_left_in_hour - 5     # (5 minutes before the hour)
+        if minutes_left_in_hour < 0:
+            return 0
+        return minutes_left_in_hour
 
+    # This function will get the number of second until 6est. when I want to reset data
+    @classmethod
+    async def get_seconds_until_reset(cls):
+        """Get the number of seconds until 6am est."""
+        # code from----> http://jacobbridges.github.io/post/how-many-seconds-until-midnight/
+        tomorrow = datetime.now() + timedelta(1)
+        midnight = datetime(year=tomorrow.year, month=tomorrow.month,
+                            day=tomorrow.day, hour=6, minute=0, second=0)
+        hours = str(int((midnight - datetime.now()).seconds / (60 * 60)))
+        print("Time until reset: {} hours.".format(hours))
+        return (midnight - datetime.now()).seconds
 
-# Resets command uses back to 4
-async def reset_command_uses():
-    for filename in os.listdir(directory):
-        with open(directory + "/" + filename) as json_f:
-            user_info = json.load(json_f)
-            user_info[limits]['current'] = 4  # Reset
-        # Save changes to the file
-        with open((directory + "/" + filename), 'w') as json_d:
-            json.dump(user_info, json_d)
-    print("Finished resetting command uses.")
+    # Converts champion names so they can be used to fetch champion images in a url
+    @classmethod
+    async def convert_champion_name(cls, champ_name, special=False):
+        champ_name = champ_name.lower()
+        # These are the special cases that need to be checked
+        if "bomb" in champ_name:
+            return "bomb-king"
+        if "mal" in champ_name:
+            if special:
+                return "mal'damba"
+            else:
+                return "maldamba"
+        if "sha" in champ_name:
+            return "sha-lin"
+        # else return the name passed in since its already correct
+        return champ_name
 
-
-# Gets minutes left in the hour
-async def get_second_until_hour():
-    minutes_left_in_hour = 60 - datetime.now().minute   # Get minutes left until the next hour
-    minutes_left_in_hour = minutes_left_in_hour - 5     # (5 minutes before the hour)
-    if minutes_left_in_hour < 0:
-        return 0
-    return minutes_left_in_hour
-
-
-# This function will get the number of second until 6est. when I want to reset data
-async def get_seconds_until_reset():
-    """Get the number of seconds until 6am est."""
-    # code from----> http://jacobbridges.github.io/post/how-many-seconds-until-midnight/
-    tomorrow = datetime.now() + timedelta(1)
-    midnight = datetime(year=tomorrow.year, month=tomorrow.month,
-                        day=tomorrow.day, hour=6, minute=0, second=0)
-    hours = str(int((midnight - datetime.now()).seconds / (60 * 60)))
-    print("Time until reset: {} hours.".format(hours))
-    return (midnight - datetime.now()).seconds
-
-
-# Converts champion names so they can be used to fetch champion images in a url
-async def convert_champion_name(champ_name, special=False):
-    champ_name = champ_name.lower()
-    # These are the special cases that need to be checked
-    if "bomb" in champ_name:
-        return "bomb-king"
-    if "mal" in champ_name:
-        if special:
-            return "mal'damba"
-        else:
-            return "maldamba"
-    if "sha" in champ_name:
-        return "sha-lin"
-    # else return the name passed in since its already correct
-    return champ_name
+    # Gets a url to the image of champion's name passed in
+    async def get_champ_image(self, champ_name):
+        champ_name = await self.convert_champion_name(champ_name)
+        url = "https://raw.githubusercontent.com/EthanHicks1/PaladinsAssistantBot/master/icons/champ_icons/{}.png"\
+            .format(champ_name)
+        return url
 
 
-# Gets a url to the image of champion's name passed in
-async def get_champ_image(champ_name):
-    champ_name = await convert_champion_name(champ_name)
-    url = "https://raw.githubusercontent.com/EthanHicks1/PaladinsAssistantBot/master/icons/champ_icons/{}.png"\
-        .format(champ_name)
-    # request = requests.get(url)
-    # if request.status_code == 404:
-    #    url = "https://raw.githubusercontent.com/EthanHicks1/PaladinsAssistantBot/master/icons/unknown.png"
-    return url
-
+# Todo split ------------------ above is utils class >< below is image cogs
 
 # Creates an team image by using champion Icons
 async def create_team_image(champ_list, ranks):
@@ -239,23 +231,9 @@ async def create_team_image(champ_list, ranks):
 
 # Creates a match image based on the two teams champions
 async def create_match_image(team1, team2, ranks1, ranks2):
-    # start = time.time()
     buffer1 = await create_team_image(team1, ranks1)
     buffer2 = await create_team_image(team2, ranks2)
     middle = await draw_match_vs()
-    # end = time.time()
-    # print("run1", end - start)
-
-    """ Not really faster....
-    start2 = time.time()
-    buffer1, buffer2, middle = await asyncio.gather(
-        create_team_image(team1, ranks1),
-        create_team_image(team2, ranks2),
-        draw_match_vs()
-    )
-    end2 = time.time()
-    print("run2", end2 - start2)
-    """
 
     offset = 128
 
@@ -305,182 +283,6 @@ async def draw_match_vs():
 
     # Store the pillow image we just created into the buffer with the PNG format
     base.save(final_buffer, "png")
-
-    # seek back to the start of the buffer stream
-    final_buffer.seek(0)
-
-    return final_buffer
-
-
-async def create_card_image(card_image, champ_info, json_data, lang):
-    image_size_x = 256
-    image_size_y = 196
-    x_offset = 28
-    y_offset = 48
-    champ_card_name = champ_info[0]
-    champ_card_level = champ_info[1]
-
-    # Load in the Frame image from the web
-    # response = requests.get("https://web2.hirez.com/paladins/cards/frame-{}.png".format(champ_card_level))
-    # card_frame = Image.open(BytesIO(response.content))
-    card_frame = Image.open("icons/card_frames/{}.png".format(champ_card_level))
-    frame_x, frame_y = card_frame.size
-
-    # Create the image without any text (just frame and card image)
-    image_base = Image.new('RGBA', (frame_x, frame_y), (0, 0, 0, 0))
-
-    # Resizing images that don't match the common image size
-    check_x, check_y = card_image.size
-    if check_x != image_size_x or check_y != image_size_y:
-        card_image = card_image.resize((image_size_x, image_size_y), Image.ANTIALIAS)
-
-    image_base.paste(card_image, (x_offset, y_offset, image_size_x + x_offset, image_size_y + y_offset))
-    image_base.paste(card_frame, (0, 0), card_frame)
-
-    # Add in the Card Number
-    draw = ImageDraw.Draw(image_base)
-    draw.text((30, frame_y-56), champ_card_level, font=ImageFont.truetype("arialbd", 44))
-
-    try:
-        desc = json_data[lang][champ_card_name]["card_desc"]
-        cool_down = json_data[lang][champ_card_name]["card_cd"]
-
-        # todo --- find all the cards that don't have the word scale in them and see if they follow the same format
-        # some cards don't have the word "scale" in them because cool-down scales.
-        if "scale" not in desc:
-            pass
-        else:
-            # Scale of the card
-            scale = re.search('=(.+?)\|', desc)
-            scale = float(scale.group(1)) * int(champ_card_level)
-            # Text area of the card we are going to replace
-            replacement = re.search('{(.*?)}', desc)
-
-            # Replacing the scaling text with the correct number
-            # desc = desc.replace('{'+str(replacement.group(1))+'}', str(float(scale.group(1)) * int(champ_card_level)))
-            desc = desc.replace('{' + str(replacement.group(1)) + '}', str(round(scale, 1)))
-
-            # Removes the extra text at the start in-between [****]
-            desc = re.sub("[\[].*?[\]]", '', desc)
-    except KeyError:
-        desc = "Card information missing from bot data."
-        cool_down = 0
-    except AttributeError:
-        desc = "Couldn't find card description for some reason. Please report this."
-        cool_down = 0
-
-    # Add card name
-    draw = ImageDraw.Draw(image_base)
-    font = ImageFont.truetype("arialbd", 21)
-    text_x, text_y = draw.textsize(champ_card_name, font=font)
-    draw.text(((frame_x-text_x)/2, (frame_y-text_y)/2+20), champ_card_name, font=font)
-
-    # Add card text
-    draw = ImageDraw.Draw(image_base)
-    font = ImageFont.truetype("arial", 18)
-    lines = textwrap.wrap(desc, width=26)
-    padding = 40
-    for line in lines:
-        text_x, text_y = draw.textsize(line, font=font)
-        draw.text(((frame_x-text_x)/2, (frame_y - text_y) / 2 + padding+20), line, font=font, fill=(64, 64, 64))
-        padding += 25
-
-    # Add in cool down if needed
-    if cool_down != 0:
-        # add in number
-        draw = ImageDraw.Draw(image_base)
-        draw.text((int(frame_x/2)+2, frame_y - 66), str(cool_down), font=ImageFont.truetype("arial", 30),
-                  fill=(64, 64, 64))
-
-        cool_down_icon = Image.open("icons/cool_down_icon.png")
-        image_base.paste(cool_down_icon, (int(frame_x/2)-20, frame_y - 60), mask=cool_down_icon)
-
-    # Final image saving steps
-    # Creates a buffer to store the image in
-    final_buffer = BytesIO()
-
-    # Store the pillow image we just created into the buffer with the PNG format
-    image_base.save(final_buffer, "png")
-
-    # seek back to the start of the buffer stream
-    final_buffer.seek(0)
-
-    return final_buffer
-
-
-# Creates a image desks
-async def create_deck_image(player_name, champ_name, deck, lang):
-    card_image_x = 314
-    card_image_y = 479
-
-    # Main image
-    color = (0, 0, 0, 0)
-    deck_image = Image.new('RGBA', (1570, 800), color=color)
-
-    champ_name = await convert_champion_name(champ_name)
-    try:
-        champ_background = Image.open("icons/champ_headers/{}.png".format(champ_name)).convert('RGBA')
-    except FileNotFoundError:
-        champ_background = Image.open("icons/maps/test_maps.png").convert('RGBA')
-    champ_background = champ_background.resize((1570, 800), Image.ANTIALIAS)
-    deck_image.paste(champ_background, (0, 0))
-
-    # Loop to add all the cards in
-    for i, card in enumerate(deck.cards):
-        card_m = str(card).split("(")
-        number = str(card_m[1]).split(")")[0]
-        info = [card_m[0].strip(), number]
-
-        # open data file
-        if "mal" in champ_name.lower():
-            champ_name = "mal-damba"
-
-        # Opens the json data that relates to the specific champion
-        try:
-            file_name = "icons/champ_card_desc_lang/{}.json".format(champ_name)
-            # file_name = "icons/champ_card_desc/{}.json".format(champ_name)    # Just English
-            with open(file_name, encoding='utf-8') as json_f:
-                json_data = json.load(json_f)
-        except (IndexError, json.decoder.JSONDecodeError, FileNotFoundError):
-            json_data = {}
-
-        # Opens the image of the card
-        try:
-            if 'mal' in champ_name:
-                champ_name = "Mal'Damba"
-            try:
-                en_card_name = json_data[lang][card_m[0].strip()]["card_name_en"]
-                en_card_name = en_card_name.strip().lower().replace(" ", "-").replace("'", "")
-            except KeyError:
-                en_card_name = "Not implemented yet."
-
-            card_icon_image = Image.open("icons/champ_cards/{}/{}.png".format(champ_name, en_card_name))
-        except FileNotFoundError:
-            card_icon_image = Image.open("icons/temp_card_art.png")
-
-        card_icon = await create_card_image(card_icon_image, info, json_data, lang=lang)
-
-        card_icon = Image.open(card_icon)
-        deck_image.paste(card_icon, (card_image_x * i, 800-card_image_y), card_icon)
-
-    color = (255, 255, 255)
-
-    if "mal" in champ_name:
-        champ_name = "Mal'Damba"
-    else:
-        champ_name = champ_name.upper()
-
-    # Adding in other text on image
-    draw = ImageDraw.Draw(deck_image)
-    draw.text((0, 0), str(player_name), color, font=ImageFont.truetype("arial", 64))
-    draw.text((0, 64), str(champ_name), color, font=ImageFont.truetype("arial", 64))
-    draw.text((0, 128), str(deck.deckName), color, font=ImageFont.truetype("arial", 64))
-
-    # Creates a buffer to store the image in
-    final_buffer = BytesIO()
-
-    # Store the pillow image we just created into the buffer with the PNG format
-    deck_image.save(final_buffer, "png")
 
     # seek back to the start of the buffer stream
     final_buffer.seek(0)

@@ -4,7 +4,6 @@ from discord.ext.commands import Bot
 
 from discord.ext.commands.errors import CommandError, CommandNotFound
 
-
 import asyncio
 import aiohttp.client_exceptions as aiohttp_client_exceptions
 import concurrent.futures
@@ -14,7 +13,7 @@ import traceback
 from socket import gaierror
 import requests
 
-import my_utils as helper
+import my_utils
 from pyrez.api import PaladinsAPI
 import Champion
 
@@ -36,8 +35,10 @@ class PaladinsAssistant(commands.Bot):
         # token/prefix (Bot)
         self.load_bot_config()
 
+        # create class instances to be used throughout the whole bot
         self.paladinsAPI = PaladinsAPI(devId=self.ID, authKey=self.KEY)
         self.champs = Champion.Champion()
+        self.helper = my_utils
 
         # prefix/language (Servers)
         self.load_bot_servers_config()

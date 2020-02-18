@@ -87,7 +87,7 @@ class PaladinsAssistant(commands.Bot):
 
     # Below cogs represents the folder our cogs are in. The dot is like an import path.
     INITIAL_EXTENSIONS = ['cogs.Help', 'cogs.Rand', 'cogs.PaladinsAPINew', 'cogs.ServersConfig', 'cogs.Owner',
-                          'cogs.Other', 'cogs.new_api', 'cogs.ConsoleHelp']
+                          'cogs.Other', 'cogs.new_api', 'cogs.Console', 'cogs.DeckImage', ]
 
     daily_error_count = 0
     daily_command_count = 0

@@ -3,7 +3,7 @@ import json
 from colorama import Fore
 
 
-# Function decoder that only allows server owns to use a certain command
+# Function decoder that only allows the server owner to use a certain command
 def server_owner_only():
     async def predicate(ctx):
         # If in dm's
@@ -101,6 +101,7 @@ class ServersConfigCog(commands.Cog, name="Servers Config"):
             # print("This server's id is:" + str(ctx.guild.id))
             # await ctx.send("This server's id is: " + str(ctx.guild.id))
 
+    # function used outside of this class to determine the language that a command needs to return
     async def check_language(self, ctx):
         if ctx.guild is None:  # DM to the bot will not have guild.id
             return "en"

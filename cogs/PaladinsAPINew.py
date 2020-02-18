@@ -2,8 +2,6 @@ import discord
 from discord.ext import commands
 import my_utils as helper
 from datetime import datetime; datetime.now
-from datetime import date
-
 
 from pyrez.exceptions import PlayerNotFound, PrivatePlayer, NotFound, MatchException
 import aiohttp
@@ -878,93 +876,6 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
         embeds = [embed, embed2]
         return embeds
-
-    @commands.command(name='console', pass_context=True, ignore_extra=False, aliases=["Console"])
-    @commands.cooldown(3, 30, commands.BucketType.user)
-    async def console(self, ctx, player_name, platform: str):
-        async with ctx.channel.typing():
-            platform = platform.lower()
-            if platform == "xbox":
-                platform = "10"
-            elif platform == "ps4":
-                platform = "9"
-            elif platform == "switch":
-                platform = "22"
-            else:
-                await ctx.send("```Invalid platform name. Valid platform names are:\n1. Xbox\n2. PS4\n3. Switch```")
-                return None
-
-            # players = paladinsAPI.getPlayerId(player_name, "steam")
-            # players = paladinsAPI.getPlayerId(player_name, platform)
-
-            players = self.bot.paladinsAPI.searchPlayers(player_name)
-
-            if not players:
-                await ctx.send("Found `0` players with the name `{}`.".format(player_name))
-                return None
-
-            # Hi-Rez endpoint down.
-            if players is None:
-                await ctx.send("A Hi-Rez endpoint is down meaning this command won't work. "
-                               "Please don't try again for a while and give Hi-Rez a few hours to get the "
-                               "endpoint online again.")
-                return None
-
-            players = [player for player in players if player.playerName.lower() == player_name.lower() and
-                       player['portal_id'] == platform]
-            num_players = len(players)
-            if num_players > 20:  # Too many players...we must match case exactly
-                await ctx.send("Found `{}` players with the name `{}`. Switching to case sensitive mode..."
-                               .format(num_players, player_name))
-                players = [player for player in players if player.playerName == player_name and
-                           player['portal_id'] == platform]
-                num_players = len(players)
-                await ctx.send("Found `{}` players with the name `{}`."
-                               .format(num_players, player_name))
-                if num_players > 20:
-                    await ctx.send("```There are too many players with the name {}:\n\nPlease look on PaladinsGuru to "
-                                   "find the Player ID```https://paladins.guru/search?term={}&type=Player"
-                                   .format(player_name, player_name))
-                    return None
-
-            ss = ""
-            recent_player = []
-            for player in players:
-                ss += str(player) + "\n"
-                player = self.bot.paladinsAPI.getPlayer(player=player.playerId)
-
-                current_date = date.today()
-                current_time = datetime.min.time()
-                today = datetime.combine(current_date, current_time)
-                last_seen = player.lastLoginDatetime
-                last_seen = (today - last_seen).days
-
-                if last_seen <= 90:
-                    recent_player.append(player)
-
-            await ctx.send("Found `{}` recent player(s) `(seen in the last 90 days)`".format(len(recent_player)))
-            for player in recent_player:
-                current_date = date.today()
-                current_time = datetime.min.time()
-                today = datetime.combine(current_date, current_time)
-                last_seen = player.lastLoginDatetime
-                last_seen = (today - last_seen).days
-
-                if last_seen <= 0:
-                    last_seen = "Today"
-                else:
-                    last_seen = "{} days ago".format(last_seen)
-
-                embed = discord.Embed(
-                    title=player.playerName,
-                    description="↓↓↓  Player ID  ↓↓↓```fix\n{}```".format(player.playerId),
-                    colour=discord.colour.Color.dark_teal(),
-                )
-                embed.add_field(name='Last Seen:', value=last_seen, inline=True)
-                embed.add_field(name='Account Level:', value=player.accountLevel, inline=True)
-                embed.add_field(name='Hours Played:', value=player.hoursPlayed, inline=True)
-                embed.add_field(name='Account Created:', value=player.createdDatetime, inline=True)
-                await ctx.send(embed=embed)
 
     @commands.command(name='top', pass_context=True, ignore_extra=False, aliases=["Top", "bottom", "Bottom"])
     @commands.cooldown(3, 30, commands.BucketType.user)

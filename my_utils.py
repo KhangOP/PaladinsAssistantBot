@@ -1,12 +1,7 @@
-from PIL import Image, ImageFont, ImageDraw, ImageOps
-import requests
-from io import BytesIO
 from datetime import datetime, timedelta
 from pytz import timezone
 import json
-import time
 import os
-import math
 
 
 """
@@ -16,10 +11,9 @@ end = time.time()
 print(end - start)
 """
 
-'''This file servers to provide helper functions that our used in more than one other program.'''
-
 
 class BotUtils:
+    """This file servers to provide helper functions that our used in more than one other program."""
     directory = 'user_info'
     usage = "usage"
     limits = "limits"

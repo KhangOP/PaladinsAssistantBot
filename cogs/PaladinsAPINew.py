@@ -1,14 +1,11 @@
 import discord
 from discord.ext import commands
 import my_utils as helper
-from datetime import datetime; datetime.now
 
 from pyrez.exceptions import PlayerNotFound, PrivatePlayer, NotFound, MatchException
 import aiohttp
 
 import json
-from psutil import Process
-from os import getpid
 
 from colorama import Fore
 
@@ -47,16 +44,6 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             "pl": 12,  # Polish
             "tr": 13,  # Turkish
         }.get(x, 1)  # Return English by default if an unknown number is entered
-
-    @classmethod
-    # Used to change text prefix to change it's color
-    async def color_win_rates(cls, text, win_rate):
-        if float(win_rate) > 60.0:
-            return "+" + text
-        elif float(win_rate) < 50.0 and float(win_rate) != 0.0:
-            return "-" + text
-        else:
-            return "*" + text
 
     # Checking for is_on_mobile() status
     async def get_mobile_status(self, ctx):
@@ -172,24 +159,6 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         return str('{0:.2f}'.format((n1 / n2) * 100))
 
     @classmethod
-    # Converts the match name so that its small enough to fit on one line
-    async def convert_match_type(cls, match_name):
-        if "Practice" in match_name:
-            return "Bot Match"
-        elif "TDM" in match_name:
-            return "TDM"
-        elif "Onslaught" in match_name:
-            return "Onslaught"
-        elif "Ranked" in match_name:
-            return "Ranked"
-        elif "(KOTH)" in match_name:
-            return "KOTH"
-        elif "(Siege)" in match_name:  # Test Maps (WIP)
-            return "Test Maps"
-        else:
-            return "Siege"
-
-    @classmethod
     # Converts champion names to include spacing in the name if needed
     async def convert_champion_name(cls, champ_name: str):
         champ_name = champ_name.title()
@@ -202,67 +171,6 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             return "Sha Lin"
         # else return the name passed in since its already correct
         return champ_name
-
-    # Gets KDA and Win Rate for a player from Nonsocial's herokuapp
-    async def get_global_kda(self, player_id):
-        if str(player_id) == '0':
-            return ["Private Account", "???", "???", "???"]
-        url = "http://nonsocial.herokuapp.com/api/kda?player=" + str(player_id)
-        async with aiohttp.ClientSession(conn_timeout=5, read_timeout=5) as cs:
-            async with cs.get(url) as r:
-                soup = await r.text()  # returns dict
-
-                # Error checking to make sure that the player was found on the site
-                if 'ERROR' in soup:
-                    error = ["Private Account", "???", "???", "???"]
-                    return error
-
-                # Stop being an asshole. It was supposed to be free and unlimited, Y'all are paying nothing and it's
-                # online 24/7 almost 1 year (8/2018). But because some shitty viewers are spamming stupid invalid
-                # inputs such as !rank Nightbot, !rank SadMartini all endpoints are limited to 15 calls per minute.
-
-                # Checking to see if we have used up the 15 calls per min
-                if 'Stop being an asshole.' in soup:
-                    try:
-                        data = await self.get_player_current_stats_api(player_id)
-                    except BaseException:
-                        data = ["Private Account", "???", "???", "???"]
-                    return data
-                # FeistyJalapeno (Level 710): 5740 Wins, 3475 Losses
-                #  (Kills: 114,019 / Deaths: 63,976 / Assists: 108,076 - 2.63 KDA) - Win rate: 62.29%
-
-                split1 = soup.split("(Level ")
-
-                try:
-                    player_name = str(split1[0]).strip()  # Player Name
-                except BaseException:
-                    print(Fore.RED + str(soup))
-                    return ["Connection Error", "???", "???", "???"]
-                try:
-                    level = split1[1].split(")")[0]  # Level
-                    temp = int(level)
-                except (ValueError, IndexError, BaseException) as e:
-                    level = "???"
-                    print(Fore.LIGHTCYAN_EX + "???? what in the string nation is going on: " + Fore.YELLOW + soup)
-                    print(e)
-                try:
-                    kda = split1[1].split("- ")[1].split(" KDA")[0]  # KDA
-                    temp = float(kda)
-                except (ValueError, IndexError, BaseException) as e:
-                    kda = "???"
-                    print(Fore.LIGHTCYAN_EX + "???? what in the string nation is going on: " + Fore.YELLOW + soup)
-                    print(e)
-                try:
-                    win_rate = soup.split("Win rate: ")[1].split("%")[0]  # Win Rate
-                    temp = float(win_rate)
-                except (ValueError, IndexError, BaseException) as e:
-                    win_rate = "???"
-                    print(Fore.LIGHTCYAN_EX + "???? what in the string nation is going on: " + Fore.YELLOW + soup)
-                    print(e)
-
-                stats = [player_name, level, win_rate, kda]
-
-                return stats
 
     # Current command helper function
     async def get_player_current_stats_api(self, player_name):
@@ -877,6 +785,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         embeds = [embed, embed2]
         return embeds
 
+    # Returns the highest or lowest stats sorted by different categories (Level, KDA, WL, Matches, Time)
     @commands.command(name='top', pass_context=True, ignore_extra=False, aliases=["Top", "bottom", "Bottom"])
     @commands.cooldown(3, 30, commands.BucketType.user)
     # Gets stats for a champ using Paladins API
@@ -1074,288 +983,6 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
                 await ctx.send(embed=mobile_embed)
 
-    @commands.command(name='history', pass_context=True, ignore_extra=False,
-                      aliases=["History", "historia", "Historia"])
-    @commands.cooldown(3, 40, commands.BucketType.user)
-    async def history(self, ctx, player_name, amount=None, champ_name=None):
-        lang = await self.bot.language.check_language(ctx=ctx)
-        # Maybe convert the player name
-        if str(player_name) == "me":
-            player_name = await self.check_player_name(str(ctx.author.id))
-        elif player_name[0] == "<" and player_name[1] == "@":  # 99% that someone has been mentioned
-            player_name = player_name.replace("<", "").replace(">", "").replace("@", "").replace("!", "")
-            if len(player_name) == 18:
-                player_name = await self.check_player_name(player_name)
-
-        if player_name == "None":
-            await ctx.send("You have not stored your IGN yet. To do so please use the store command like so: "
-                           "`>>store Paladins_IGN`")
-            return None
-
-        await helper.store_commands(ctx.author.id, "history")
-        async with ctx.channel.typing():
-            if amount:
-                try:
-                    amount = int(amount)
-                except ValueError:
-                    champ_name = amount
-                    amount = 50
-            else:
-                amount = 10
-
-            if amount > 50 or amount < 10:
-                await ctx.send("Please enter an amount between 10-50.")
-                await ctx.send("```fix\nDefaulting to the default value of 10 matches.```")
-                amount = 10
-            player_id = self.get_player_id(player_name)
-            if player_id == -1:
-                await ctx.send(self.lang_dict["general_error2"][lang].format(player_name))
-                return None
-            elif player_id == -2:
-                await ctx.send("```Invalid platform name. Valid platform names are:\n1. Xbox\n2. PS4\n3. Switch```")
-                return None
-            elif player_id == -3:
-                await ctx.send("Name overlap detected. Please look up your Paladins ID using the `>>console` command.")
-                return None
-
-            if champ_name:  # Check in case they don't provide champ name
-                champ_name = await self.convert_champion_name(str(champ_name))
-
-            try:
-                paladins_data = self.bot.paladinsAPI.getMatchHistory(player_id)
-                # Endpoint down
-                if paladins_data is None:
-                    await ctx.send("```fix\nPaladins Endpoint down (no data returned). Please try again later and "
-                                   "hopefully by then Evil Mojo will have it working again.```")
-                    return None
-            except (NotFound, MatchException):
-                await ctx.send("Player does not have recent match data or their account is private. Make sure the first"
-                               " parameter is a player name and not the Match Id.")
-                return None
-
-            count = 0
-            total_matches = 0
-            match_data = ""
-            match_data2 = ""
-            # Damage, Flank, Tank, Support => (win, lose)
-            total_wins = [0, 0, 0, 0, 0, 0, 0, 0]
-            # Damage, Flank, Tank, Support => (kda, total_matches per class)
-            total_kda = [0, 0, 0, 0, 0, 0, 0, 0]
-            global_kda = 0.0
-            for match in paladins_data:
-                # Check to see if this player does have match history
-                if match.playerName is None:
-                    await ctx.send("Player does not have recent match data or their account is private.")
-                    return None
-                else:
-                    player_name = match.playerName
-
-                # empty string means to get everything or only get matches with a certain champ
-                if not champ_name or champ_name == match.godName:
-                    ss = str('+{:10}{:4}{:3}:00 {:9} {:9} {:5} ({}/{}/{})\n')
-                    kills = match.kills
-                    deaths = match.deaths
-                    assists = match.assists
-                    kda = await self.calc_kda(kills, deaths, assists)
-                    match_name = await self.convert_match_type(match.mapName)
-                    ss = ss.format(match.godName, match.winStatus, match.matchMinutes, match_name,
-                                   match.matchId, kda, kills, deaths, assists)
-
-                    # we don't want to count event or bot matches when calculating stats
-                    if match_name != "Bot Match" and match_name != "End Times" and match_name != "Test Maps":
-                        global_kda += float(kda)
-                        total_matches += 1
-                        class_index = self.bot.champs.get_champ_class(match.godName)
-                        if class_index != -1:
-                            total_kda[class_index * 2] += float(kda)
-                            total_kda[class_index * 2 + 1] += 1
-                            if match.winStatus == "Loss":
-                                total_wins[class_index * 2 + 1] += 1  # Losses
-                            else:
-                                total_wins[class_index * 2] += 1  # Wins
-                        else:
-                            print("Unclassified champion: " + str(match.godName))
-
-                    # Used for coloring
-                    if match.winStatus == "Loss":
-                        ss = ss.replace("+", "-")
-
-                    if count >= 30:
-                        match_data2 += ss
-                    else:
-                        match_data += ss
-
-                # Making sure we display the correct number of matches
-                count += 1
-                if count == amount:
-                    break
-
-            if not match_data and champ_name:
-                await ctx.send("Could not find any matches with the champion: `" + champ_name + "` in the last `"
-                               + str(amount) + "` matches.")
-                return None
-
-            # Base string to hold kda and win rate for all classes
-            ss = "Class      KDA:  Win Rate:\n\n" \
-                 "Total:   {:5}  {:6}% ({}-{})\n" \
-                 "Damages: {:5}  {:6}% ({}-{})\n" \
-                 "Flanks:  {:5}  {:6}% ({}-{})\n" \
-                 "Tanks:   {:5}  {:6}% ({}-{})\n" \
-                 "Healers: {:5}  {:6}% ({}-{})\n\n"
-
-            # Calculating win rates
-            d_t = total_wins[0] + total_wins[1]  # Damage total matches
-            f_t = total_wins[2] + total_wins[3]  # Flank total matches
-            t_t = total_wins[4] + total_wins[5]  # Tank total matches
-            s_t = total_wins[6] + total_wins[7]  # Healer total matches
-            d_wr = await self.calc_win_rate(total_wins[0], d_t)
-            f_wr = await self.calc_win_rate(total_wins[2], f_t)
-            t_wr = await self.calc_win_rate(total_wins[4], t_t)
-            s_wr = await self.calc_win_rate(total_wins[6], s_t)
-
-            # Total wins/loses
-            if total_matches == 0:  # prevent division by 0
-                total_matches = 1
-            global_kda = round(global_kda / total_matches, 2)
-            tot_wins = total_wins[0] + total_wins[2] + total_wins[4] + total_wins[6]
-            tot_loses = total_wins[1] + total_wins[3] + total_wins[5] + total_wins[7]
-            total_wr = await self.calc_win_rate(tot_wins, d_t + f_t + t_t + s_t)
-
-            # Coloring based off of class/total win rates
-            ss = ss.replace("Total", await self.color_win_rates("Total", total_wr)) \
-                .replace("Damages", await self.color_win_rates("Damages", d_wr)) \
-                .replace("Flanks", await self.color_win_rates("Flanks", f_wr)) \
-                .replace("Tanks", await self.color_win_rates("Tanks", t_wr)) \
-                .replace("Healers", await self.color_win_rates("Healers", s_wr))
-
-            # KDA calc
-            d_kda, f_kda, t_kda, s_kda, = 0.0, 0.0, 0.0, 0.0
-            if total_kda[0] != 0:
-                d_kda = round(total_kda[0] / total_kda[1], 2)
-            if total_kda[2] != 0:
-                f_kda = round(total_kda[2] / total_kda[3], 2)
-            if total_kda[4] != 0:
-                t_kda = round(total_kda[4] / total_kda[5], 2)
-            if total_kda[6] != 0:
-                s_kda = round(total_kda[6] / total_kda[7], 2)
-
-            # Filling the the string with all the data
-            ss = ss.format(global_kda, total_wr, tot_wins, tot_loses, d_kda, d_wr, total_wins[0], total_wins[1], f_kda,
-                           f_wr, total_wins[2], total_wins[3], t_kda, t_wr, total_wins[4], total_wins[5], s_kda, s_wr,
-                           total_wins[6], total_wins[7])
-
-            title = str('{}\'s last {} matches:\n\n').format(str(player_name), count)
-            title += str('{:11}{:4}  {:4} {:9} {:9} {:5} {}\n').format("Champion", "Win?", "Time", "Mode", "Match ID",
-                                                                       "KDA", "Detailed")
-            title += match_data
-        await ctx.send("```diff\n" + title + "```")
-        match_data2 += "\n\n" + ss
-        await ctx.send("```diff\n" + match_data2 + "```")
-
-    # Returns simple match history details
-    @commands.command(name='last', pass_context=True, ignore_extra=False, aliases=["Last", "ostatni", "Ostatni"])
-    @commands.cooldown(2, 30, commands.BucketType.user)
-    async def last(self, ctx, player_name, match_id=-1):
-        lang = await self.bot.language.check_language(ctx=ctx)
-        # Maybe convert the player name
-        if str(player_name) == "me":
-            player_name = await self.check_player_name(str(ctx.author.id))
-        elif player_name[0] == "<" and player_name[1] == "@":  # 99% that someone has been mentioned
-            player_name = player_name.replace("<", "").replace(">", "").replace("@", "").replace("!", "")
-            if len(player_name) == 18:
-                player_name = await self.check_player_name(player_name)
-
-        if player_name == "None":
-            await ctx.send("You have not stored your IGN yet. To do so please use the store command like so: "
-                           "`>>store Paladins_IGN`")
-            return None
-
-        await helper.store_commands(ctx.author.id, "last")
-        player_id = self.get_player_id(player_name)
-
-        if player_id == -1:
-            match_data = self.lang_dict["general_error2"][lang].format(player_name)
-            embed = discord.Embed(
-                title=match_data,
-                colour=discord.colour.Color.dark_teal()
-            )
-            await ctx.send(embed=embed)
-            return None
-        elif player_id == -2:
-            embed = discord.Embed(
-                title="```Invalid platform name. Valid platform names are:\n1. Xbox\n2. PS4\n3. Switch```",
-                colour=discord.colour.Color.red()
-            )
-            await ctx.send(embed=embed)
-            return None
-        elif player_id == -3:
-            embed = discord.Embed(
-                title="Name overlap detected. Please look up your Paladins ID using the `>>console` command.",
-                colour=discord.colour.Color.red()
-            )
-            await ctx.send(embed=embed)
-            return None
-
-        try:
-            paladins_data = self.bot.paladinsAPI.getMatchHistory(player_id)
-
-            # Endpoint down
-            if paladins_data is None:
-                await ctx.send("```fix\nPaladins Endpoint down (no data returned). Please try again later and "
-                               "hopefully by then Evil Mojo will have it working again.```")
-                return None
-        except (NotFound, MatchException):
-            await ctx.send("Player does not have recent match data or their account is private. Make sure the first"
-                           " parameter is a player name and not the Match Id.")
-            return None
-
-        for match in paladins_data:
-            # Check to see if this player does have match history
-            if match.playerName is None:
-                break
-
-            if match_id == -1 or match_id == match.matchId:
-                match_data = str('{}\'s {} match:\n\n').format(str(match.playerName),
-                                                               str(match.mapName).replace("LIVE", ""))
-                ss = str('`Match Status: {} ({} mins)\nChampion: {}\nKDA: {} ({}-{}-{})\nDamage: {:,}\nDamage Taken: '
-                         '{:,}\nHealing: {:,}\nSelf Healing: {:,}\nObjective Time: {}\nShielding: {:,}`\n')
-                kills = match.kills
-                deaths = match.deaths
-                assists = match.assists
-                kda = await self.calc_kda(kills, deaths, assists)
-                match_data += ss.format(match.winStatus, match.matchMinutes, match.godName, kda, kills, deaths, assists,
-                                        match.damage, match.damageTaken, match.healing, match.healingPlayerSelf,
-                                        match.objectiveAssists, match.damageMitigated)
-
-                embed = discord.Embed(
-                    description=match_data,
-                    colour=discord.colour.Color.dark_teal(),
-                )
-
-                embed.set_thumbnail(url=await helper.get_champ_image(match.godName))
-
-                map_name = match.mapName.replace("LIVE ", "").replace("Ranked ", "").replace(" (TDM)", "") \
-                    .replace(" (Onslaught) ", "").replace(" (Siege)", "").replace("Practice ", "").lower() \
-                    .replace(" ", "_").replace("'", "")
-                map_url = "https://raw.githubusercontent.com/EthanHicks1/PaladinsAssistantBot/master/icons/maps/{}.png"\
-                    .format(map_name)
-                embed.set_image(url=map_url)
-
-                await ctx.send(embed=embed)
-                return None
-
-        # If the match id could not be found
-        embed = discord.Embed(
-            description="Could not find a match with the match id: " + str(match_id),
-            colour=discord.colour.Color.dark_teal()
-        )
-
-        # If player has not played recently
-        if match_id == -1:
-            embed.description = "Player does not have recent match data or their account is private."
-
-        await ctx.send(embed=embed)
-
     # Returns simple stats based on the option they choose (champ_name, or me)
     @commands.command(name='stats', aliases=['Stats', 'statystyki', 'Statystyki', 'statistiques', 'Statistiques'],
                       pass_context=True, ignore_extra=False)
@@ -1418,75 +1045,6 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             json.dump(player_discord_ids, json_f)
         await ctx.send("Your Paladins In-Game-name is now stored as `" + player_ign +
                        "`. You can now use the keyword `me` instead of typing out your name")
-
-    @commands.is_owner()
-    @commands.command()
-    async def testing(self, ctx):
-        """
-        start = time.time()
-        # team1 = ["Ash", "Makoa", "Willo", "Seris"]
-
-        team1 = ["Ash", "Makoa", "Willo", "Seris", "Io"]
-        buffer = await helper.create_team_image(team1, [])
-        file = discord.File(filename="Team.png", fp=buffer)
-        await ctx.send("```diff\n" + "bruh" + "```", file=file)
-        end = time.time()
-        print(end - start)
-        """
-
-        # info = await self.get_player_current_stats_api("FeistyJalapeno")
-        # await ctx.send(info)
-        # return None
-
-        """
-        info = ""
-        for i in range(0, 20):
-            td = await self.get_global_kda("FeistyJalapeno")
-            info += str(td) + "\n"
-
-        await ctx.send(info)
-        """
-        """
-        for i in range(0, 10):
-            embed = discord.Embed(
-                description="Test limit: " + str(i+1) + "\nplayer's stats. ",
-                colour=discord.colour.Color.dark_teal(),
-            )
-            await ctx.send(embed=embed)
-        """
-        """
-        embed = discord.Embed(
-            description="Someone's stats:\n Name: Bruh \n Winrate: 55%",
-            colour=discord.colour.Color.dark_teal(),
-        )
-        await ctx.send(embed=embed)
-
-        embed = discord.Embed(
-            title="Some Title",
-            description="Someone's stats:\n Name: Bruh \n Winrate: 55%",
-            colour=discord.colour.Color.dark_teal(),
-        )
-        await ctx.send(embed=embed)
-
-        embed = discord.Embed(
-            title="`Someone's stats:`\n ```Name: Bruh``` \n Winrate: 55%",
-            colour=discord.colour.Color.dark_teal(),
-        )
-        await ctx.send(embed=embed)
-        """
-
-        embed = discord.Embed(
-            title="Some Title \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b "
-                  "\u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b "
-                  "\u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b ",
-            colour=discord.colour.Color.dark_teal(),
-        )
-        embed.add_field(name="`Some Title`", value="Someone's stats:\nName: Bruh \nWinrate: 55%", inline=False)
-        embed.add_field(name="```Some Title```", value="Derp:\nName: Dabber \nWinrate: 72.54%", inline=False)
-        embed.set_thumbnail(url=await helper.get_champ_image("Drogoz"))
-        await ctx.send(embed=embed)
-
-        return None
 
 
 # Add this class to the cog list

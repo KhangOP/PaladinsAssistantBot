@@ -1,7 +1,6 @@
 import discord
 from discord.ext import commands
-from datetime import date
-from datetime import datetime; datetime.now
+from datetime import date, datetime
 
 
 # Class handles commands related to console players
@@ -11,6 +10,7 @@ class ConsoleCommands(commands.Cog, name="Console Commands"):
     def __init__(self, bot):
         self.bot = bot
 
+    # Returns a list of embeds of console players so they can store their Paladins id's in the bot
     @commands.command(name='console', pass_context=True, ignore_extra=False, aliases=["Console"])
     @commands.cooldown(3, 30, commands.BucketType.user)
     async def console(self, ctx, player_name, platform: str):

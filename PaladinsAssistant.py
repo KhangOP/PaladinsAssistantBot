@@ -13,7 +13,7 @@ import traceback
 from socket import gaierror
 import requests
 
-import my_utils
+import my_utils as helper
 from pyrez.api import PaladinsAPI
 import Champion
 
@@ -38,10 +38,12 @@ class PaladinsAssistant(commands.Bot):
         # create class instances to be used throughout the whole bot
         self.paladinsAPI = PaladinsAPI(devId=self.ID, authKey=self.KEY)
         self.champs = Champion.Champion()
-        self.helper = my_utils
 
         # prefix/language (Servers)
         self.load_bot_servers_config()
+
+        # loads in text for commands to use
+        self.load_bot_cmd_languages()
 
         # Load Bot cogs
         self.load_cogs()
@@ -87,13 +89,18 @@ class PaladinsAssistant(commands.Bot):
 
     # Below cogs represents the folder our cogs are in. The dot is like an import path.
     INITIAL_EXTENSIONS = ['cogs.Help', 'cogs.Rand', 'cogs.PaladinsAPINew', 'cogs.ServersConfig', 'cogs.Owner',
-                          'cogs.Other', 'cogs.new_api', 'cogs.Console', 'cogs.DeckImage', ]
+                          'cogs.Other', 'cogs.new_api', 'cogs.Console', 'cogs.DeckImage']
+
+    DASHES = "----------------------------------------"
 
     daily_error_count = 0
     daily_command_count = 0
 
     unique_users = {}
     servers_config = {}
+
+    cmd_lang_dict = {}
+    command_languages = "languages/paladins_api_lang_dict"
 
     # Gets Token, Prefix (Bot) and ID, Key (PyRez API) from a file
     def load_bot_config(self):
@@ -108,6 +115,12 @@ class PaladinsAssistant(commands.Bot):
     def load_bot_servers_config(self):
         with open(self.BOT_SERVER_CONFIG_FILE) as json_f:
             self.servers_config = json.load(json_f)
+
+    def load_bot_cmd_languages(self):
+        # Loads in language dictionary (need encoding option so it does not mess up other languages)
+        with open(self.command_languages, encoding='utf-8') as json_f:
+            print(Fore.CYAN + "Loaded language dictionary for PaladinsAPICog...")
+            self.cmd_lang_dict = json.load(json_f)
 
     # Here we load our extensions(cogs) listed above in [initial_extensions].
     def load_cogs(self):

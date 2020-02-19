@@ -16,34 +16,22 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
     def __init__(self, bot):
         self.bot = bot
-        self.load_lang()
-
-    dashes = "----------------------------------------"
-
-    lang_dict = {}
-    file_name = "languages/paladins_api_lang_dict"
-
-    def load_lang(self):
-        # Loads in language dictionary (need encoding option so it does not mess up other languages)
-        with open(self.file_name, encoding='utf-8') as json_f:
-            print(Fore.CYAN + "Loaded language dictionary for PaladinsAPICog...")
-            self.lang_dict = json.load(json_f)
 
     # Converts the language to prefix
     @staticmethod
     async def convert_language(x):
         return {
-            "en": 1,  # English
-            "de": 2,  # German
-            "fr": 3,  # French
-            "zh": 5,  # Chinese
-            "od": 7,  # Out-dated/Unused
-            "es": 9,  # Spanish
+            "en": 1,   # English
+            "de": 2,   # German
+            "fr": 3,   # French
+            "zh": 5,   # Chinese
+            "od": 7,   # Out-dated/Unused
+            "es": 9,   # Spanish
             "pt": 10,  # Portuguese
             "ru": 11,  # Russian
             "pl": 12,  # Polish
             "tr": 13,  # Turkish
-        }.get(x, 1)  # Return English by default if an unknown number is entered
+        }.get(x, 1)    # Return English by default if an unknown number is entered
 
     # Checking for is_on_mobile() status
     async def get_mobile_status(self, ctx):
@@ -57,21 +45,6 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         else:
             mobile_status = ctx.author.is_on_mobile()
         return mobile_status
-
-    # adds in whitespace by tricking discord
-    async def force_whitespace(self, string, max_length):
-        padded_string = string
-        length = len(padded_string)
-
-        if length % 2 != 0:
-            padded_string += " "
-
-        max_length = (max_length - length)*2 + length
-
-        while len(padded_string) <= max_length:
-            padded_string += "\u200b "
-
-        return padded_string
 
     # Get the player id for a player based on their name. First it checks a dictionary and if they are not in there then
     # it does an API call to get the player's id. Then it writes that id to the dictionary. Helps save API calls.
@@ -169,59 +142,15 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             return "Mal Damba"
         if "Sha" in champ_name:
             return "Sha Lin"
-        # else return the name passed in since its already correct
+        # else return the name passed in since it's already correct
         return champ_name
-
-    # Current command helper function
-    async def get_player_current_stats_api(self, player_name):
-        # Player level, Account level, Win Rate
-        player_id = self.get_player_id(player_name)
-        if player_id == -1:
-            return ["Private Account", "???", "???", "???"]
-        try:
-            info = self.bot.paladinsAPI.getPlayer(player_id)
-        except (PlayerNotFound, PrivatePlayer):
-            return ["Private Account", "???", "???", "???"]
-
-        # Overall Info
-        total = int(info.wins) + int(info.losses)
-        wr = await self.calc_win_rate(int(info.wins), total)
-
-        # Get KDA
-        try:
-            stats = self.bot.paladinsAPI.getChampionRanks(player_id)
-        except BaseException:
-            return ["Private Account", "???", "???", "???"]
-        if stats is None:  # Private account
-            return ["Private Account", "???", "???", "???"]
-
-        t_wins = 0
-        t_loses = 0
-        t_kda = 0
-        count = 1
-
-        for stat in stats:
-            wins = stat.wins
-            losses = stat.losses
-            kda = await self.calc_kda(stat.kills, stat.deaths, stat.assists)
-
-            # Global win rate and kda
-            if wins + losses > 10:  # Player needs to have over 20 matches with a champ for it to affect kda
-                t_wins += wins
-                t_loses += losses
-                t_kda += float(kda) * (wins + losses)  # These two lines allow the kda to be weighted
-                count += (wins + losses)  # aka the more a champ is played the more it affects global kda
-
-        kda = str('{0:.2f}').format(t_kda / count)
-
-        return [str(info.playerName), str(info.accountLevel), wr, kda]
 
     # Uses Paladins API to get overall stats for a player
     async def get_player_stats_api(self, player_name, lang):
         # Player level, played hours, etc
         player_id = self.get_player_id(player_name)
         if player_id == -1:
-            return self.lang_dict["general_error2"][lang].format(player_name)
+            return self.bot.cmd_lang_dict["general_error2"][lang].format(player_name)
         elif player_id == -2:
             return "```Invalid platform name. Valid platform names are:\n1. Xbox\n2. PS4\n3. Switch```"
         elif player_id == -3:
@@ -296,6 +225,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                         str(info.totalAchievements))
         return ss
 
+    # maybe a combo of the mobile and non-mobile version
     async def get_player_stats_api_new(self, player_name, lang):
         # Player level, played hours, etc
         player_id = self.get_player_id(player_name)
@@ -521,6 +451,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         return embeds
 
     # Gets stats for a champ using Paladins API
+    # Todo needed by the current command as well
     async def get_champ_stats_api(self, player_name, champ, simple, lang, mobile=False):
         # Gets player id and error checks
         player_id = self.get_player_id(player_name)
@@ -790,7 +721,6 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     @commands.cooldown(3, 30, commands.BucketType.user)
     # Gets stats for a champ using Paladins API
     async def top(self, ctx, player_name, option, by_class="nope"):
-        # lang = await self.bot.check_language(ctx=ctx)
         lang = await self.bot.language.check_language(ctx=ctx)
 
         # Maybe convert the player name
@@ -1028,23 +958,6 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 embeds = await self.get_champ_stats_api_mobile(player_name, champ_name, lang=lang)
                 for embed in embeds:
                     await ctx.send(embed=embed)
-
-    # Stores Player's IGN for the bot to use
-    @commands.command(name='store', pass_context=True, ignore_extra=False,
-                      aliases=["zapisz", "Zapisz", "Store", 'salva'])
-    @commands.cooldown(2, 30, commands.BucketType.user)
-    async def store_player_name(self, ctx, player_ign):
-        with open("player_discord_ids") as json_f:
-            player_discord_ids = json.load(json_f)
-
-        player_discord_ids.update({str(ctx.author.id): player_ign})  # update dict
-
-        # need to update the file now
-        print("Stored a IGN in conversion dictionary: " + player_ign)
-        with open("player_discord_ids", 'w') as json_f:
-            json.dump(player_discord_ids, json_f)
-        await ctx.send("Your Paladins In-Game-name is now stored as `" + player_ign +
-                       "`. You can now use the keyword `me` instead of typing out your name")
 
 
 # Add this class to the cog list

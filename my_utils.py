@@ -116,8 +116,22 @@ async def get_seconds_until_reset():
     return (midnight - datetime.now()).seconds
 
 
+# Converts champion names to include spacing in the name if needed
+async def convert_champion_name_normal(champ_name: str):
+    champ_name = champ_name.title()
+    # These are the special cases that need to be checked
+    if "Bomb" in champ_name:
+        return "Bomb King"
+    if "Mal" in champ_name:
+        return "Mal Damba"
+    if "Sha" in champ_name:
+        return "Sha Lin"
+    # else return the name passed in since it's already correct
+    return champ_name
+
+
 # Converts champion names so they can be used to fetch champion images in a url or from local computer
-async def convert_champion_name(champ_name, special=False):
+async def convert_champion_name_image(champ_name, special=False):
     champ_name = champ_name.lower()
     # These are the special cases that need to be checked
     if "bomb" in champ_name:
@@ -135,7 +149,7 @@ async def convert_champion_name(champ_name, special=False):
 
 # Gets a url to the image of champion's name passed in
 async def get_champ_image(champ_name):
-    champ_name = await convert_champion_name(champ_name)
+    champ_name = await convert_champion_name_image(champ_name)
     url = "https://raw.githubusercontent.com/EthanHicks1/PaladinsAssistantBot/master/icons/champ_icons/{}.png"\
         .format(champ_name)
     return url

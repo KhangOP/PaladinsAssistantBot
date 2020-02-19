@@ -6,6 +6,7 @@ from io import BytesIO
 import json
 import textwrap
 import re
+import my_utils as helper
 
 
 class Decks(commands.Cog, name="Decks Command"):
@@ -18,6 +19,8 @@ class Decks(commands.Cog, name="Decks Command"):
     @commands.cooldown(4, 30, commands.BucketType.user)
     async def deck(self, ctx, player_name, champ_name, deck_index=None):
         lang = await self.bot.language.check_language(ctx=ctx)
+        await helper.store_commands(ctx.author.id, "deck")
+
         # Maybe convert the player name
         if str(player_name) == "me":
             player_name = await self.check_player_name(str(ctx.author.id))
@@ -31,7 +34,6 @@ class Decks(commands.Cog, name="Decks Command"):
                            "`>>store Paladins_IGN`")
             return None
 
-        await store_commands(ctx.author.id, "deck")
         async with ctx.channel.typing():
             player_id = self.get_player_id(player_name)
 
@@ -58,7 +60,7 @@ class Decks(commands.Cog, name="Decks Command"):
                 await ctx.send(embed=embed)
                 return None
 
-            champ_name = await self.convert_champion_name(champ_name)
+            champ_name = await helper.convert_champion_name_normal(champ_name)
 
             lang_num = await self.convert_language(lang)
             player_decks = self.bot.paladinsAPI.getPlayerLoadouts(player_id, language=lang_num)
@@ -123,7 +125,7 @@ class Decks(commands.Cog, name="Decks Command"):
         color = (0, 0, 0, 0)
         deck_image = Image.new('RGBA', (1570, 800), color=color)
 
-        champ_name = await convert_champion_name(champ_name)
+        champ_name = await helper.convert_champion_name_image(champ_name)
         try:
             champ_background = Image.open("icons/champ_headers/{}.png".format(champ_name)).convert('RGBA')
         except FileNotFoundError:
@@ -290,6 +292,22 @@ class Decks(commands.Cog, name="Decks Command"):
         final_buffer.seek(0)
 
         return final_buffer
+
+    # Converts the language to prefix
+    @staticmethod
+    async def convert_language(x):
+        return {
+            "en": 1,  # English
+            "de": 2,  # German
+            "fr": 3,  # French
+            "zh": 5,  # Chinese
+            "od": 7,  # Out-dated/Unused
+            "es": 9,  # Spanish
+            "pt": 10,  # Portuguese
+            "ru": 11,  # Russian
+            "pl": 12,  # Polish
+            "tr": 13,  # Turkish
+        }.get(x, 1)  # Return English by default if an unknown number is entered
 
 
 # Add this class to the cog list

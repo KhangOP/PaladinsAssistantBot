@@ -14,22 +14,6 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
     def __init__(self, bot):
         self.bot = bot
 
-    # Converts the language to prefix
-    @staticmethod
-    async def convert_language(x):
-        return {
-            "en": 1,   # English
-            "de": 2,   # German
-            "fr": 3,   # French
-            "zh": 5,   # Chinese
-            "od": 7,   # Out-dated/Unused
-            "es": 9,   # Spanish
-            "pt": 10,  # Portuguese
-            "ru": 11,  # Russian
-            "pl": 12,  # Polish
-            "tr": 13,  # Turkish
-        }.get(x, 1)    # Return English by default if an unknown number is entered
-
     # Get the player id for a player based on their name. First it checks a dictionary and if they are not in there then
     # it does an API call to get the player's id. Then it writes that id to the dictionary. Helps save API calls.
     def get_player_id(self, player_name):
@@ -114,20 +98,6 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         if n2 == 0:  # This means they have no data for the ranked split/season
             return "0"
         return str('{0:.2f}'.format((n1 / n2) * 100))
-
-    @classmethod
-    # Converts champion names to include spacing in the name if needed
-    async def convert_champion_name(cls, champ_name: str):
-        champ_name = champ_name.title()
-        # These are the special cases that need to be checked
-        if "Bomb" in champ_name:
-            return "Bomb King"
-        if "Mal" in champ_name:
-            return "Mal Damba"
-        if "Sha" in champ_name:
-            return "Sha Lin"
-        # else return the name passed in since it's already correct
-        return champ_name
 
     # Uses Paladins API to get overall stats for a player
     async def get_player_stats_api(self, player_name, lang):
@@ -934,7 +904,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                     await ctx.send(embed=embed)
         # get stats for a specific character
         else:
-            champ_name = await self.convert_champion_name(option)
+            champ_name = await helper.convert_champion_name_normal(option)
             if not mobile_status:
                 result = await self.get_champ_stats_api(player_name, champ_name, simple=0, lang=lang)
                 await ctx.send(embed=result)

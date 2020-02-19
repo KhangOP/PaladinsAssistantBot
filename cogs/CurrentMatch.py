@@ -22,6 +22,11 @@ class CurrentCog(commands.Cog, name="Current Command"):
     @commands.cooldown(30, 30, commands.BucketType.user)
     async def current(self, ctx, player_name, option="-s"):
         lang = await self.bot.language.check_language(ctx=ctx)
+        value = -1
+        if option == "-a":
+            value = 1
+        can_use = await helper.store_commands(ctx.author.id, "current", value)
+
         # Maybe convert the player name
         if str(player_name) == "me":
             player_name = await self.check_player_name(str(ctx.author.id))
@@ -35,10 +40,6 @@ class CurrentCog(commands.Cog, name="Current Command"):
                            "`>>store Paladins_IGN`")
             return None
 
-        value = -1
-        if option == "-a":
-            value = 1
-        can_use = await helper.store_commands(ctx.author.id, "current", value)
         async with ctx.channel.typing():
             # Data Format
             # {'Match': 795950194, 'match_queue_id': 452, 'personal_status_message': 0, 'ret_msg': 0, 'status': 3,
@@ -433,7 +434,8 @@ class CurrentCog(commands.Cog, name="Current Command"):
         return final_buffer
 
     # Creates an team image by using champion Icons
-    async def create_team_image(self, champ_list, ranks):
+    @staticmethod
+    async def create_team_image(champ_list, ranks):
         champion_images = []
 
         while len(champ_list) != 5:
@@ -443,7 +445,7 @@ class CurrentCog(commands.Cog, name="Current Command"):
             if champ != "?" and champ is not None:
                 try:
                     champion_images.append(
-                        Image.open("icons/champ_icons/{}.png".format(await convert_champion_name(champ))))
+                        Image.open("icons/champ_icons/{}.png".format(await helper.convert_champion_name_image(champ))))
                 except FileNotFoundError:
                     image_size = 512
                     base = Image.new('RGB', (image_size, image_size), "black")
@@ -495,7 +497,8 @@ class CurrentCog(commands.Cog, name="Current Command"):
         return final_buffer
 
     # Draws a question in place of missing information for images
-    async def draw_match_vs(self):
+    @staticmethod
+    async def draw_match_vs():
         base = Image.new('RGB', (2560, 128), "black")
 
         # put text on image

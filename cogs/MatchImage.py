@@ -19,6 +19,8 @@ class MatchCog(commands.Cog, name="Match Command"):
     @commands.cooldown(2, 30, commands.BucketType.user)
     async def match(self, ctx, player_name, match_id=None, colored="-b"):
         lang = await self.bot.language.check_language(ctx=ctx)
+        await helper.store_commands(ctx.author.id, "match")
+
         # Maybe convert the player name
         if str(player_name) == "me":
             player_name = await self.check_player_name(str(ctx.author.id))
@@ -57,7 +59,6 @@ class MatchCog(commands.Cog, name="Match Command"):
             await ctx.send(embed=embed)
             return None
 
-        await helper.store_commands(ctx.author.id, "match")
         async with ctx.channel.typing():
             try:
                 paladins_data = self.bot.paladinsAPI.getMatchHistory(player_id)
@@ -170,7 +171,8 @@ class MatchCog(commands.Cog, name="Match Command"):
         # Adding in player data
         for i, (champ, champ2) in enumerate(zip(team1, team2)):
             try:
-                champ_image = Image.open("icons/champ_icons/{}.png".format(await helper.convert_champion_name(champ)))
+                champ_image = Image.open("icons/champ_icons/{}.png".format(
+                    await helper.convert_champion_name_image(champ)))
             except FileNotFoundError:
                 champ_image = Image.open("icons/temp_card_art.png")
             border = (0, shrink, 0, shrink)  # left, up, right, bottom
@@ -181,7 +183,8 @@ class MatchCog(commands.Cog, name="Match Command"):
 
             # Second team
             try:
-                champ_image = Image.open("icons/champ_icons/{}.png".format(await helper.convert_champion_name(champ2)))
+                champ_image = Image.open("icons/champ_icons/{}.png".format(
+                    await helper.convert_champion_name_image(champ2)))
             except FileNotFoundError:
                 champ_image = Image.open("icons/temp_card_art.png")
             border = (0, shrink, 0, shrink)  # left, up, right, bottom
@@ -306,7 +309,7 @@ class MatchCog(commands.Cog, name="Match Command"):
             # Team 1 Bans
             try:
                 champ_image = Image.open("icons/champ_icons/{}.png".format(
-                    await helper.convert_champion_name(str(md[6]))))
+                    await helper.convert_champion_name_image(str(md[6]))))
                 champ_image = champ_image.resize((200, 200))
                 middle_panel.paste(champ_image, (512 * 7 + rs, ds))
             except FileNotFoundError:
@@ -314,7 +317,7 @@ class MatchCog(commands.Cog, name="Match Command"):
 
             try:
                 champ_image = Image.open("icons/champ_icons/{}.png".format(
-                    await helper.convert_champion_name(str(md[7]))))
+                    await helper.convert_champion_name_image(str(md[7]))))
                 champ_image = champ_image.resize((200, 200))
                 middle_panel.paste(champ_image, (512 * 7 + rs + 240, ds))
             except FileNotFoundError:
@@ -323,7 +326,7 @@ class MatchCog(commands.Cog, name="Match Command"):
             # Team 2 Bans
             try:
                 champ_image = Image.open("icons/champ_icons/{}.png".format(
-                    await helper.convert_champion_name(str(md[8]))))
+                    await helper.convert_champion_name_image(str(md[8]))))
                 champ_image = champ_image.resize((200, 200))
                 middle_panel.paste(champ_image, (512 * 7 + rs, ds + 232))
             except FileNotFoundError:
@@ -331,7 +334,7 @@ class MatchCog(commands.Cog, name="Match Command"):
 
             try:
                 champ_image = Image.open("icons/champ_icons/{}.png".format(
-                    await helper.convert_champion_name(str(md[9]))))
+                    await helper.convert_champion_name_image(str(md[9]))))
                 champ_image = champ_image.resize((200, 200))
                 middle_panel.paste(champ_image, (512 * 7 + rs + 240, ds + 232))
             except FileNotFoundError:

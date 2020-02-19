@@ -13,8 +13,6 @@ class Decks(commands.Cog, name="Decks Command"):
     def __init__(self, bot):
         self.bot = bot
 
-    dashes = "----------------------------------------"
-
     @commands.command(name='deck', pass_context=True,
                       aliases=["Deck", "decks", "Decks", "talia", "Talia", 'baralho', 'baralhos'], ignore_extra=False)
     @commands.cooldown(4, 30, commands.BucketType.user)
@@ -38,7 +36,7 @@ class Decks(commands.Cog, name="Decks Command"):
             player_id = self.get_player_id(player_name)
 
             if player_id == -1:
-                match_data = self.lang_dict["general_error2"][lang].format(player_name)
+                match_data = self.bot.cmd_lang_dict["general_error2"][lang].format(player_name)
                 embed = Embed(
                     title=match_data,
                     colour=colour.Color.dark_teal()
@@ -105,7 +103,7 @@ class Decks(commands.Cog, name="Decks Command"):
                 break
 
             if deck_index is None or found is False:
-                message = "Decks for " + player_name + "'s " + champ_name + ":\n" + self.dashes + "\n"
+                message = "Decks for " + player_name + "'s " + champ_name + ":\n" + self.bot.DASHES + "\n"
                 for i, deck in enumerate(deck_list, start=1):
                     message += str(i) + '. ' + deck + "\n"
 

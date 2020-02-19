@@ -7,7 +7,6 @@ import os
 class OtherCog(commands.Cog, name="Other Cog"):
     """OtherCog"""
 
-    dashes = "----------------------------------------"
     directory = 'user_info'
 
     def __init__(self, bot):
@@ -18,7 +17,7 @@ class OtherCog(commands.Cog, name="Other Cog"):
     async def usage(self, ctx):
         user_commands = await self.get_store_commands(ctx.author.id)
         len(user_commands)
-        message = "Commands used by {}\n{}\n".format(ctx.author, self.dashes)
+        message = "Commands used by {}\n{}\n".format(ctx.author, self.bot.DASHES)
 
         # Data to plot
         labels = []

@@ -1,13 +1,12 @@
 from discord.ext import commands
 from discord import Embed, colour, File
 
-from pyrez.exceptions import PlayerNotFound, PrivatePlayer, NotFound, MatchException
+from pyrez.exceptions import NotFound, MatchException
 
 from PIL import Image, ImageFont, ImageDraw, ImageOps
 from io import BytesIO
-import json
-import textwrap
-import re
+
+import my_utils as helper
 
 
 class MatchCog(commands.Cog, name="Match Command"):
@@ -36,7 +35,7 @@ class MatchCog(commands.Cog, name="Match Command"):
         player_id = self.get_player_id(player_name)
 
         if player_id == -1:
-            match_data = self.lang_dict["general_error2"][lang].format(player_name)
+            match_data = self.bot.cmd_lang_dict["general_error2"][lang].format(player_name)
             embed = Embed(
                 title=match_data,
                 colour=colour.Color.dark_teal()
@@ -58,7 +57,7 @@ class MatchCog(commands.Cog, name="Match Command"):
             await ctx.send(embed=embed)
             return None
 
-        await store_commands(ctx.author.id, "match")
+        await helper.store_commands(ctx.author.id, "match")
         async with ctx.channel.typing():
             try:
                 paladins_data = self.bot.paladinsAPI.getMatchHistory(player_id)
@@ -171,7 +170,7 @@ class MatchCog(commands.Cog, name="Match Command"):
         # Adding in player data
         for i, (champ, champ2) in enumerate(zip(team1, team2)):
             try:
-                champ_image = Image.open("icons/champ_icons/{}.png".format(await convert_champion_name(champ)))
+                champ_image = Image.open("icons/champ_icons/{}.png".format(await helper.convert_champion_name(champ)))
             except FileNotFoundError:
                 champ_image = Image.open("icons/temp_card_art.png")
             border = (0, shrink, 0, shrink)  # left, up, right, bottom
@@ -182,7 +181,7 @@ class MatchCog(commands.Cog, name="Match Command"):
 
             # Second team
             try:
-                champ_image = Image.open("icons/champ_icons/{}.png".format(await convert_champion_name(champ2)))
+                champ_image = Image.open("icons/champ_icons/{}.png".format(await helper.convert_champion_name(champ2)))
             except FileNotFoundError:
                 champ_image = Image.open("icons/temp_card_art.png")
             border = (0, shrink, 0, shrink)  # left, up, right, bottom
@@ -207,7 +206,8 @@ class MatchCog(commands.Cog, name="Match Command"):
         return final_buffer
 
     # Creates the text at the top of the image
-    async def create_player_key_image(self, x, y, color=False):
+    @staticmethod
+    async def create_player_key_image(x, y, color=False):
         key = Image.new('RGB', (x * 9, y - 100), color=(112, 225, 225))
         base_draw = ImageDraw.Draw(key)
         # ss = "Player Credits K/D/A  Damage  Taken  Objective Time  Shielding  Healing"
@@ -249,7 +249,8 @@ class MatchCog(commands.Cog, name="Match Command"):
 
         return key
 
-    async def create_middle_info_panel(self, md):  # update this section
+    @staticmethod
+    async def create_middle_info_panel(md):
         middle_panel = Image.new('RGB', (512 * 9, 512), color=(217, 247, 247))
 
         # Adding in map to image
@@ -304,14 +305,16 @@ class MatchCog(commands.Cog, name="Match Command"):
 
             # Team 1 Bans
             try:
-                champ_image = Image.open("icons/champ_icons/{}.png".format(await convert_champion_name(str(md[6]))))
+                champ_image = Image.open("icons/champ_icons/{}.png".format(
+                    await helper.convert_champion_name(str(md[6]))))
                 champ_image = champ_image.resize((200, 200))
                 middle_panel.paste(champ_image, (512 * 7 + rs, ds))
             except FileNotFoundError:
                 pass
 
             try:
-                champ_image = Image.open("icons/champ_icons/{}.png".format(await convert_champion_name(str(md[7]))))
+                champ_image = Image.open("icons/champ_icons/{}.png".format(
+                    await helper.convert_champion_name(str(md[7]))))
                 champ_image = champ_image.resize((200, 200))
                 middle_panel.paste(champ_image, (512 * 7 + rs + 240, ds))
             except FileNotFoundError:
@@ -319,14 +322,16 @@ class MatchCog(commands.Cog, name="Match Command"):
 
             # Team 2 Bans
             try:
-                champ_image = Image.open("icons/champ_icons/{}.png".format(await convert_champion_name(str(md[8]))))
+                champ_image = Image.open("icons/champ_icons/{}.png".format(
+                    await helper.convert_champion_name(str(md[8]))))
                 champ_image = champ_image.resize((200, 200))
                 middle_panel.paste(champ_image, (512 * 7 + rs, ds + 232))
             except FileNotFoundError:
                 pass
 
             try:
-                champ_image = Image.open("icons/champ_icons/{}.png".format(await convert_champion_name(str(md[9]))))
+                champ_image = Image.open("icons/champ_icons/{}.png".format(
+                    await helper.convert_champion_name(str(md[9]))))
                 champ_image = champ_image.resize((200, 200))
                 middle_panel.paste(champ_image, (512 * 7 + rs + 240, ds + 232))
             except FileNotFoundError:
@@ -334,7 +339,8 @@ class MatchCog(commands.Cog, name="Match Command"):
 
         return middle_panel
 
-    async def create_player_stats_image(self, champ_icon, champ_stats, index, party, color=False):
+    @staticmethod
+    async def create_player_stats_image(champ_icon, champ_stats, index, party, color=False):
         shrink = 140
         offset = 10
         image_size_y = 512 - shrink * 2

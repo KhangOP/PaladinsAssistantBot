@@ -1,13 +1,10 @@
 import discord
 from discord.ext import commands
-import my_utils as helper
-
-from pyrez.exceptions import PlayerNotFound, PrivatePlayer, NotFound, MatchException
-import aiohttp
-
+from pyrez.exceptions import PlayerNotFound, PrivatePlayer
 import json
-
 from colorama import Fore
+
+import my_utils as helper
 
 
 # All functions in this class use Pyrez wrapper to access Paladins API
@@ -32,19 +29,6 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             "pl": 12,  # Polish
             "tr": 13,  # Turkish
         }.get(x, 1)    # Return English by default if an unknown number is entered
-
-    # Checking for is_on_mobile() status
-    async def get_mobile_status(self, ctx):
-        mobile_status = False
-        if ctx.guild is None:  # In DM's
-            guilds = self.bot.guilds
-            for guild in guilds:
-                member = guild.get_member(ctx.author.id)
-                if member is not None:
-                    mobile_status = member.is_on_mobile()
-        else:
-            mobile_status = ctx.author.is_on_mobile()
-        return mobile_status
 
     # Get the player id for a player based on their name. First it checks a dictionary and if they are not in there then
     # it does an API call to get the player's id. Then it writes that id to the dictionary. Helps save API calls.
@@ -159,7 +143,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         try:
             info = self.bot.paladinsAPI.getPlayer(player_id)
         except (PlayerNotFound, PrivatePlayer):
-            return self.lang_dict["general_error2"][lang].format(player_name)
+            return self.bot.cmd_lang_dict["general_error2"][lang].format(player_name)
 
         total = int(info.wins) + int(info.losses)
 
@@ -191,11 +175,12 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             t_kda = "???"
 
         # Overall Info
-        ss = self.lang_dict["stats_s1"][lang]
-        ss = ss.format(self.dashes, str(info.playerName), str(info.accountLevel), wr, str(total), t_kda, str(info.leaves))
+        ss = self.bot.cmd_lang_dict["stats_s1"][lang]
+        ss = ss.format(self.bot.DASHES, str(info.playerName), str(info.accountLevel), wr, str(total), t_kda,
+                       str(info.leaves))
 
         # Ranked Info
-        s2 = self.lang_dict["stats_s2"][lang]
+        s2 = self.bot.cmd_lang_dict["stats_s2"][lang]
 
         # Get the platform's ranked stats
         platform = str(info.platform).lower()
@@ -207,12 +192,12 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         win = int(ranked.wins)
         lose = int(ranked.losses)
         wr = await self.calc_win_rate(win, win + lose)
-        ss += s2.format(str(ranked.currentSeason), self.dashes, str(ranked.currentRank.getName()),
+        ss += s2.format(str(ranked.currentSeason), self.bot.DASHES, str(ranked.currentRank.getName()),
                         str(ranked.currentTrumpPoints), str(ranked.leaderboardIndex), wr, win, lose,
                         str(ranked.leaves))
 
         # Extra info
-        s3 = self.lang_dict["stats_s3"][lang]
+        s3 = self.bot.cmd_lang_dict["stats_s3"][lang]
         try:
             created = str(info.createdDatetime).split()[0]
         except IndexError:
@@ -221,7 +206,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             last = str(info.lastLoginDatetime).split()[0]
         except IndexError:
             last = "Unknown"
-        ss += s3.format(self.dashes, created, last, str(info.platform), str(info.playedGods),
+        ss += s3.format(self.bot.DASHES, created, last, str(info.platform), str(info.playedGods),
                         str(info.totalAchievements))
         return ss
 
@@ -231,7 +216,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         player_id = self.get_player_id(player_name)
         if player_id == -1:
             embed = discord.Embed(
-                title=self.lang_dict["general_error2"][lang].format(player_name),
+                title=self.bot.cmd_lang_dict["general_error2"][lang].format(player_name),
                 colour=discord.colour.Color.red()
             )
             return [embed]
@@ -252,7 +237,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             info = self.bot.paladinsAPI.getPlayer(player_id)
         except (PlayerNotFound, PrivatePlayer):
             embed = discord.Embed(
-                description=self.lang_dict["general_error2"][lang].format(player_name),
+                description=self.bot.cmd_lang_dict["general_error2"][lang].format(player_name),
                 colour=discord.colour.Color.red()
             )
             return [embed]
@@ -268,7 +253,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         embed.set_thumbnail(url=await helper.get_champ_image("Drogoz"))
 
         # Overall Info
-        ss = self.lang_dict["stats_s1"][lang]
+        ss = self.bot.cmd_lang_dict["stats_s1"][lang]
         p1, p2 = ss.split("*")
         total = int(info.wins) + int(info.losses)
         wr = await self.calc_win_rate(int(info.wins), total)
@@ -276,7 +261,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         embed.add_field(name="**```{}```**".format(p1), value=p2, inline=False)
 
         # Ranked Info
-        s2 = self.lang_dict["stats_s2"][lang]
+        s2 = self.bot.cmd_lang_dict["stats_s2"][lang]
 
         # Get the platform's ranked stats
         platform = str(info.platform).lower()
@@ -290,12 +275,12 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         wr = await self.calc_win_rate(win, win + lose)
         p1, p2 = s2.split("*")
         p1 = p1.format(str(ranked.currentSeason))
-        p2 = p2.format("`"+str(ranked.currentRank.getName()+"`"), str(ranked.currentTrumpPoints), str(ranked.leaderboardIndex),
-                       wr, win, lose, str(ranked.leaves))
+        p2 = p2.format("`"+str(ranked.currentRank.getName()+"`"), str(ranked.currentTrumpPoints),
+                       str(ranked.leaderboardIndex), wr, win, lose, str(ranked.leaves))
         embed.add_field(name="**```{}```**".format(p1), value=p2, inline=False)
 
         # Extra info
-        s3 = self.lang_dict["stats_s3"][lang]
+        s3 = self.bot.cmd_lang_dict["stats_s3"][lang]
         try:
             created = str(info.createdDatetime).split()[0]
         except IndexError:
@@ -320,7 +305,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         player_id = self.get_player_id(player_name)
         if player_id == -1:
             embed = discord.Embed(
-                title=self.lang_dict["general_error2"][lang].format(player_name),
+                title=self.bot.cmd_lang_dict["general_error2"][lang].format(player_name),
                 colour=discord.colour.Color.red()
             )
             return [embed]
@@ -341,7 +326,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             info = self.bot.paladinsAPI.getPlayer(player_id)
         except (PlayerNotFound, PrivatePlayer):
             embed = discord.Embed(
-                description=self.lang_dict["general_error2"][lang].format(player_name),
+                description=self.bot.cmd_lang_dict["general_error2"][lang].format(player_name),
                 colour=discord.colour.Color.red()
             )
             return [embed]
@@ -377,7 +362,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             t_kda = "???"
 
         # Overall Info
-        ss = self.lang_dict["stats_s1"][lang + "_mobile"]
+        ss = self.bot.cmd_lang_dict["stats_s1"][lang + "_mobile"]
         ss = ss.format(str(info.playerName), str(info.accountLevel), wr, str(total), t_kda, str(info.leaves))
 
         parts = ss.split("\n")
@@ -396,7 +381,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             embed.add_field(name=p1, value=p2, inline=False)
 
         # Ranked Info
-        s2 = self.lang_dict["stats_s2"][lang + "_mobile"]
+        s2 = self.bot.cmd_lang_dict["stats_s2"][lang + "_mobile"]
 
         # Get the platform's ranked stats
         platform = str(info.platform).lower()
@@ -421,7 +406,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             embed2.add_field(name=p1, value=p2, inline=False)
 
         # Extra info
-        s3 = self.lang_dict["stats_s3"][lang + "_mobile"]
+        s3 = self.bot.cmd_lang_dict["stats_s3"][lang + "_mobile"]
         try:
             created = str(info.createdDatetime).split()[0]
         except IndexError:
@@ -462,7 +447,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 ss = str('*   {:15} Lv. {:3}  {:7}   {:6}\n')
                 ss = ss.format(champ, "???", "???", "???")
                 return ss
-            match_data = self.lang_dict["general_error2"][lang].format(player_name)
+            match_data = self.bot.cmd_lang_dict["general_error2"][lang].format(player_name)
             embed = discord.Embed(
                 title=match_data,
                 colour=discord.colour.Color.dark_teal()
@@ -504,7 +489,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 ss = str('*   {:15} Lv. {:3}  {:7}   {:6}\n')
                 ss = ss.format(champ, "???", "???", "???")
                 return ss
-            match_data = self.lang_dict["general_error2"][lang].format(player_name)
+            match_data = self.bot.cmd_lang_dict["general_error2"][lang].format(player_name)
             embed = discord.Embed(
                 description=match_data,
                 colour=discord.colour.Color.dark_teal()
@@ -517,7 +502,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 ss = str('*{:18} Lv. {:3}  {:7}   {:6}\n')
                 ss = ss.format(champ, "???", "???", "???")
                 return ss
-            match_data = self.lang_dict["general_error"][lang].format(player_name)
+            match_data = self.bot.cmd_lang_dict["general_error"][lang].format(player_name)
             embed = discord.Embed(
                 description=match_data,
                 colour=discord.colour.Color.dark_teal()
@@ -546,7 +531,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 if not last_played:  # Bought the champ but never played them
                     break
 
-                ss = self.lang_dict["stats_champ"][lang].replace("*", " ")
+                ss = self.bot.cmd_lang_dict["stats_champ"][lang].replace("*", " ")
 
                 ss = ss.format(champ, level, kda, stat.kills, stat.deaths, stat.assists,
                                win_rate, wins, losses, str(stat.lastPlayed).split()[0])
@@ -610,7 +595,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         # Gets player id and error checks
         player_id = self.get_player_id(player_name)
         if player_id == -1:
-            match_data = self.lang_dict["general_error2"][lang].format(player_name)
+            match_data = self.bot.cmd_lang_dict["general_error2"][lang].format(player_name)
             embed = discord.Embed(
                 title=match_data,
                 colour=discord.colour.Color.dark_teal()
@@ -631,14 +616,14 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         try:
             stats = self.bot.paladinsAPI.getChampionRanks(player_id)
         except BaseException:
-            match_data = self.lang_dict["general_error2"][lang].format(player_name)
+            match_data = self.bot.cmd_lang_dict["general_error2"][lang].format(player_name)
             embed = discord.Embed(
                 description=match_data,
                 colour=discord.colour.Color.dark_teal()
             )
             return [embed]
         if stats is None:  # Private account
-            match_data = self.lang_dict["general_error"][lang].format(player_name)
+            match_data = self.bot.cmd_lang_dict["general_error"][lang].format(player_name)
             embed = discord.Embed(
                 description=match_data,
                 colour=discord.colour.Color.dark_teal()
@@ -667,7 +652,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                 if not last_played:  # Bought the champ but never played them
                     break
 
-                ss = self.lang_dict["stats_champ"][lang]
+                ss = self.bot.cmd_lang_dict["stats_champ"][lang]
 
                 ss = ss.format(champ, level, kda, stat.kills, stat.deaths, stat.assists,
                                win_rate, wins, losses, str(stat.lastPlayed).split()[0])
@@ -741,7 +726,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         # Gets player id and error checks
         player_id = self.get_player_id(player_name)
         if player_id == -1:
-            match_data = self.lang_dict["general_error2"][lang].format(player_name)
+            match_data = self.bot.cmd_lang_dict["general_error2"][lang].format(player_name)
             embed = discord.Embed(
                 title=match_data,
                 colour=discord.colour.Color.dark_teal()
@@ -762,14 +747,14 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         try:
             stats = self.bot.paladinsAPI.getChampionRanks(player_id)
         except BaseException:
-            match_data = self.lang_dict["general_error"][lang].format(player_name)
+            match_data = self.bot.cmd_lang_dict["general_error"][lang].format(player_name)
             embed = discord.Embed(
                 description=match_data,
                 colour=discord.colour.Color.dark_teal()
             )
             return embed
         if stats is None:  # Private account
-            match_data = self.lang_dict["general_error"][lang].format(player_name)
+            match_data = self.bot.cmd_lang_dict["general_error"][lang].format(player_name)
             embed = discord.Embed(
                 description=match_data,
                 colour=discord.colour.Color.dark_teal()
@@ -779,7 +764,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         player_champion_data = []
         count = 0
 
-        mobile_status = await self.get_mobile_status(ctx=ctx)
+        mobile_status = await self.bot.get_mobile_status(ctx=ctx)
 
         for stat in stats:
             count += 1
@@ -935,7 +920,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             return None
 
         # Checking for is_on_mobile() status
-        mobile_status = await self.get_mobile_status(ctx=ctx)
+        mobile_status = await self.bot.get_mobile_status(ctx=ctx)
 
         # get basic player stats
         if option is None:

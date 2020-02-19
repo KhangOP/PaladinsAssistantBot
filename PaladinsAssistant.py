@@ -89,7 +89,8 @@ class PaladinsAssistant(commands.Bot):
 
     # Below cogs represents the folder our cogs are in. The dot is like an import path.
     INITIAL_EXTENSIONS = ['cogs.Help', 'cogs.Rand', 'cogs.PaladinsAPINew', 'cogs.ServersConfig', 'cogs.Owner',
-                          'cogs.Other', 'cogs.new_api', 'cogs.Console', 'cogs.DeckImage']
+                          'cogs.Other', 'cogs.new_api', 'cogs.Console', 'cogs.DeckImage', 'cogs.CurrentMatch',
+                          'cogs.MatchImage']
 
     DASHES = "----------------------------------------"
 
@@ -116,6 +117,7 @@ class PaladinsAssistant(commands.Bot):
         with open(self.BOT_SERVER_CONFIG_FILE) as json_f:
             self.servers_config = json.load(json_f)
 
+    # Loads in different languages translations for text for commands
     def load_bot_cmd_languages(self):
         # Loads in language dictionary (need encoding option so it does not mess up other languages)
         with open(self.command_languages, encoding='utf-8') as json_f:
@@ -444,6 +446,18 @@ class PaladinsAssistant(commands.Bot):
                   "most likely a bug that will need be fixed."
             await self.send_error(cont=ctx, msg=msg)
     # """
+
+    # Checking for is_on_mobile() status
+    async def get_mobile_status(self, ctx):
+        mobile_status = False
+        if ctx.guild is None:  # In DM's
+            for guild in self.guilds:
+                member = guild.get_member(ctx.author.id)
+                if member is not None:
+                    mobile_status = member.is_on_mobile()
+        else:
+            mobile_status = ctx.author.is_on_mobile()
+        return mobile_status
 
 
 # Overrides the prefix for the bot to allow for customs prefixes

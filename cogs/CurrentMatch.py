@@ -4,6 +4,8 @@ from discord import Embed, colour, File
 from PIL import Image, ImageFont, ImageDraw
 from io import BytesIO
 
+import my_utils as helper
+
 
 # Hold commands that only the bot owner can use
 class CurrentCog(commands.Cog, name="Current Command"):
@@ -45,7 +47,7 @@ class CurrentCog(commands.Cog, name="Current Command"):
             # Gets player id and error checks
             player_id = self.get_player_id(player_name)
             if player_id == -1:
-                await ctx.send(self.lang_dict["general_error2"][lang].format(player_name))
+                await ctx.send(self.bot.cmd_lang_dict["general_error2"][lang].format(player_name))
                 return None
             elif player_id == -2:
                 await ctx.send("```Invalid platform name. Valid platform names are:\n1. Xbox\n2. PS4\n3. Switch```")
@@ -148,7 +150,7 @@ class CurrentCog(commands.Cog, name="Current Command"):
                         team2_ranks.append(str(player.tier))
 
             # Checking for is_on_mobile() status
-            mobile_status = await self.get_mobile_status(ctx=ctx)
+            mobile_status = await self.bot.get_mobile_status(ctx=ctx)
 
             match_data = ""
             match_data += player_name + " is in a " + match_string + " match."  # Match Type

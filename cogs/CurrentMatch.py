@@ -392,6 +392,160 @@ class CurrentCog(commands.Cog, name="Current Command"):
                             mobile_embed2.add_field(name=info[0], value=info[1], inline=False)
                         await ctx.send(embed=mobile_embed2)
 
+    # Todo needed by the current command as well
+    async def get_champ_stats_api(self, player_name, champ, lang, mobile=False):
+        # Gets player id and error checks
+        player_id = self.get_player_id(player_name)
+        if player_id == -1:
+            if simple == 1:
+                if mobile:
+                    return [champ, "???", "???", "???"]
+                ss = str('*   {:15} Lv. {:3}  {:7}   {:6}\n')
+                ss = ss.format(champ, "???", "???", "???")
+                return ss
+            match_data = self.bot.cmd_lang_dict["general_error2"][lang].format(player_name)
+            embed = Embed(
+                title=match_data,
+                colour=colour.Color.dark_teal()
+            )
+            return embed
+        elif player_id == -2:
+            if simple == 1:
+                if mobile:
+                    return [champ, "???", "???", "???"]
+                ss = str('*   {:15} Lv. {:3}  {:7}   {:6}\n')
+                ss = ss.format(champ, "???", "???", "???")
+                return ss
+            embed = Embed(
+                title="```Invalid platform name. Valid platform names are:\n1. Xbox\n2. PS4\n3. Switch```",
+                colour=colour.Color.red()
+            )
+            return embed
+        elif player_id == -3:
+            if simple == 1:
+                if mobile:
+                    return [champ, "???", "???", "???"]
+                ss = str('*   {:15} Lv. {:3}  {:7}   {:6}\n')
+                ss = ss.format(champ, "???", "???", "???")
+                return ss
+            embed = Embed(
+                title="Name overlap detected. Please look up your Paladins ID using the `>>console` command.",
+                colour=colour.Color.red()
+            )
+            return embed
+        try:  # Todo Console name not returned in data (but correct)
+            stats = self.bot.paladinsAPI.getChampionRanks(player_id)
+            # {"Assists": 2771, "Deaths": 2058, "Gold": 880190, "Kills": 2444, "LastPlayed": "6/14/2019 9:49:51 PM",
+            # "Losses": 125, "MinionKills": 253, "Minutes": 3527, "Rank": 58, "Wins": 144, "Worshippers": 33582898,
+            # "champion": "Makoa", "champion_id": "2288", "player_id": "704972387", "ret_msg": null}
+        except BaseException:
+            if simple == 1:
+                if mobile:
+                    return [champ, "???", "???", "???"]
+                ss = str('*   {:15} Lv. {:3}  {:7}   {:6}\n')
+                ss = ss.format(champ, "???", "???", "???")
+                return ss
+            match_data = self.bot.cmd_lang_dict["general_error2"][lang].format(player_name)
+            embed = Embed(
+                description=match_data,
+                colour=colour.Color.dark_teal()
+            )
+            return embed
+        if stats is None:  # Private account
+            if simple == 1:
+                if mobile:
+                    return [champ, "???", "???", "???"]
+                ss = str('*{:18} Lv. {:3}  {:7}   {:6}\n')
+                ss = ss.format(champ, "???", "???", "???")
+                return ss
+            match_data = self.bot.cmd_lang_dict["general_error"][lang].format(player_name)
+            embed = Embed(
+                description=match_data,
+                colour=colour.Color.dark_teal()
+            )
+            return embed
+
+        if "Mal" in champ:
+            champ = "Mal'Damba"
+
+        ss = ""
+        t_wins = 0
+        t_loses = 0
+        t_kda = 0
+        count = 1
+
+        for stat in stats:
+            wins = stat.wins
+            losses = stat.losses
+            kda = await self.calc_kda(stat.kills, stat.deaths, stat.assists)
+            # champ we want to get the stats on
+            if stat.godName == champ:
+                win_rate = await self.calc_win_rate(wins, wins + losses)
+                level = stat.godLevel
+
+                last_played = str(stat.lastPlayed)
+                if not last_played:  # Bought the champ but never played them
+                    break
+
+                ss = self.bot.cmd_lang_dict["stats_champ"][lang].replace("*", " ")
+
+                ss = ss.format(champ, level, kda, stat.kills, stat.deaths, stat.assists,
+                               win_rate, wins, losses, str(stat.lastPlayed).split()[0])
+                if simple == 1:
+                    if mobile:
+                        return [champ, str(level), win_rate, kda]
+                    win_rate += " %"
+                    kda = "(" + kda + ")"
+                    ss = str('*   {:15} Lv. {:3}  {:7}   {:6}\n')
+                    ss = ss.format(champ, str(level), win_rate, kda)
+                    """This Block of code adds color based on Win Rate"""
+                    if "???" in win_rate:
+                        pass
+                    elif (float(win_rate.replace(" %", ""))) > 55.00:
+                        ss = ss.replace("*", "+")
+                    elif (float(win_rate.replace(" %", ""))) < 49.00:
+                        ss = ss.replace("*", "-")
+                    """^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"""
+                    return ss
+
+            # Global win rate and kda
+            if wins + losses > 10:  # Player needs to have over 20 matches with a champ for it to affect kda
+                t_wins += wins
+                t_loses += losses
+                t_kda += float(kda) * (wins + losses)  # These two lines allow the kda to be weighted
+                count += (wins + losses)  # aka the more a champ is played the more it affects global kda
+
+        # They have not played this champion yet
+        if ss == "":
+            ss = "No data for champion: " + champ + "\n"
+            if simple == 1:
+                ss = str('*{:18} Lv. {:3}  {:7}   {:6}\n')
+                ss = ss.format(champ, "???", "???", "???")
+                return ss
+            embed = Embed(
+                description=ss,
+                colour=colour.Color.orange()
+            )
+            return embed
+
+        # Global win rate and kda
+        global_ss = str("\n\nGlobal KDA: {}\nGlobal Win Rate: {}% ({}-{})")
+        win_rate = await self.calc_win_rate(t_wins, t_wins + t_loses)
+        t_kda = str('{0:.2f}').format(t_kda / count)
+        global_ss = global_ss.format(t_kda, win_rate, t_wins, t_loses)
+        ss += global_ss
+
+        # Create an embed
+        my_title = player_name + "'s stats: "
+        desc = "`{}`".format(ss)
+        embed = Embed(
+            title=my_title,
+            description=desc,
+            colour=colour.Color.dark_teal()
+        )
+        embed.set_thumbnail(url=await helper.get_champ_image(champ))
+        return embed
+
     # Creates a match image based on the two teams champions
     async def create_match_image(self, team1, team2, ranks1, ranks2):
         buffer1 = await self.create_team_image(team1, ranks1)

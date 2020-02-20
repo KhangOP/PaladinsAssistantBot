@@ -362,6 +362,20 @@ class PaladinsAssistant(commands.Bot):
         print(message.author, message.author.id, message.content, message.channel, message.guild,
               await helper.get_est_time(), len(self.unique_users))
 
+    # called when a bot is invited into a server
+    async def on_guild_join(self, guild):
+        print("{} has joined the following server: {}".format(self.user.name, guild))
+
+    # called when a bot is removed from a server
+    async def on_guild_remove(self, guild):
+        """
+        The client got banned.
+        The client got kicked.
+        The client left the guild.
+        The client or the guild owner deleted the guild.
+        """
+        print("{} has be removed the following server: {}".format(self.user.name, guild))
+
     # """
     # Handles errors when a user messes up the spelling or forgets an argument to a command or an error occurs
     async def on_command_error(self, ctx, error):

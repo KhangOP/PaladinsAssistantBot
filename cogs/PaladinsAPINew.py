@@ -1,5 +1,5 @@
-import discord
 from discord.ext import commands
+from discord import Embed, colour
 from pyrez.exceptions import PlayerNotFound, PrivatePlayer
 import json
 from colorama import Fore
@@ -185,38 +185,38 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         # Player level, played hours, etc
         player_id = self.get_player_id(player_name)
         if player_id == -1:
-            embed = discord.Embed(
+            embed = Embed(
                 title=self.bot.cmd_lang_dict["general_error2"][lang].format(player_name),
-                colour=discord.colour.Color.red()
+                colour=colour.Color.red()
             )
             return [embed]
         elif player_id == -2:
-            embed = discord.Embed(
+            embed = Embed(
                 title="```Invalid platform name. Valid platform names are:\n1. Xbox\n2. PS4\n3. Switch```",
-                colour=discord.colour.Color.red()
+                colour=colour.Color.red()
             )
             return [embed]
         elif player_id == -3:
-            embed = discord.Embed(
+            embed = Embed(
                 title="Name overlap detected. Please look up your Paladins ID using the `>>console` command.",
-                colour=discord.colour.Color.red()
+                colour=colour.Color.red()
             )
             return [embed]
 
         try:
             info = self.bot.paladinsAPI.getPlayer(player_id)
         except (PlayerNotFound, PrivatePlayer):
-            embed = discord.Embed(
+            embed = Embed(
                 description=self.bot.cmd_lang_dict["general_error2"][lang].format(player_name),
-                colour=discord.colour.Color.red()
+                colour=colour.Color.red()
             )
             return [embed]
 
-        embed = discord.Embed(
+        embed = Embed(
             title="Some Title \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b "
                   "\u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b "
                   "\u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b ",
-            colour=discord.colour.Color.dark_teal(),
+            colour=colour.Color.dark_teal(),
         )
 
         # Add in icon image
@@ -274,30 +274,30 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         # Player level, played hours, etc
         player_id = self.get_player_id(player_name)
         if player_id == -1:
-            embed = discord.Embed(
+            embed = Embed(
                 title=self.bot.cmd_lang_dict["general_error2"][lang].format(player_name),
-                colour=discord.colour.Color.red()
+                colour=colour.Color.red()
             )
             return [embed]
         elif player_id == -2:
-            embed = discord.Embed(
+            embed = Embed(
                 title="```Invalid platform name. Valid platform names are:\n1. Xbox\n2. PS4\n3. Switch```",
-                colour=discord.colour.Color.red()
+                colour=colour.Color.red()
             )
             return [embed]
         elif player_id == -3:
-            embed = discord.Embed(
+            embed = Embed(
                 title="Name overlap detected. Please look up your Paladins ID using the `>>console` command.",
-                colour=discord.colour.Color.red()
+                colour=colour.Color.red()
             )
             return [embed]
 
         try:
             info = self.bot.paladinsAPI.getPlayer(player_id)
         except (PlayerNotFound, PrivatePlayer):
-            embed = discord.Embed(
+            embed = Embed(
                 description=self.bot.cmd_lang_dict["general_error2"][lang].format(player_name),
-                colour=discord.colour.Color.red()
+                colour=colour.Color.red()
             )
             return [embed]
 
@@ -336,9 +336,9 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         ss = ss.format(str(info.playerName), str(info.accountLevel), wr, str(total), t_kda, str(info.leaves))
 
         parts = ss.split("\n")
-        embed = discord.Embed(
+        embed = Embed(
             title="`{}  ------------`".format(parts.pop(0)),
-            colour=discord.colour.Color.dark_teal(),
+            colour=colour.Color.dark_teal(),
         )
         for part in parts:
             try:
@@ -367,9 +367,9 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                        str(ranked.currentTrumpPoints), str(ranked.leaderboardIndex), wr, win, lose, str(ranked.leaves))
 
         parts = s2.split("\n")
-        embed2 = discord.Embed(
+        embed2 = Embed(
             title="`{} {}`".format(parts.pop(0), ranked.currentSeason),
-            colour=discord.colour.Color.dark_magenta(),
+            colour=colour.Color.dark_magenta(),
         )
         for part in parts:
             p1, p2 = part.split("*")
@@ -389,9 +389,9 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         s3 = s3.format(created, last, str(info.totalAchievements), str(info.platform), str(info.playedGods))
 
         parts = s3.split("\n")
-        embed3 = discord.Embed(
+        embed3 = Embed(
             title="`{}  -------------`".format(parts.pop(0)),
-            colour=discord.colour.Color.dark_teal(),
+            colour=colour.Color.dark_teal(),
         )
         i = 0
         for part in parts:
@@ -406,45 +406,26 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         return embeds
 
     # Gets stats for a champ using Paladins API
-    # Todo needed by the current command as well
-    async def get_champ_stats_api(self, player_name, champ, simple, lang, mobile=False):
+    async def get_champ_stats_api(self, player_name, champ, lang):
         # Gets player id and error checks
         player_id = self.get_player_id(player_name)
         if player_id == -1:
-            if simple == 1:
-                if mobile:
-                    return [champ, "???", "???", "???"]
-                ss = str('*   {:15} Lv. {:3}  {:7}   {:6}\n')
-                ss = ss.format(champ, "???", "???", "???")
-                return ss
             match_data = self.bot.cmd_lang_dict["general_error2"][lang].format(player_name)
-            embed = discord.Embed(
+            embed = Embed(
                 title=match_data,
-                colour=discord.colour.Color.dark_teal()
+                colour=colour.Color.dark_teal()
             )
             return embed
         elif player_id == -2:
-            if simple == 1:
-                if mobile:
-                    return [champ, "???", "???", "???"]
-                ss = str('*   {:15} Lv. {:3}  {:7}   {:6}\n')
-                ss = ss.format(champ, "???", "???", "???")
-                return ss
-            embed = discord.Embed(
+            embed = Embed(
                 title="```Invalid platform name. Valid platform names are:\n1. Xbox\n2. PS4\n3. Switch```",
-                colour=discord.colour.Color.red()
+                colour=colour.Color.red()
             )
             return embed
         elif player_id == -3:
-            if simple == 1:
-                if mobile:
-                    return [champ, "???", "???", "???"]
-                ss = str('*   {:15} Lv. {:3}  {:7}   {:6}\n')
-                ss = ss.format(champ, "???", "???", "???")
-                return ss
-            embed = discord.Embed(
+            embed = Embed(
                 title="Name overlap detected. Please look up your Paladins ID using the `>>console` command.",
-                colour=discord.colour.Color.red()
+                colour=colour.Color.red()
             )
             return embed
         try:  # Todo Console name not returned in data (but correct)
@@ -453,29 +434,17 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             # "Losses": 125, "MinionKills": 253, "Minutes": 3527, "Rank": 58, "Wins": 144, "Worshippers": 33582898,
             # "champion": "Makoa", "champion_id": "2288", "player_id": "704972387", "ret_msg": null}
         except BaseException:
-            if simple == 1:
-                if mobile:
-                    return [champ, "???", "???", "???"]
-                ss = str('*   {:15} Lv. {:3}  {:7}   {:6}\n')
-                ss = ss.format(champ, "???", "???", "???")
-                return ss
             match_data = self.bot.cmd_lang_dict["general_error2"][lang].format(player_name)
-            embed = discord.Embed(
+            embed = Embed(
                 description=match_data,
-                colour=discord.colour.Color.dark_teal()
+                colour=colour.Color.dark_teal()
             )
             return embed
         if stats is None:  # Private account
-            if simple == 1:
-                if mobile:
-                    return [champ, "???", "???", "???"]
-                ss = str('*{:18} Lv. {:3}  {:7}   {:6}\n')
-                ss = ss.format(champ, "???", "???", "???")
-                return ss
             match_data = self.bot.cmd_lang_dict["general_error"][lang].format(player_name)
-            embed = discord.Embed(
+            embed = Embed(
                 description=match_data,
-                colour=discord.colour.Color.dark_teal()
+                colour=colour.Color.dark_teal()
             )
             return embed
 
@@ -505,22 +474,6 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
                 ss = ss.format(champ, level, kda, stat.kills, stat.deaths, stat.assists,
                                win_rate, wins, losses, str(stat.lastPlayed).split()[0])
-                if simple == 1:
-                    if mobile:
-                        return [champ, str(level), win_rate, kda]
-                    win_rate += " %"
-                    kda = "(" + kda + ")"
-                    ss = str('*   {:15} Lv. {:3}  {:7}   {:6}\n')
-                    ss = ss.format(champ, str(level), win_rate, kda)
-                    """This Block of code adds color based on Win Rate"""
-                    if "???" in win_rate:
-                        pass
-                    elif (float(win_rate.replace(" %", ""))) > 55.00:
-                        ss = ss.replace("*", "+")
-                    elif (float(win_rate.replace(" %", ""))) < 49.00:
-                        ss = ss.replace("*", "-")
-                    """^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"""
-                    return ss
 
             # Global win rate and kda
             if wins + losses > 10:  # Player needs to have over 20 matches with a champ for it to affect kda
@@ -532,13 +485,9 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         # They have not played this champion yet
         if ss == "":
             ss = "No data for champion: " + champ + "\n"
-            if simple == 1:
-                ss = str('*{:18} Lv. {:3}  {:7}   {:6}\n')
-                ss = ss.format(champ, "???", "???", "???")
-                return ss
-            embed = discord.Embed(
+            embed = Embed(
                 description=ss,
-                colour=discord.colour.Color.orange()
+                colour=colour.Color.orange()
             )
             return embed
 
@@ -552,10 +501,10 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         # Create an embed
         my_title = player_name + "'s stats: "
         desc = "`{}`".format(ss)
-        embed = discord.Embed(
+        embed = Embed(
             title=my_title,
             description=desc,
-            colour=discord.colour.Color.dark_teal()
+            colour=colour.Color.dark_teal()
         )
         embed.set_thumbnail(url=await helper.get_champ_image(champ))
         return embed
@@ -566,37 +515,37 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         player_id = self.get_player_id(player_name)
         if player_id == -1:
             match_data = self.bot.cmd_lang_dict["general_error2"][lang].format(player_name)
-            embed = discord.Embed(
+            embed = Embed(
                 title=match_data,
-                colour=discord.colour.Color.dark_teal()
+                colour=colour.Color.dark_teal()
             )
             return [embed]
         elif player_id == -2:
-            embed = discord.Embed(
+            embed = Embed(
                 title="```Invalid platform name. Valid platform names are:\n1. Xbox\n2. PS4\n3. Switch```",
-                colour=discord.colour.Color.red()
+                colour=colour.Color.red()
             )
             return [embed]
         elif player_id == -3:
-            embed = discord.Embed(
+            embed = Embed(
                 title="Name overlap detected. Please look up your Paladins ID using the `>>console` command.",
-                colour=discord.colour.Color.red()
+                colour=colour.Color.red()
             )
             return [embed]
         try:
             stats = self.bot.paladinsAPI.getChampionRanks(player_id)
         except BaseException:
             match_data = self.bot.cmd_lang_dict["general_error2"][lang].format(player_name)
-            embed = discord.Embed(
+            embed = Embed(
                 description=match_data,
-                colour=discord.colour.Color.dark_teal()
+                colour=colour.Color.dark_teal()
             )
             return [embed]
         if stats is None:  # Private account
             match_data = self.bot.cmd_lang_dict["general_error"][lang].format(player_name)
-            embed = discord.Embed(
+            embed = Embed(
                 description=match_data,
-                colour=discord.colour.Color.dark_teal()
+                colour=colour.Color.dark_teal()
             )
             return [embed]
 
@@ -637,9 +586,9 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         # They have not played this champion yet
         if ss == "":
             ss = "No data for champion: " + champ + "\n"
-            embed = discord.Embed(
+            embed = Embed(
                 description=ss,
-                colour=discord.colour.Color.orange()
+                colour=colour.Color.orange()
             )
             return [embed]
 
@@ -650,9 +599,9 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
 
         # Create an embed
         my_title = '`' + player_name + "'s stats: `"
-        embed = discord.Embed(
+        embed = Embed(
             title=my_title,
-            colour=discord.colour.Color.dark_teal()
+            colour=colour.Color.dark_teal()
         )
         embed.set_thumbnail(url=await helper.get_champ_image(champ))
         parts = ss.split("\n")
@@ -661,9 +610,9 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
             embed.add_field(name=p1, value=p2, inline=True)
 
         # Global stats
-        embed2 = discord.Embed(
+        embed2 = Embed(
             title="`Global stats:`",
-            colour=discord.colour.Color.dark_magenta(),
+            colour=colour.Color.dark_magenta(),
         )
         embed2.add_field(name='KDA:', value=t_kda, inline=True)
         embed2.add_field(name='Win Rate:', value=win_rate, inline=True)
@@ -697,37 +646,37 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         player_id = self.get_player_id(player_name)
         if player_id == -1:
             match_data = self.bot.cmd_lang_dict["general_error2"][lang].format(player_name)
-            embed = discord.Embed(
+            embed = Embed(
                 title=match_data,
-                colour=discord.colour.Color.dark_teal()
+                colour=colour.Color.dark_teal()
             )
             return embed
         elif player_id == -2:
-            embed = discord.Embed(
+            embed = Embed(
                 title="```Invalid platform name. Valid platform names are:\n1. Xbox\n2. PS4\n3. Switch```",
-                colour=discord.colour.Color.red()
+                colour=colour.Color.red()
             )
             return embed
         elif player_id == -3:
-            embed = discord.Embed(
+            embed = Embed(
                 title="Name overlap detected. Please look up your Paladins ID using the `>>console` command.",
-                colour=discord.colour.Color.red()
+                colour=colour.Color.red()
             )
             return embed
         try:
             stats = self.bot.paladinsAPI.getChampionRanks(player_id)
         except BaseException:
             match_data = self.bot.cmd_lang_dict["general_error"][lang].format(player_name)
-            embed = discord.Embed(
+            embed = Embed(
                 description=match_data,
-                colour=discord.colour.Color.dark_teal()
+                colour=colour.Color.dark_teal()
             )
             return embed
         if stats is None:  # Private account
             match_data = self.bot.cmd_lang_dict["general_error"][lang].format(player_name)
-            embed = discord.Embed(
+            embed = Embed(
                 description=match_data,
-                colour=discord.colour.Color.dark_teal()
+                colour=colour.Color.dark_teal()
             )
             return embed
 
@@ -835,9 +784,9 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                     class_message[c_index] += "{} ({})\n".format(champ[0], champ[index])
 
                 for title, data, image in zip(class_title, class_message, class_image):
-                    mobile_embed = discord.Embed(
+                    mobile_embed = Embed(
                         title=title,
-                        colour=discord.colour.Color.dark_teal(),
+                        colour=colour.Color.dark_teal(),
                         description=data
                     )
 
@@ -855,9 +804,9 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
                     champ[5] = "{}h {}m".format(hours, minutes)
                     new_value += "{} ({})\n".format(champ[0], champ[index])
 
-                mobile_embed = discord.Embed(
+                mobile_embed = Embed(
                     title=select_title,
-                    colour=discord.colour.Color.dark_teal(),
+                    colour=colour.Color.dark_teal(),
                     description=new_value
                 )
 
@@ -906,7 +855,7 @@ class PaladinsAPICog(commands.Cog, name="Paladins API Commands"):
         else:
             champ_name = await helper.convert_champion_name_normal(option)
             if not mobile_status:
-                result = await self.get_champ_stats_api(player_name, champ_name, simple=0, lang=lang)
+                result = await self.get_champ_stats_api(player_name, champ_name, lang=lang)
                 await ctx.send(embed=result)
             # mobile version
             else:

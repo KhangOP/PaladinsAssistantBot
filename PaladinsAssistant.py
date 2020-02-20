@@ -15,6 +15,7 @@ import requests
 
 import my_utils as helper
 from pyrez.api import PaladinsAPI
+import hirezapi
 import Champion
 
 from colorama import Fore, init
@@ -26,17 +27,15 @@ class PaladinsAssistant(commands.Bot):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Creating client reference
-        self.client = Bot
-
         # Removing default help command.
-        self.client.remove_command(self, 'help')
+        self.remove_command('help')
 
         # token/prefix (Bot)
         self.load_bot_config()
 
         # create class instances to be used throughout the whole bot
         self.paladinsAPI = PaladinsAPI(devId=self.ID, authKey=self.KEY)
+        self.api = hirezapi.PaladinsAPI(dev_id=self.ID, auth_key=self.KEY)
         self.champs = Champion.Champion()
 
         # prefix/language (Servers)
@@ -128,8 +127,7 @@ class PaladinsAssistant(commands.Bot):
     def load_cogs(self):
         for extension in self.INITIAL_EXTENSIONS:
             try:
-                self.client.load_extension(self, extension)
-                # super().load_extension(extension)
+                self.load_extension(extension)
                 print(Fore.GREEN + "Loaded extension:", Fore.MAGENTA + extension)
             except BaseException as e:
                 print(Fore.RED + "Failed to load: {} because of {}".format(extension, e))
@@ -364,7 +362,8 @@ class PaladinsAssistant(commands.Bot):
 
     # called when a bot is invited into a server
     async def on_guild_join(self, guild):
-        print("{} has joined the following server: {}".format(self.user.name, guild))
+        print("{} has joined the following server: {} with {} users."
+              .format(self.user.name, guild, guild.member_count))
 
     # called when a bot is removed from a server
     async def on_guild_remove(self, guild):
@@ -374,7 +373,8 @@ class PaladinsAssistant(commands.Bot):
         The client left the guild.
         The client or the guild owner deleted the guild.
         """
-        print("{} has be removed the following server: {}".format(self.user.name, guild))
+        print("{} has be removed the following server: {} with {} users.".
+              format(self.user.name, guild, guild.member_count))
 
     # """
     # Handles errors when a user messes up the spelling or forgets an argument to a command or an error occurs

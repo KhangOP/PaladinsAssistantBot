@@ -24,4 +24,4 @@ This project is provided under the MIT License, which you can view in [`LICENSE.
 
 All information obtained is provided by Hi-Rez Studios API and is thus their property. According to Section 11a of the [`API Terms of Use`](https://www.hirezstudios.com/wp-content/themes/hi-rez-studios/pdf/api-terms-of-use-agreement.pdf "Hi-Rez Studios API · Terms of Use"), you must attribute any data provided as below.
 
-> Data provided by Hi-Rez. © 2019 Hi-Rez Studios, Inc. All rights reserved  .
+> Data provided by Hi-Rez. © 2019 Hi-Rez Studios, Inc. All rights reserved.
